@@ -594,6 +594,15 @@
     const ceilingLight = new THREE.PointLight(0xffecd2, 1.0, 50); ceilingLight.position.set(0, 13.5, 0); scene.add(ceilingLight);
     const deskLampLight = new THREE.PointLight(0xffea9f, 0, 20); deskLampLight.position.set(-6.5, 7.8, -4.5); scene.add(deskLampLight);
 
+    // DEDICATED OVERHEAD HOST SPOTLIGHT
+    const hostSpotlight = new THREE.SpotLight(0xffffff, 0, 16, Math.PI / 4.5, 0.25, 1.2);
+    hostSpotlight.position.set(0, 10.5, -11.6);
+    const hostSpotTarget = new THREE.Object3D();
+    hostSpotTarget.position.set(0, 4.5, -11.6);
+    scene.add(hostSpotTarget);
+    hostSpotlight.target = hostSpotTarget;
+    scene.add(hostSpotlight);
+
     // SPOTLIGHT RIG
     const trussGroup = new THREE.Group();
     trussGroup.position.set(0, 8.4, -9.8);
@@ -625,6 +634,7 @@
     function updateStudioLighting(power) {
       const val = power ? 5.0 : 0;
       deskLampLight.intensity = power ? 2.5 : 0;
+      hostSpotlight.intensity = power ? 9.0 : 0;
       fixtureCyan.spot.intensity = val;
       fixtureGold.spot.intensity = val;
       fixtureMagenta.spot.intensity = val;
@@ -1100,7 +1110,6 @@
     const gPodium = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 0.6, 20), new THREE.MeshStandardMaterial({ color: 0x2b154a }));
     gPodium.position.y = 0.74; miniGoody.add(gPodium);
 
-    // Silver podium trim ring
     const podiumTrim = new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.46, 0.05, 20), silverMetalMat);
     podiumTrim.position.y = 1.02; miniGoody.add(podiumTrim);
 
@@ -1263,19 +1272,19 @@
 
       syncContestantCameras();
 
-      // 1. Render Host / Audience / Stream View (Plushies hidden)
+      // 1. Audience / Host View: contestants invisible
       if (playerPlushie1) playerPlushie1.visible = false;
       if (playerPlushie2) playerPlushie2.visible = false;
       renderer.render(scene, camera);
 
-      // 2. Render Jake's private mobile viewport
+      // 2. Jake View
       if (showJake) {
         if (playerPlushie1) playerPlushie1.visible = true;
         rendererJake.render(scene, camJake);
         if (playerPlushie1) playerPlushie1.visible = false;
       }
 
-      // 3. Render June's private mobile viewport
+      // 3. June View
       if (showJune) {
         if (playerPlushie2) playerPlushie2.visible = true;
         rendererJune.render(scene, camJune);
