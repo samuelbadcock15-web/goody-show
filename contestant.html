@@ -265,7 +265,7 @@
     function renderBackstageScreens() {
       sScreenCtx.fillStyle = '#060210'; sScreenCtx.fillRect(0, 0, 512, 256);
       if (contestantStudioPower) {
-        // Jake Feed
+        // Left Screen (Jake)
         if (videoJake.readyState >= 2) {
           sScreenCtx.drawImage(videoJake, 15, 20, 225, 215);
         } else {
@@ -273,7 +273,7 @@
         }
         sScreenCtx.strokeStyle = '#39ff14'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(15, 20, 225, 215);
 
-        // June Feed
+        // Right Screen (June)
         if (videoJune.readyState >= 2) {
           sScreenCtx.drawImage(videoJune, 272, 20, 225, 215);
         } else {
@@ -393,7 +393,7 @@
     bindDpad('dpad-left', 'LEFT');
     bindDpad('dpad-right', 'RIGHT');
 
-    // Join Flow
+    // Join Flow & PeerJS Multiplexing
     document.getElementById('btn-jake').addEventListener('click', () => joinGame("goody-contestant-1", "Jake"));
     document.getElementById('btn-june').addEventListener('click', () => joinGame("goody-contestant-2", "June"));
 
@@ -411,7 +411,7 @@
           audio: { echoCancellation: true, noiseSuppression: true }
         });
 
-        // Feed local stream to correct video element for backstage display
+        // Assign local stream to respective video element
         if (contestantId === "goody-contestant-1") {
           videoJake.srcObject = localStream;
           videoJake.play();
@@ -423,19 +423,13 @@
         peer = new Peer(contestantId);
 
         peer.on('open', () => {
+          // Call studio and request return stream
           const call = peer.call("goody-main-studio", localStream, {
             metadata: { contestant: contestantId, name: contestantName }
           });
 
-          call.on('stream', (remoteStream) => {
-            // Receive remote contestant stream
-            if (contestantId === "goody-contestant-1") {
-              videoJune.srcObject = remoteStream;
-              videoJune.play();
-            } else {
-              videoJake.srcObject = remoteStream;
-              videoJake.play();
-            }
+          call.on('stream', (returnStream) => {
+            // Audio/Video feedback from studio
           });
 
           dataConn = peer.connect("goody-main-studio", {
@@ -471,6 +465,21 @@
             }
           });
         });
+
+        // Also listen for incoming calls if the other contestant calls or if peer connects directly
+        peer.on('call', (incomingCall) => {
+          incomingCall.answer(localStream);
+          incomingCall.on('stream', (remoteStream) => {
+            if (incomingCall.metadata && incomingCall.metadata.contestant === "goody-contestant-2") {
+              videoJune.srcObject = remoteStream;
+              videoJune.play();
+            } else if (incomingCall.metadata && incomingCall.metadata.contestant === "goody-contestant-1") {
+              videoJake.srcObject = remoteStream;
+              videoJake.play();
+            }
+          });
+        });
+
       } catch (err) {
         alert("Camera & microphone permissions required: " + err.message);
       }
