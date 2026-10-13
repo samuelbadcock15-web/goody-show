@@ -54,7 +54,7 @@
   <div id="blocker">
     <div id="instructions-card">
       <h1>The Goody Tonight Show</h1>
-      <p>The game show spiral now begins exactly in the dead-center of the circular stage floor!</p>
+      <p>The game show track now fills out the entire circular arena floor!</p>
       <p><strong>Click Anywhere to Enter</strong></p>
       <p>
         <span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> &nbsp;Walk around<br>
@@ -285,7 +285,7 @@
     const miniWall = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 4.5, 32, 1, true, -Math.PI / 2, Math.PI), new THREE.MeshStandardMaterial({ color: 0x15092a, side: THREE.BackSide }));
     miniWall.position.y = 2.65; miniDiorama.add(miniWall);
 
-    // EXACT-CENTER SPIRAL (STARTS PRECISELY AT X=0, Z=0 IN THE MIDDLE OF THE CIRCULAR FLOOR)
+    // FULL-STAGE GAME SHOW SPIRAL (SPREAD ACROSS THE ENTIRE ARENA FLOOR)
     const countryColors = [
       0xe67e22, 0xd35400, 0xe74c3c, 0x8e44ad, 
       0x27ae60, 0x2980b9, 0x16a085, 0xc0392b, 
@@ -293,19 +293,20 @@
       0xd35400, 0x0d47a1, 0xb71c1c, 0x4a148c
     ];
 
-    const totalTiles = 24;
+    const spiralCenterZ = 1.8;
+    const totalTiles = 32;
     for (let i = 0; i < totalTiles; i++) {
-      const angle = i * 0.58; 
-      // At i = 0, radius = 0, so the first tile is positioned exactly at (0, 0)
-      const radius = i * 0.105; 
+      const angle = i * 0.48; 
+      const radius = 0.7 + (i * 0.135); 
       const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
+      const z = spiralCenterZ + (Math.sin(angle) * (radius * 0.88));
 
       const tile = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.18, 0.20, 0.07, 16),
+        new THREE.CylinderGeometry(0.28, 0.30, 0.08, 20),
         new THREE.MeshStandardMaterial({ 
           color: countryColors[i % countryColors.length], 
-          roughness: 0.35 
+          roughness: 0.3,
+          metalness: 0.1
         })
       );
       tile.position.set(x, 0.48, z);
@@ -444,7 +445,7 @@
       lensBarrel.rotation.x = Math.PI / 2; lensBarrel.position.set(0, 0, -0.24); headPivot.add(lensBarrel);
 
       const frontGlass = new THREE.Mesh(new THREE.CircleGeometry(0.08, 16), new THREE.MeshBasicMaterial({ color: 0x00f0ff }));
-      frontGlass.position.set(0, 0, -0.431); frontGlass.rotation.y = Math.PI; headPivot.add(frontGlass);
+      frontGlass.position.set(0, 0, -0.431); headPivot.add(frontGlass);
 
       const tallyLamp = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), new THREE.MeshBasicMaterial({ color: 0x111111 }));
       tallyLamp.position.set(0, 0.15, -0.28); headPivot.add(tallyLamp);
