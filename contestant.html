@@ -31,7 +31,6 @@
       background: #18092d; padding: 4px 10px; border-radius: 8px; font-family: monospace; font-size: 0.78rem;
     }
 
-    /* Dedicated 3D Viewport on Contestant Phone */
     .viewport-box {
       position: relative; width: 100%; height: 38vh; background: #000;
       border: 2px solid #ffda66; border-radius: 12px; overflow: hidden;
@@ -49,7 +48,6 @@
       transform: scaleX(-1); background: #111; z-index: 10; pointer-events: none;
     }
 
-    /* Dice Button */
     #btn-roll-dice {
       width: 100%; padding: 12px; background: #444; border: 2px solid #777;
       border-radius: 10px; font-size: 1rem; font-weight: 900; color: #888;
@@ -65,7 +63,6 @@
       text-align: center; font-family: monospace; font-size: 0.84rem; color: #39ff14; min-height: 18px;
     }
 
-    /* Interactive Trivia Card */
     #trivia-card {
       background: #190930; border: 2px solid #00f0ff; border-radius: 10px; padding: 8px;
       display: none; flex-direction: column; gap: 6px;
@@ -86,7 +83,6 @@
     .btn-opt.flash-green { background: #00b894 !important; }
     .btn-opt.flash-red { background: #d63031 !important; }
 
-    /* Movement D-Pad */
     .controls-panel {
       display: flex; justify-content: space-between; align-items: center;
       background: #140728; border: 1px solid #a29bfe; border-radius: 10px; padding: 6px 10px;
@@ -116,7 +112,6 @@
       <span style="color: #39ff14;">🔴 CONTESTANT POV</span>
     </div>
 
-    <!-- Independent 3D Studio Canvas -->
     <div class="viewport-box">
       <canvas id="contestant3d"></canvas>
       <div id="drag-hint">👆 Drag to look • D-Pad to walk</div>
@@ -127,7 +122,6 @@
 
     <button id="btn-roll-dice" disabled>🎲 ROLL DICE (LOCKED)</button>
 
-    <!-- Trivia Screen -->
     <div id="trivia-card">
       <div style="display: flex; justify-content: space-between;">
         <span id="q-country-tag">COUNTRY</span>
@@ -142,7 +136,6 @@
       </div>
     </div>
 
-    <!-- Movement Controls -->
     <div class="controls-panel">
       <div class="dpad-label">
         🕹️ <strong>STAGE MOVE</strong><br>Walk around game floor
@@ -221,9 +214,10 @@
     function updateContestantLighting(power) {
       ambientLight.intensity = power ? 0.9 : 0.2;
       stageSpot.intensity = power ? 2.5 : 0;
+      updateGoodyFace(power);
     }
 
-    // Build Stage
+    // Build Stage Floor & Walls
     const carpet = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 0.1, 48), new THREE.MeshStandardMaterial({ color: 0x271147 }));
     scene.add(carpet);
 
@@ -231,7 +225,7 @@
     stageWall.position.y = 2.2;
     scene.add(stageWall);
 
-    // Host Robot Goody
+    // Host Robot Goody (Fully Rigged with Face & Antenna)
     const hostGroup = new THREE.Group(); hostGroup.position.set(0, 0, -2.6);
     const podium = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 0.6, 20), new THREE.MeshStandardMaterial({ color: 0x2b154a }));
     podium.position.y = 0.3; hostGroup.add(podium);
@@ -239,12 +233,47 @@
     hostBody.position.y = 0.9; hostGroup.add(hostBody);
     const hostHead = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.35, 0.35), new THREE.MeshStandardMaterial({ color: 0x333 }));
     hostHead.position.y = 1.35; hostGroup.add(hostHead);
+
+    const antennaStem = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.22, 8), new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9 }));
+    antennaStem.position.y = 1.62; hostGroup.add(antennaStem);
+    const antennaOrb = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), new THREE.MeshBasicMaterial({ color: 0x111111 }));
+    antennaOrb.position.y = 1.74; hostGroup.add(antennaOrb);
+
+    const faceCanvas = document.createElement('canvas'); faceCanvas.width = 128; faceCanvas.height = 128;
+    const fctx = faceCanvas.getContext('2d'); fctx.fillStyle = '#000'; fctx.fillRect(0, 0, 128, 128);
+    const faceTex = new THREE.CanvasTexture(faceCanvas);
+    const hostFace = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 0.25), new THREE.MeshBasicMaterial({ map: faceTex }));
+    hostFace.position.set(0, 1.35, 0.19); hostGroup.add(hostFace);
     scene.add(hostGroup);
+
+    function updateGoodyFace(power) {
+      fctx.fillStyle = '#000'; fctx.fillRect(0, 0, 128, 128);
+      if (power) {
+        fctx.fillStyle = '#39ff14'; fctx.font = 'bold 48px monospace'; fctx.textAlign = 'center';
+        fctx.fillText("^‿^", 64, 80);
+        antennaOrb.material.color.setHex(0x39ff14);
+      } else {
+        antennaOrb.material.color.setHex(0x111111);
+      }
+      faceTex.needsUpdate = true;
+    }
+    updateGoodyFace(false);
 
     // Backstage Screens
     const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshStandardMaterial({ color: 0x11111a }));
     screenMesh.position.set(0, 2.2, -4.5);
     scene.add(screenMesh);
+
+    // 14 Game Show Floor Counters
+    for (let i = 0; i < 32; i++) {
+      const angle = i * 0.48;
+      const radius = 0.7 + (i * 0.135);
+      const x = Math.cos(angle) * radius;
+      const z = 1.8 + (Math.sin(angle) * (radius * 0.88));
+      const tile = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.3, 0.06, 16), new THREE.MeshStandardMaterial({ color: (i % 2 === 0 ? 0xff7675 : 0x00f0ff) }));
+      tile.position.set(x, 0.05, z);
+      scene.add(tile);
+    }
 
     // Touch-Drag Looking
     let isDragging = false;
@@ -322,10 +351,6 @@
         peer.on('open', () => {
           const call = peer.call("goody-main-studio", localStream, {
             metadata: { contestant: contestantId, name: contestantName }
-          });
-
-          call.on('stream', (studioStream) => {
-            // Display live studio stream on backstage screen mesh texture if desired
           });
 
           dataConn = peer.connect("goody-main-studio", {
