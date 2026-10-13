@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Goody Tonight Show - Contestant Companion</title>
+  <title>Goody Tonight Show - Contestant Studio</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; touch-action: none; }
     body {
       background: #090314; color: #fff;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 10px;
+      min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 8px;
       overflow: hidden;
     }
     #setup-card {
       width: 100%; max-width: 440px; background: #1b0933; border: 2px solid #ff79b0;
-      border-radius: 16px; padding: 20px; text-align: center; margin-top: 15px;
+      border-radius: 16px; padding: 20px; text-align: center; margin-top: 20px;
     }
     .btn-select {
       width: 100%; padding: 16px; margin: 10px 0; border-radius: 12px; border: none;
@@ -24,92 +24,76 @@
     .btn-june { background: #d63031; }
 
     #live-stage-portal {
-      width: 100%; max-width: 440px; height: 95vh; display: none; flex-direction: column; gap: 8px;
+      width: 100%; max-width: 440px; height: 98vh; display: none; flex-direction: column; gap: 6px;
     }
     .badge-bar {
       display: flex; justify-content: space-between; align-items: center;
-      background: #18092d; padding: 6px 12px; border-radius: 8px; font-family: monospace; font-size: 0.8rem;
+      background: #18092d; padding: 4px 10px; border-radius: 8px; font-family: monospace; font-size: 0.78rem;
     }
 
-    /* Interactive Viewport Area */
-    .viewport-container {
-      position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000;
+    /* Dedicated 3D Viewport on Contestant Phone */
+    .viewport-box {
+      position: relative; width: 100%; height: 38vh; background: #000;
       border: 2px solid #ffda66; border-radius: 12px; overflow: hidden;
-      box-shadow: 0 4px 20px rgba(255, 218, 102, 0.25);
+      box-shadow: 0 4px 16px rgba(255, 218, 102, 0.25);
     }
-    #studio-stream-video {
-      width: 100%; height: 100%; object-fit: cover; pointer-events: none;
-    }
-    #touch-look-surface {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      z-index: 10; cursor: grab;
-    }
-    #touch-look-hint {
-      position: absolute; top: 8px; left: 8px; font-size: 0.72rem;
-      background: rgba(0,0,0,0.6); padding: 3px 6px; border-radius: 4px;
-      color: #ffda66; pointer-events: none; z-index: 11; font-family: monospace;
+    #contestant3d { width: 100%; height: 100%; display: block; }
+    #drag-hint {
+      position: absolute; top: 6px; left: 8px; font-size: 0.7rem;
+      background: rgba(0,0,0,0.65); padding: 2px 6px; border-radius: 4px;
+      color: #ffda66; font-family: monospace; pointer-events: none;
     }
     #local-selfie-pip {
-      position: absolute; bottom: 8px; right: 8px; width: 28%; aspect-ratio: 4 / 3;
-      border: 2px solid #39ff14; border-radius: 8px; object-fit: cover;
-      transform: scaleX(-1); background: #111; z-index: 15; pointer-events: none;
+      position: absolute; bottom: 6px; right: 6px; width: 26%; aspect-ratio: 4 / 3;
+      border: 2px solid #39ff14; border-radius: 6px; object-fit: cover;
+      transform: scaleX(-1); background: #111; z-index: 10; pointer-events: none;
     }
 
     /* Dice Button */
     #btn-roll-dice {
-      width: 100%; padding: 12px; background: #444; border: 3px solid #777;
-      border-radius: 12px; font-size: 1.05rem; font-weight: 900; color: #888;
-      text-transform: uppercase; letter-spacing: 1px; cursor: not-allowed; transition: all 0.2s;
+      width: 100%; padding: 12px; background: #444; border: 2px solid #777;
+      border-radius: 10px; font-size: 1rem; font-weight: 900; color: #888;
+      text-transform: uppercase; letter-spacing: 1px; cursor: not-allowed;
     }
     #btn-roll-dice.active-roll {
       background: linear-gradient(180deg, #fdcb6e, #e17055);
       border-color: #ffeaa7; color: #2d3436; cursor: pointer;
-      box-shadow: 0 4px 0 #b3392b, 0 0 15px #fdcb6e;
+      box-shadow: 0 0 12px #fdcb6e;
     }
 
     #status-pill {
-      text-align: center; font-family: monospace; font-size: 0.88rem; color: #39ff14; min-height: 20px;
+      text-align: center; font-family: monospace; font-size: 0.84rem; color: #39ff14; min-height: 18px;
     }
 
-    /* Trivia Card */
+    /* Interactive Trivia Card */
     #trivia-card {
-      background: #190930; border: 2px solid #00f0ff; border-radius: 12px; padding: 10px;
-      display: none; flex-direction: column; gap: 8px; z-index: 25;
+      background: #190930; border: 2px solid #00f0ff; border-radius: 10px; padding: 8px;
+      display: none; flex-direction: column; gap: 6px;
     }
-    #q-country-tag {
-      font-size: 0.82rem; font-weight: bold; color: #ffda66; text-transform: uppercase;
-    }
+    #q-country-tag { font-size: 0.78rem; font-weight: bold; color: #ffda66; }
     #q-timer { font-family: monospace; font-weight: bold; color: #ff7675; text-align: right; }
-    
-    #q-text { 
-      font-size: 0.95rem; font-weight: 700; line-height: 1.35; color: #ffffff;
-      background: rgba(0,0,0,0.35); padding: 8px; border-radius: 8px; border-left: 4px solid #00f0ff;
+    #q-text {
+      font-size: 0.88rem; font-weight: 700; line-height: 1.3; color: #fff;
+      background: rgba(0,0,0,0.4); padding: 6px; border-radius: 6px; border-left: 3px solid #00f0ff;
     }
-
-    .options-grid {
-      display: grid; grid-template-columns: 1fr; gap: 6px;
-    }
+    .options-grid { display: grid; grid-template-columns: 1fr; gap: 5px; }
     .btn-opt {
-      padding: 10px 12px; background: #2f1454; border: 2px solid #9c4dd6; border-radius: 8px;
-      color: #fff; font-size: 0.88rem; font-weight: bold; text-align: left; cursor: not-allowed; opacity: 0.6;
+      padding: 8px 10px; background: #2f1454; border: 1px solid #9c4dd6; border-radius: 6px;
+      color: #fff; font-size: 0.82rem; font-weight: bold; text-align: left; opacity: 0.6;
     }
     .btn-opt.unlocked { cursor: pointer; opacity: 1; border-color: #00f0ff; }
     .btn-opt.selected { background: #6c5ce7; border-color: #a29bfe; }
-    .btn-opt.flash-green { background: #00b894 !important; border-color: #55efc4 !important; }
-    .btn-opt.flash-red { background: #d63031 !important; border-color: #ff7675 !important; }
+    .btn-opt.flash-green { background: #00b894 !important; }
+    .btn-opt.flash-red { background: #d63031 !important; }
 
-    /* Movement D-Pad Section */
+    /* Movement D-Pad */
     .controls-panel {
       display: flex; justify-content: space-between; align-items: center;
-      background: #140728; border: 2px solid #a29bfe; border-radius: 12px; padding: 8px 12px;
+      background: #140728; border: 1px solid #a29bfe; border-radius: 10px; padding: 6px 10px;
       margin-top: auto;
     }
-    .dpad-label {
-      font-size: 0.72rem; color: #ff9ff3; font-family: monospace; max-width: 140px; line-height: 1.3;
-    }
-    .dpad-grid {
-      display: grid; grid-template-columns: 46px 46px 46px; grid-template-rows: 38px 38px; gap: 4px;
-    }
+    .dpad-label { font-size: 0.7rem; color: #ff9ff3; font-family: monospace; }
+    .dpad-grid { display: grid; grid-template-columns: 44px 44px 44px; grid-template-rows: 36px 36px; gap: 4px; }
     .dpad-btn {
       background: #2b1154; border: 2px solid #ff79b0; border-radius: 6px; color: #fff;
       font-size: 1.1rem; font-weight: bold; display: flex; justify-content: center; align-items: center;
@@ -121,7 +105,7 @@
 
   <div id="setup-card">
     <h2 style="color: #ffda66; margin-bottom: 8px;">The Goody Tonight Show</h2>
-    <p style="color: #ebdcf9; font-size: 0.88rem; margin-bottom: 14px;">Select your contestant profile to start in the center of the stage facing Goody:</p>
+    <p style="color: #ebdcf9; font-size: 0.86rem; margin-bottom: 14px;">Select your contestant profile to start in the center of the studio:</p>
     <button class="btn-select btn-jake" id="btn-jake">I am Contestant 1 (Jake)</button>
     <button class="btn-select btn-june" id="btn-june">I am Contestant 2 (June)</button>
   </div>
@@ -129,14 +113,13 @@
   <main id="live-stage-portal">
     <div class="badge-bar">
       <span id="role-tag" style="color: #00f0ff;">CONNECTING...</span>
-      <span style="color: #39ff14;">🔴 LIVE CONTESTANT CAM</span>
+      <span style="color: #39ff14;">🔴 CONTESTANT POV</span>
     </div>
 
-    <!-- Interactive Touch Look Viewport -->
-    <div class="viewport-container">
-      <video id="studio-stream-video" autoplay playsinline muted></video>
-      <div id="touch-look-surface"></div>
-      <div id="touch-look-hint">👆 Drag screen to look around</div>
+    <!-- Independent 3D Studio Canvas -->
+    <div class="viewport-box">
+      <canvas id="contestant3d"></canvas>
+      <div id="drag-hint">👆 Drag to look • D-Pad to walk</div>
       <video id="local-selfie-pip" autoplay playsinline muted></video>
     </div>
 
@@ -146,7 +129,7 @@
 
     <!-- Trivia Screen -->
     <div id="trivia-card">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; justify-content: space-between;">
         <span id="q-country-tag">COUNTRY</span>
         <span id="q-timer">⏱️ 30s</span>
       </div>
@@ -159,11 +142,10 @@
       </div>
     </div>
 
-    <!-- Contestant Movement D-Pad -->
+    <!-- Movement Controls -->
     <div class="controls-panel">
       <div class="dpad-label">
-        🕹️ <strong>STAGE MOVE</strong><br>
-        Walk your player around the studio
+        🕹️ <strong>STAGE MOVE</strong><br>Walk around game floor
       </div>
       <div class="dpad-grid">
         <div></div>
@@ -176,7 +158,9 @@
     </div>
   </main>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
   <script>
     let localStream = null;
     let peer = null;
@@ -192,7 +176,6 @@
     const setupCard = document.getElementById('setup-card');
     const liveStagePortal = document.getElementById('live-stage-portal');
     const localSelfiePip = document.getElementById('local-selfie-pip');
-    const studioStreamVideo = document.getElementById('studio-stream-video');
     const roleTag = document.getElementById('role-tag');
     const statusPill = document.getElementById('status-pill');
     const btnRollDice = document.getElementById('btn-roll-dice');
@@ -208,6 +191,121 @@
       document.getElementById('opt-3')
     ];
 
+    // THREE.JS CONTESTANT STAGE SCENE (Independent 3D Camera)
+    const viewportCanvas = document.getElementById('contestant3d');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x05020a);
+
+    const camera = new THREE.PerspectiveCamera(65, 16 / 9, 0.1, 100);
+    // Center stage, eye-level facing host Goody
+    let camPos = new THREE.Vector3(0, 1.4, 0.8);
+    let camYaw = 0;
+    let camPitch = 0;
+    camera.position.copy(camPos);
+
+    const renderer = new THREE.WebGLRenderer({ canvas: viewportCanvas, antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+
+    function resizeContestantViewport() {
+      const rect = viewportCanvas.parentElement.getBoundingClientRect();
+      renderer.setSize(rect.width, rect.height);
+      camera.aspect = rect.width / rect.height;
+      camera.updateProjectionMatrix();
+    }
+    window.addEventListener('resize', resizeContestantViewport);
+
+    // Build the Studio Stage in Contestant's Viewport
+    const carpet = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 0.1, 48), new THREE.MeshStandardMaterial({ color: 0x271147 }));
+    scene.add(carpet);
+
+    const stageWall = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 4.5, 32, 1, true, -Math.PI / 2, Math.PI), new THREE.MeshStandardMaterial({ color: 0x15092a, side: THREE.BackSide }));
+    stageWall.position.y = 2.2;
+    scene.add(stageWall);
+
+    // Goody Robot Podium at Z = -2.6
+    const hostGroup = new THREE.Group(); hostGroup.position.set(0, 0, -2.6);
+    const podium = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 0.6, 20), new THREE.MeshStandardMaterial({ color: 0x2b154a }));
+    podium.position.y = 0.3; hostGroup.add(podium);
+    const hostBody = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.4), new THREE.MeshStandardMaterial({ color: 0x333 }));
+    hostBody.position.y = 0.9; hostGroup.add(hostBody);
+    const hostHead = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.35, 0.35), new THREE.MeshStandardMaterial({ color: 0x333 }));
+    hostHead.position.y = 1.35; hostGroup.add(hostHead);
+    scene.add(hostGroup);
+
+    // Backstage Contestant Screens Mesh
+    const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshStandardMaterial({ color: 0x11111a }));
+    screenMesh.position.set(0, 2.2, -4.5);
+    scene.add(screenMesh);
+
+    // Stage Lighting
+    scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+    const spot = new THREE.PointLight(0xffea00, 2.0, 15); spot.position.set(0, 4, -1); scene.add(spot);
+
+    // 14 Counters on Stage Floor
+    for (let i = 0; i < 32; i++) {
+      const angle = i * 0.48;
+      const radius = 0.7 + (i * 0.135);
+      const x = Math.cos(angle) * radius;
+      const z = 1.8 + (Math.sin(angle) * (radius * 0.88));
+      const tile = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.3, 0.06, 16), new THREE.MeshStandardMaterial({ color: (i % 2 === 0 ? 0xff7675 : 0x00f0ff) }));
+      tile.position.set(x, 0.05, z);
+      scene.add(tile);
+    }
+
+    // Touch-Drag Looking on Screen
+    let isDragging = false;
+    let lastX = 0, lastY = 0;
+
+    viewportCanvas.addEventListener('touchstart', (e) => {
+      isDragging = true;
+      lastX = e.touches[0].clientX;
+      lastY = e.touches[0].clientY;
+    });
+
+    viewportCanvas.addEventListener('touchmove', (e) => {
+      if (!isDragging) return;
+      const dx = e.touches[0].clientX - lastX;
+      const dy = e.touches[0].clientY - lastY;
+      lastX = e.touches[0].clientX;
+      lastY = e.touches[0].clientY;
+
+      camYaw -= dx * 0.006;
+      camPitch = Math.max(-0.9, Math.min(0.9, camPitch - dy * 0.006));
+      camera.rotation.set(camPitch, camYaw, 0, 'YXZ');
+    });
+
+    viewportCanvas.addEventListener('touchend', () => { isDragging = false; });
+
+    // D-Pad Arrow Walking Movement
+    const moveSpeed = 0.18;
+    function movePlayer(dir) {
+      const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), camYaw);
+      const side = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), camYaw);
+
+      if (dir === 'FORWARD') camPos.addScaledVector(fwd, moveSpeed);
+      if (dir === 'BACK') camPos.addScaledVector(fwd, -moveSpeed);
+      if (dir === 'LEFT') camPos.addScaledVector(side, -moveSpeed);
+      if (dir === 'RIGHT') camPos.addScaledVector(side, moveSpeed);
+
+      // Keep within the studio floor
+      camPos.y = 1.4;
+      if (Math.hypot(camPos.x, camPos.z) > 5.5) {
+        camPos.clampLength(0, 5.5);
+      }
+      camera.position.copy(camPos);
+    }
+
+    const bindDpad = (id, dir) => {
+      const el = document.getElementById(id);
+      el.addEventListener('touchstart', (e) => { e.preventDefault(); movePlayer(dir); });
+      el.addEventListener('mousedown', () => movePlayer(dir));
+    };
+    bindDpad('dpad-fwd', 'FORWARD');
+    bindDpad('dpad-back', 'BACK');
+    bindDpad('dpad-left', 'LEFT');
+    bindDpad('dpad-right', 'RIGHT');
+
+    // Join Flow
     document.getElementById('btn-jake').addEventListener('click', () => joinGame("goody-contestant-1", "Jake"));
     document.getElementById('btn-june').addEventListener('click', () => joinGame("goody-contestant-2", "June"));
 
@@ -217,6 +315,7 @@
       setupCard.style.display = 'none';
       liveStagePortal.style.display = 'flex';
       roleTag.textContent = `${name.toUpperCase()} (CONTESTANT)`;
+      resizeContestantViewport();
 
       try {
         localStream = await navigator.mediaDevices.getUserMedia({
@@ -228,26 +327,16 @@
         peer = new Peer(contestantId);
 
         peer.on('open', () => {
-          const call = peer.call("goody-main-studio", localStream, {
-            metadata: { contestant: contestantId, name: contestantName, role: "CONTESTANT" }
-          });
-
-          call.on('stream', (returnStudioStream) => {
-            studioStreamVideo.srcObject = returnStudioStream;
-            studioStreamVideo.play().catch(e => console.log(e));
+          peer.call("goody-main-studio", localStream, {
+            metadata: { contestant: contestantId, name: contestantName }
           });
 
           dataConn = peer.connect("goody-main-studio", {
-            metadata: { contestant: contestantId, name: contestantName, role: "CONTESTANT" }
+            metadata: { contestant: contestantId, name: contestantName }
           });
 
           dataConn.on('open', () => {
-            statusPill.textContent = "Connected! Placed central facing Goody.";
-            // Immediately request central spawn facing host
-            dataConn.send({
-              type: "CONTESTANT_INIT_CAMERA",
-              contestant: contestantId
-            });
+            statusPill.textContent = "Live on stage in center! Standby for host...";
           });
 
           dataConn.on('data', (data) => {
@@ -270,92 +359,12 @@
             }
           });
         });
-
       } catch (err) {
         alert("Camera & microphone permissions required: " + err.message);
       }
     }
 
-    // Touch-Drag Screen to Look Around
-    const touchSurface = document.getElementById('touch-look-surface');
-    let isTouching = false;
-    let lastTouchX = 0;
-    let lastTouchY = 0;
-
-    touchSurface.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      isTouching = true;
-      lastTouchX = e.touches[0].clientX;
-      lastTouchY = e.touches[0].clientY;
-    });
-
-    touchSurface.addEventListener('touchmove', (e) => {
-      e.preventDefault();
-      if (!isTouching) return;
-      const deltaX = e.touches[0].clientX - lastTouchX;
-      const deltaY = e.touches[0].clientY - lastTouchY;
-      lastTouchX = e.touches[0].clientX;
-      lastTouchY = e.touches[0].clientY;
-
-      if (dataConn && dataConn.open) {
-        dataConn.send({
-          type: "CONTESTANT_LOOK",
-          contestant: contestantId,
-          deltaX: deltaX * 0.005,
-          deltaY: deltaY * 0.005
-        });
-      }
-    });
-
-    touchSurface.addEventListener('touchend', () => { isTouching = false; });
-    touchSurface.addEventListener('touchcancel', () => { isTouching = false; });
-
-    // Desktop Mouse Drag Look Alternative
-    touchSurface.addEventListener('mousedown', (e) => {
-      isTouching = true;
-      lastTouchX = e.clientX;
-      lastTouchY = e.clientY;
-    });
-    window.addEventListener('mousemove', (e) => {
-      if (!isTouching) return;
-      const deltaX = e.clientX - lastTouchX;
-      const deltaY = e.clientY - lastTouchY;
-      lastTouchX = e.clientX;
-      lastTouchY = e.clientY;
-
-      if (dataConn && dataConn.open) {
-        dataConn.send({
-          type: "CONTESTANT_LOOK",
-          contestant: contestantId,
-          deltaX: deltaX * 0.005,
-          deltaY: deltaY * 0.005
-        });
-      }
-    });
-    window.addEventListener('mouseup', () => { isTouching = false; });
-
-    // D-Pad Walking Movement Handlers
-    function sendPlayerMove(dir) {
-      if (dataConn && dataConn.open) {
-        dataConn.send({
-          type: "CONTESTANT_MOVE_STAGE",
-          contestant: contestantId,
-          direction: dir
-        });
-      }
-    }
-
-    const bindMove = (btnId, dir) => {
-      const el = document.getElementById(btnId);
-      el.addEventListener('touchstart', (e) => { e.preventDefault(); sendPlayerMove(dir); });
-      el.addEventListener('mousedown', () => sendPlayerMove(dir));
-    };
-    bindMove('dpad-fwd', 'FORWARD');
-    bindMove('dpad-back', 'BACK');
-    bindMove('dpad-left', 'LEFT');
-    bindMove('dpad-right', 'RIGHT');
-
-    // Dice & Question Loops
+    // Dice & Trivia Handlers
     function startTenSecondRoll() {
       hasRolled = false;
       btnRollDice.disabled = false;
@@ -411,8 +420,7 @@
       selectedOptionIndex = null;
       triviaCard.style.display = 'flex';
       qCountryTag.textContent = `🌍 ${qData.country} (${isMyTurn ? "YOUR QUESTION" : "OPPONENT'S QUESTION"})`;
-      const textToDisplay = qData.text || qData.q || "Listen carefully to the question from Goody:";
-      qText.textContent = textToDisplay;
+      qText.textContent = qData.text || qData.q || "Listen carefully to the question from Goody:";
       qTimer.textContent = "🔒 LISTENING TO HOST...";
 
       qData.options.forEach((opt, idx) => {
@@ -488,6 +496,12 @@
         optButtons.forEach(b => b.className = "btn-opt");
       }, 7000);
     }
+
+    function renderLoop() {
+      requestAnimationFrame(renderLoop);
+      renderer.render(scene, camera);
+    }
+    renderLoop();
   </script>
 </body>
 </html>
