@@ -104,13 +104,11 @@
     const countdownPill = document.getElementById('countdown-pill');
     const timerValEl = document.getElementById('timer-val');
 
-    // Contestant camera rotations (controlled via mobile swipe)
     const contestantRotations = {
       "goody-contestant-1": { yaw: 0, pitch: -0.15 },
       "goody-contestant-2": { yaw: 0, pitch: -0.15 }
     };
 
-    // AUTO-START COUNTDOWN TIMER
     let autoStartSeconds = 10;
     let autoStartInterval = setInterval(() => {
       autoStartSeconds--;
@@ -212,7 +210,6 @@
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
 
-    // INDIVIDUAL OFFSCREEN CAMERAS & RENDERERS FOR JAKE AND JUNE
     const canvasJake = document.createElement('canvas');
     canvasJake.width = 640; canvasJake.height = 360;
     const rendererJake = new THREE.WebGLRenderer({ canvas: canvasJake, antialias: true });
@@ -927,7 +924,7 @@
     qBoardMesh.rotation.y = 0.8;
     miniDiorama.add(qBoardMesh);
 
-    // CUTE PLUSHIE AUDIENCE & PLAYER CONTROL
+    // CUTE PLUSHIE AUDIENCE
     function createCutePlushie3D(color) {
       const pGroup = new THREE.Group();
       const pMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.95 });
@@ -982,7 +979,6 @@
     });
     miniDiorama.add(miniAudience);
 
-    // UNCONSTRAINED CONTESTANT MOVEMENT & ROAMING
     function handlePlushieMovement(contestant, direction) {
       const targetPlushie = contestant === "goody-contestant-2" ? playerPlushie2 : playerPlushie1;
       if (!targetPlushie) return;
@@ -1127,7 +1123,6 @@
       faceTex.needsUpdate = true;
     }
 
-    // STUDIO CAMERAS
     function createStudioRoboticCamera(x, z) {
       const camRig = new THREE.Group(); camRig.position.set(x, 0.44, z);
       const darkMat = new THREE.MeshStandardMaterial({ color: 0x1f1f26 });
@@ -1176,10 +1171,9 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // THIRD PERSON CHASE CAMERAS (Clear View Over Avatar)
     function syncContestantCameras() {
-      const dist = 1.8; // Distance behind plushie
-      const height = 1.2; // Elevation above plushie
+      const dist = 1.8;
+      const height = 1.2;
 
       if (playerPlushie1) {
         const rot = contestantRotations["goody-contestant-1"];
@@ -1256,11 +1250,27 @@
 
       prevTime = time;
 
+      syncContestantCameras();
+
+      // 1. Render Host / Audience / Stream View
+      // Make both contestant plushies invisible so they cannot be seen roaming
+      if (playerPlushie1) playerPlushie1.visible = false;
+      if (playerPlushie2) playerPlushie2.visible = false;
       renderer.render(scene, camera);
 
-      syncContestantCameras();
-      if (showJake) rendererJake.render(scene, camJake);
-      if (showJune) rendererJune.render(scene, camJune);
+      // 2. Render Jake's private mobile viewport (Jake can see his plushie)
+      if (showJake) {
+        if (playerPlushie1) playerPlushie1.visible = true;
+        rendererJake.render(scene, camJake);
+        if (playerPlushie1) playerPlushie1.visible = false;
+      }
+
+      // 3. Render June's private mobile viewport (June can see her plushie)
+      if (showJune) {
+        if (playerPlushie2) playerPlushie2.visible = true;
+        rendererJune.render(scene, camJune);
+        if (playerPlushie2) playerPlushie2.visible = false;
+      }
     }
     animate();
   </script>
