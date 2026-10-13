@@ -28,7 +28,6 @@
       width: 100%; max-width: 440px; display: none; flex-direction: column; gap: 8px;
     }
 
-    /* Video split monitors */
     .screens-container {
       position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000;
       border: 2px solid #ffda66; border-radius: 12px; overflow: hidden;
@@ -48,24 +47,33 @@
       background: #18092d; padding: 6px 12px; border-radius: 8px; font-family: monospace; font-size: 0.8rem;
     }
 
-    /* Game controls */
     .action-panel {
       display: flex; flex-direction: column; gap: 8px; width: 100%;
     }
 
     #btn-roll-dice {
-      width: 100%; padding: 16px; background: linear-gradient(180deg, #fdcb6e, #e17055);
-      border: 3px solid #ffeaa7; border-radius: 14px; font-size: 1.2rem; font-weight: 900;
-      color: #2d3436; text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
-      box-shadow: 0 4px 0 #b3392b;
+      width: 100%; padding: 16px; background: #444;
+      border: 3px solid #777; border-radius: 14px; font-size: 1.2rem; font-weight: 900;
+      color: #888; text-transform: uppercase; letter-spacing: 1px; cursor: not-allowed;
+      transition: all 0.2s ease;
     }
-    #btn-roll-dice:active { transform: translateY(3px); box-shadow: 0 1px 0 #b3392b; }
+    #btn-roll-dice.active-roll {
+      background: linear-gradient(180deg, #fdcb6e, #e17055);
+      border-color: #ffeaa7; color: #2d3436; cursor: pointer;
+      box-shadow: 0 4px 0 #b3392b, 0 0 15px #fdcb6e;
+    }
+    #btn-roll-dice.active-roll:active {
+      transform: translateY(3px); box-shadow: 0 1px 0 #b3392b;
+    }
 
+    #timer-display {
+      text-align: center; font-family: monospace; font-size: 1.15rem; font-weight: bold;
+      color: #ff7675; min-height: 24px;
+    }
     #dice-result-pill {
       text-align: center; font-family: monospace; font-size: 0.95rem; color: #39ff14; min-height: 22px;
     }
 
-    /* Plushie Spectator D-PAD */
     .dpad-section {
       background: #140728; border: 2px solid #a29bfe; border-radius: 14px; padding: 10px;
       display: flex; flex-direction: column; align-items: center; gap: 6px;
@@ -87,30 +95,30 @@
 
   <div id="setup-card">
     <h2 style="color: #ffda66; margin-bottom: 8px;">The Goody Tonight Show</h2>
-    <p style="color: #ebdcf9; font-size: 0.88rem; margin-bottom: 14px;">Select your contestant profile to activate your camera, mic, dice roller, and audience plushie:</p>
+    <p style="color: #ebdcf9; font-size: 0.88rem; margin-bottom: 14px;">Select your contestant profile to activate camera, audio, and companion game pad:</p>
     <button class="btn-select btn-jake" id="btn-jake">I am Contestant 1 (Jake)</button>
     <button class="btn-select btn-june" id="btn-june">I am Contestant 2 (June)</button>
   </div>
 
   <main id="live-stage-portal">
     <div class="badge-bar">
-      <span id="role-tag" style="color: #00f0ff;">CONNECTED</span>
-      <span style="color: #39ff14;">🔴 LIVE WEBRTC</span>
+      <span id="role-tag" style="color: #00f0ff;">CONNECTING...</span>
+      <span style="color: #39ff14;">🔴 LIVE BROADCAST</span>
     </div>
 
-    <!-- Live Stage Broadcast View + Picture-in-Picture Selfie -->
     <div class="screens-container">
-      <video id="studio-stream-video" autoplay playsinline></video>
+      <video id="studio-stream-video" autoplay playsinline muted></video>
       <video id="local-selfie-pip" autoplay playsinline muted></video>
     </div>
 
-    <div class="action-panel">
-      <button id="btn-roll-dice">🎲 Roll Dice</button>
-      <div id="dice-result-pill">Wait for host to signal rolls...</div>
+    <div id="timer-display"></div>
 
-      <!-- Plushie Audience Movement Controls -->
+    <div class="action-panel">
+      <button id="btn-roll-dice" disabled>🎲 ROLL DICE (LOCKED)</button>
+      <div id="dice-result-pill">Waiting for host instructions...</div>
+
       <div class="dpad-section">
-        <div class="dpad-label">🧸 Move Your Plushie Along Audience Rim</div>
+        <div class="dpad-label">🧸 Audience Plushie D-PAD</div>
         <div class="dpad-grid">
           <div></div>
           <button class="dpad-btn" id="dpad-fwd">▲</button>
@@ -128,9 +136,10 @@
     let localStream = null;
     let peer = null;
     let dataConn = null;
-    let activeCall = null;
     let contestantId = "";
     let contestantName = "";
+    let hasRolled = false;
+    let countdownInterval = null;
 
     const setupCard = document.getElementById('setup-card');
     const liveStagePortal = document.getElementById('live-stage-portal');
@@ -138,6 +147,8 @@
     const studioStreamVideo = document.getElementById('studio-stream-video');
     const roleTag = document.getElementById('role-tag');
     const dicePill = document.getElementById('dice-result-pill');
+    const timerDisplay = document.getElementById('timer-display');
+    const btnRollDice = document.getElementById('btn-roll-dice');
 
     document.getElementById('btn-jake').addEventListener('click', () => joinGame("goody-contestant-1", "Jake"));
     document.getElementById('btn-june').addEventListener('click', () => joinGame("goody-contestant-2", "June"));
@@ -159,56 +170,84 @@
         peer = new Peer(contestantId);
 
         peer.on('open', () => {
-          // 1. Send our selfie stream to the studio
-          activeCall = peer.call("goody-main-studio", localStream, {
+          const call = peer.call("goody-main-studio", localStream, {
             metadata: { contestant: contestantId, name: contestantName }
           });
 
-          // 2. Receive the return broadcast stream from the 3D studio
-          activeCall.on('stream', (returnStudioStream) => {
+          call.on('stream', (returnStudioStream) => {
             studioStreamVideo.srcObject = returnStudioStream;
             studioStreamVideo.play().catch(e => console.log(e));
           });
 
-          // 3. Connect real-time game data channel
           dataConn = peer.connect("goody-main-studio", {
             metadata: { contestant: contestantId, name: contestantName }
           });
 
           dataConn.on('open', () => {
-            dicePill.textContent = "Connected! Waiting for host...";
+            dicePill.textContent = "Connected! Standby for show start...";
           });
 
           dataConn.on('data', (data) => {
-            if (data.type === "DICE_PROMPT") {
-              dicePill.textContent = "ROLL TIME! Tap the Roll button!";
-            } else if (data.type === "RESULT_CONFIRMED") {
-              dicePill.textContent = `You rolled a ${data.roll}! Token advanced.`;
+            if (data.type === "START_DICE_COUNTDOWN") {
+              startTenSecondRoll();
+            } else if (data.type === "ROUND_WINNER") {
+              timerDisplay.textContent = "";
+              dicePill.textContent = `${data.winnerName.toUpperCase()} GOES FIRST! (${data.p1Roll} vs ${data.p2Roll})`;
             }
           });
         });
 
       } catch (err) {
-        alert("Camera and Microphone access are needed: " + err.message);
+        alert("Camera & microphone permissions required: " + err.message);
       }
     }
 
-    // Roll Dice Handler
-    document.getElementById('btn-roll-dice').addEventListener('click', () => {
-      const rolledNumber = Math.floor(Math.random() * 6) + 1;
-      dicePill.textContent = `🎲 You rolled: ${rolledNumber}! Moving...`;
+    function startTenSecondRoll() {
+      hasRolled = false;
+      btnRollDice.disabled = false;
+      btnRollDice.classList.add('active-roll');
+      btnRollDice.textContent = "🎲 ROLL DICE NOW!";
+
+      let timeLeft = 10;
+      timerDisplay.textContent = `⏱️ TIME TO ROLL: ${timeLeft}s`;
+
+      if (countdownInterval) clearInterval(countdownInterval);
+      countdownInterval = setInterval(() => {
+        timeLeft--;
+        if (timeLeft > 0) {
+          timerDisplay.textContent = `⏱️ TIME TO ROLL: ${timeLeft}s`;
+        } else {
+          clearInterval(countdownInterval);
+          timerDisplay.textContent = "TIME EXPIRED!";
+          if (!hasRolled) {
+            executeRoll(true);
+          }
+        }
+      }, 1000);
+    }
+
+    function executeRoll(isAuto = false) {
+      if (hasRolled) return;
+      hasRolled = true;
+      btnRollDice.disabled = true;
+      btnRollDice.classList.remove('active-roll');
+      btnRollDice.textContent = "DICE ROLLED!";
+
+      const rollValue = Math.floor(Math.random() * 6) + 1;
+      dicePill.textContent = isAuto ? `⏱️ Time's up! Auto-rolled: ${rollValue}` : `🎲 You rolled: ${rollValue}!`;
 
       if (dataConn && dataConn.open) {
         dataConn.send({
           type: "PLAYER_ROLLED_DICE",
           contestant: contestantId,
           name: contestantName,
-          roll: rolledNumber
+          roll: rollValue
         });
       }
-    });
+    }
 
-    // D-Pad Movement Beams
+    btnRollDice.addEventListener('click', () => executeRoll(false));
+
     function sendPlushieMove(direction) {
       if (dataConn && dataConn.open) {
         dataConn.send({
