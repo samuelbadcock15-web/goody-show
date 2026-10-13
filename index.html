@@ -972,25 +972,29 @@
     });
     miniDiorama.add(miniAudience);
 
+    // UNCONSTRAINED CONTESTANT MOVEMENT & ROAMING
     function handlePlushieMovement(contestant, direction) {
       const targetPlushie = contestant === "goody-contestant-2" ? playerPlushie2 : playerPlushie1;
       if (!targetPlushie) return;
 
-      const uData = targetPlushie.userData;
-      let angle = uData.theta;
-      let rad = uData.radius;
+      const step = 0.25;
 
-      if (direction === 'LEFT') angle = Math.max(-Math.PI * 0.62, angle - 0.08);
-      if (direction === 'RIGHT') angle = Math.min(Math.PI * 0.62, angle + 0.08);
-      if (direction === 'FORWARD') rad = Math.max(5.5, rad - 0.12);
-      if (direction === 'BACK') rad = Math.min(6.6, rad + 0.12);
+      if (direction === 'FORWARD') {
+        targetPlushie.position.z -= step;
+      }
+      if (direction === 'BACK') {
+        targetPlushie.position.z += step;
+      }
+      if (direction === 'LEFT') {
+        targetPlushie.position.x -= step;
+      }
+      if (direction === 'RIGHT') {
+        targetPlushie.position.x += step;
+      }
 
-      uData.theta = angle;
-      uData.radius = rad;
-
-      targetPlushie.position.x = Math.sin(angle) * rad;
-      targetPlushie.position.z = Math.cos(angle) * (rad * 0.95) + 0.8;
-      targetPlushie.lookAt(0, 1.8, -2.6);
+      targetPlushie.position.x = Math.max(-6.8, Math.min(6.8, targetPlushie.position.x));
+      targetPlushie.position.z = Math.max(-6.5, Math.min(6.8, targetPlushie.position.z));
+      targetPlushie.position.y = 0.46;
     }
 
     // BACKSTAGE CONTESTANT SCREENS
@@ -1157,19 +1161,19 @@
       if (playerPlushie1) {
         camJake.position.set(
           playerPlushie1.position.x,
-          playerPlushie1.position.y + 4.4,
+          playerPlushie1.position.y + 4.5,
           playerPlushie1.position.z - 8.8
         );
-        camJake.lookAt(0, 5.8, -11.6);
+        camJake.lookAt(playerPlushie1.position.x * 0.4, 5.0, -11.6);
       }
 
       if (playerPlushie2) {
         camJune.position.set(
           playerPlushie2.position.x,
-          playerPlushie2.position.y + 4.4,
+          playerPlushie2.position.y + 4.5,
           playerPlushie2.position.z - 8.8
         );
-        camJune.lookAt(0, 5.8, -11.6);
+        camJune.lookAt(playerPlushie2.position.x * 0.4, 5.0, -11.6);
       }
     }
 
@@ -1203,10 +1207,8 @@
 
       prevTime = time;
 
-      // 1. Audience / Host Primary View
       renderer.render(scene, camera);
 
-      // 2. Individual Contestant Offscreen Feeds
       syncContestantCameras();
       if (showJake) rendererJake.render(scene, camJake);
       if (showJune) rendererJune.render(scene, camJune);
