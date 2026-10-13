@@ -3,29 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>The Goody Tonight Show - Contestant Studio</title>
+  <title>Goody Tonight Show - Contestant Companion</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; touch-action: none; }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
     body {
-      background: #05020a; color: #fff;
+      background: #090314; color: #fff;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      width: 100vw; height: 100vh; overflow: hidden;
-    }
-    #canvas3d { width: 100%; height: 100%; display: block; }
-    #drag-hint {
-      position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
-      background: rgba(18, 6, 36, 0.9); border: 2px solid #ff69b4; color: #ffda66;
-      padding: 6px 18px; border-radius: 20px; font-family: monospace; font-size: 0.85rem;
-      pointer-events: none; z-index: 25; box-shadow: 0 0 15px rgba(255,105,180,0.3);
-    }
-    #setup-overlay {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(8, 4, 16, 0.95); display: flex; flex-direction: column;
-      justify-content: center; align-items: center; z-index: 100; text-align: center; padding: 20px;
+      min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 10px;
+      overflow-x: hidden;
     }
     #setup-card {
-      background: #1c0a32; border: 3px solid #ff79b0; border-radius: 18px;
-      padding: 28px 40px; box-shadow: 0 0 35px rgba(255, 121, 176, 0.35); max-width: 440px; width: 100%;
+      width: 100%; max-width: 440px; background: #1b0933; border: 2px solid #ff79b0;
+      border-radius: 16px; padding: 20px; text-align: center; margin-top: 15px;
     }
     .btn-select {
       width: 100%; padding: 16px; margin: 10px 0; border-radius: 12px; border: none;
@@ -34,434 +23,378 @@
     .btn-jake { background: #0984e3; }
     .btn-june { background: #d63031; }
 
-    #hud {
-      position: absolute; top: 18px; left: 20px; background: rgba(22, 9, 44, 0.88);
-      border: 2px solid #ff79b0; border-radius: 12px; padding: 12px 18px; color: #fff;
-      font-family: monospace; font-size: 0.85rem; pointer-events: none; z-index: 20;
+    #live-stage-portal {
+      width: 100%; max-width: 440px; display: none; flex-direction: column; gap: 8px;
+    }
+    .screens-container {
+      position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000;
+      border: 2px solid #ffda66; border-radius: 12px; overflow: hidden;
+      box-shadow: 0 4px 20px rgba(255, 218, 102, 0.25);
+    }
+    #studio-stream-video { width: 100%; height: 100%; object-fit: cover; }
+    #local-selfie-pip {
+      position: absolute; bottom: 8px; right: 8px; width: 28%; aspect-ratio: 4 / 3;
+      border: 2px solid #39ff14; border-radius: 8px; object-fit: cover;
+      transform: scaleX(-1); background: #111; z-index: 5;
+    }
+    .badge-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #18092d; padding: 6px 12px; border-radius: 8px; font-family: monospace; font-size: 0.8rem;
     }
 
-    /* Floating Game Controls / D-Pad */
-    #controls-hud {
-      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-      display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 30; pointer-events: auto;
-    }
+    /* Dice Button */
     #btn-roll-dice {
-      padding: 12px 24px; background: #444; border: 2px solid #777;
-      border-radius: 10px; font-size: 0.95rem; font-weight: 900; color: #888;
-      text-transform: uppercase; letter-spacing: 1px; cursor: not-allowed;
+      width: 100%; padding: 14px; background: #444; border: 3px solid #777;
+      border-radius: 12px; font-size: 1.1rem; font-weight: 900; color: #888;
+      text-transform: uppercase; letter-spacing: 1px; cursor: not-allowed; transition: all 0.2s;
     }
     #btn-roll-dice.active-roll {
       background: linear-gradient(180deg, #fdcb6e, #e17055);
       border-color: #ffeaa7; color: #2d3436; cursor: pointer;
-      box-shadow: 0 0 15px #fdcb6e;
+      box-shadow: 0 4px 0 #b3392b, 0 0 15px #fdcb6e;
     }
-    .dpad-grid { display: grid; grid-template-columns: 44px 44px 44px; grid-template-rows: 36px 36px; gap: 4px; }
+
+    #status-pill {
+      text-align: center; font-family: monospace; font-size: 0.92rem; color: #39ff14; min-height: 22px;
+    }
+
+    /* Trivia Card */
+    #trivia-card {
+      background: #190930; border: 2px solid #00f0ff; border-radius: 14px; padding: 14px;
+      display: none; flex-direction: column; gap: 10px;
+    }
+    #q-country-tag {
+      font-size: 0.85rem; font-weight: bold; color: #ffda66; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    #q-timer { font-family: monospace; font-weight: bold; color: #ff7675; text-align: right; }
+    
+    #q-text { 
+      font-size: 1.05rem; font-weight: 700; line-height: 1.4; color: #ffffff;
+      background: rgba(0,0,0,0.35); padding: 10px; border-radius: 8px; border-left: 4px solid #00f0ff;
+    }
+
+    .options-grid {
+      display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 4px;
+    }
+    .btn-opt {
+      padding: 12px 14px; background: #2f1454; border: 2px solid #9c4dd6; border-radius: 10px;
+      color: #fff; font-size: 0.92rem; font-weight: bold; text-align: left; cursor: not-allowed; opacity: 0.6;
+    }
+    .btn-opt.unlocked { cursor: pointer; opacity: 1; border-color: #00f0ff; }
+    .btn-opt.selected { background: #6c5ce7; border-color: #a29bfe; }
+    .btn-opt.flash-green { background: #00b894 !important; border-color: #55efc4 !important; }
+    .btn-opt.flash-red { background: #d63031 !important; border-color: #ff7675 !important; }
+
+    /* D-Pad */
+    .dpad-section {
+      background: #140728; border: 2px solid #a29bfe; border-radius: 12px; padding: 8px;
+      display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 4px;
+    }
+    .dpad-grid { display: grid; grid-template-columns: 46px 46px 46px; grid-template-rows: 38px 38px; gap: 4px; }
     .dpad-btn {
       background: #2b1154; border: 2px solid #ff79b0; border-radius: 6px; color: #fff;
       font-size: 1.1rem; font-weight: bold; display: flex; justify-content: center; align-items: center;
     }
-    .dpad-btn:active { background: #ff79b0; color: #000; }
-
-    /* Trivia Card */
-    #trivia-card {
-      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      background: #190930; border: 2px solid #00f0ff; border-radius: 14px; padding: 16px;
-      display: none; flex-direction: column; gap: 10px; z-index: 50; max-width: 400px; width: 90%;
-      box-shadow: 0 0 30px rgba(0,240,255,0.3);
-    }
-    #q-country-tag { font-size: 0.85rem; font-weight: bold; color: #ffda66; text-transform: uppercase; }
-    #q-timer { font-family: monospace; font-weight: bold; color: #ff7675; text-align: right; }
-    #q-text {
-      font-size: 1rem; font-weight: 700; line-height: 1.4; color: #fff;
-      background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; border-left: 4px solid #00f0ff;
-    }
-    .options-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
-    .btn-opt {
-      padding: 10px 12px; background: #2f1454; border: 2px solid #9c4dd6; border-radius: 8px;
-      color: #fff; font-size: 0.9rem; font-weight: bold; text-align: left; opacity: 0.6; cursor: not-allowed;
-    }
-    .btn-opt.unlocked { cursor: pointer; opacity: 1; border-color: #00f0ff; }
-    .btn-opt.selected { background: #6c5ce7; border-color: #a29bfe; }
-    .btn-opt.flash-green { background: #00b894 !important; }
-    .btn-opt.flash-red { background: #d63031 !important; }
   </style>
 </head>
 <body>
 
-  <div id="setup-overlay">
-    <div id="setup-card">
-      <h1 style="color: #ffda66; margin-bottom: 8px; font-size: 1.4rem;">The Goody Tonight Show</h1>
-      <p style="color: #ebdcf9; font-size: 0.88rem; margin-bottom: 14px;">Select your contestant profile to enter the live studio:</p>
-      <button class="btn-select btn-jake" id="btn-jake">I am Contestant 1 (Jake)</button>
-      <button class="btn-select btn-june" id="btn-june">I am Contestant 2 (June)</button>
+  <div id="setup-card">
+    <h2 style="color: #ffda66; margin-bottom: 8px;">The Goody Tonight Show</h2>
+    <p style="color: #ebdcf9; font-size: 0.88rem; margin-bottom: 14px;">Select your contestant profile to activate camera, audio, and companion game pad:</p>
+    <button class="btn-select btn-jake" id="btn-jake">I am Contestant 1 (Jake)</button>
+    <button class="btn-select btn-june" id="btn-june">I am Contestant 2 (June)</button>
+  </div>
+
+  <main id="live-stage-portal">
+    <div class="badge-bar">
+      <span id="role-tag" style="color: #00f0ff;">CONNECTING...</span>
+      <span style="color: #39ff14;">🔴 LIVE BROADCAST</span>
     </div>
-  </div>
 
-  <div id="drag-hint">👆 Drag screen to look around freely</div>
+    <div class="screens-container">
+      <video id="studio-stream-video" autoplay playsinline muted></video>
+      <video id="local-selfie-pip" autoplay playsinline muted></video>
+    </div>
 
-  <div id="hud">
-    <div class="hud-title" id="mode-title" style="color: #ffda66;">🔴 LIVE CONTESTANT STUDIO</div>
-    <div class="hud-sub" id="mode-sub">Ghost Mode: Free Roam Active</div>
-  </div>
+    <div id="status-pill">Waiting for host...</div>
 
-  <div id="controls-hud">
     <button id="btn-roll-dice" disabled>🎲 ROLL DICE (LOCKED)</button>
-    <div class="dpad-grid">
-      <div></div><button class="dpad-btn" id="dpad-fwd">▲</button><div></div>
-      <button class="dpad-btn" id="dpad-left">◀</button>
-      <button class="dpad-btn" id="dpad-back">▼</button>
-      <button class="dpad-btn" id="dpad-right">▶</button>
-    </div>
-  </div>
 
-  <!-- Trivia Screen -->
-  <div id="trivia-card">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-      <span id="q-country-tag">COUNTRY</span>
-      <span id="q-timer">⏱️ 30s</span>
+    <!-- Interactive Country Trivia Screen -->
+    <div id="trivia-card">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span id="q-country-tag">COUNTRY</span>
+        <span id="q-timer">⏱️ 30s</span>
+      </div>
+      <div id="q-text">Loading question...</div>
+      <div class="options-grid">
+        <button class="btn-opt" id="opt-0" disabled>A) ...</button>
+        <button class="btn-opt" id="opt-1" disabled>B) ...</button>
+        <button class="btn-opt" id="opt-2" disabled>C) ...</button>
+        <button class="btn-opt" id="opt-3" disabled>D) ...</button>
+      </div>
     </div>
-    <div id="q-text">Loading question...</div>
-    <div class="options-grid">
-      <button class="btn-opt" id="opt-0" disabled>A) ...</button>
-      <button class="btn-opt" id="opt-1" disabled>B) ...</button>
-      <button class="btn-opt" id="opt-2" disabled>C) ...</button>
-      <button class="btn-opt" id="opt-3" disabled>D) ...</button>
+
+    <div class="dpad-section">
+      <div style="font-size: 0.72rem; color: #ff9ff3; font-family: monospace;">🧸 AUDIENCE PLUSHIE D-PAD</div>
+      <div class="dpad-grid">
+        <div></div>
+        <button class="dpad-btn" id="dpad-fwd">▲</button>
+        <div></div>
+        <button class="dpad-btn" id="dpad-left">◀</button>
+        <button class="dpad-btn" id="dpad-back">▼</button>
+        <button class="dpad-btn" id="dpad-right">▶</button>
+      </div>
     </div>
-  </div>
+  </main>
 
-  <canvas id="canvas3d"></canvas>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-
   <script>
-    let contestantId = "";
-    let contestantName = "";
     let localStream = null;
     let peer = null;
     let dataConn = null;
-    let studioPower = false;
-
+    let contestantId = "";
+    let contestantName = "";
     let hasRolled = false;
     let rollTimer = null;
     let questionTimer = null;
     let currentQuestionData = null;
     let selectedOptionIndex = null;
 
-    const videoJake = document.createElement('video');
-    videoJake.autoplay = true; videoJake.playsInline = true; videoJake.muted = true;
-    const videoJune = document.createElement('video');
-    videoJune.autoplay = true; videoJune.playsInline = true; videoJune.muted = true;
+    const setupCard = document.getElementById('setup-card');
+    const liveStagePortal = document.getElementById('live-stage-portal');
+    const localSelfiePip = document.getElementById('local-selfie-pip');
+    const studioStreamVideo = document.getElementById('studio-stream-video');
+    const roleTag = document.getElementById('role-tag');
+    const statusPill = document.getElementById('status-pill');
+    const btnRollDice = document.getElementById('btn-roll-dice');
 
-    // THREE.JS SCENE (Exact same studio environment as audience view)
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x040208);
-    scene.fog = new THREE.FogExp2(0x040208, 0.015);
+    const triviaCard = document.getElementById('trivia-card');
+    const qCountryTag = document.getElementById('q-country-tag');
+    const qText = document.getElementById('q-text');
+    const qTimer = document.getElementById('q-timer');
+    const optButtons = [
+      document.getElementById('opt-0'),
+      document.getElementById('opt-1'),
+      document.getElementById('opt-2'),
+      document.getElementById('opt-3')
+    ];
 
-    const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 150);
-    // Contestants spawn central on the studio floor
-    camera.position.set(0, 4.5, 4.0);
-    camera.lookAt(0, 3.5, -9.0);
+    document.getElementById('btn-jake').addEventListener('click', () => joinGame("goody-contestant-1", "Jake"));
+    document.getElementById('btn-june').addEventListener('click', () => joinGame("goody-contestant-2", "June"));
 
-    const canvas = document.getElementById('canvas3d');
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.shadowMap.enabled = true;
+    async function joinGame(id, name) {
+      contestantId = id;
+      contestantName = name;
+      setupCard.style.display = 'none';
+      liveStagePortal.style.display = 'flex';
+      roleTag.textContent = `${name.toUpperCase()} (CONTESTANT)`;
 
-    // LIGHTS
-    const ambientLight = new THREE.AmbientLight(0x181026, 0.85); scene.add(ambientLight);
-    const ceilingLight = new THREE.PointLight(0xffecd2, 1.0, 50); ceilingLight.position.set(0, 13.5, 0); scene.add(ceilingLight);
-    const deskLampLight = new THREE.PointLight(0xffea9f, 0, 20); deskLampLight.position.set(-6.5, 7.8, -4.5); scene.add(deskLampLight);
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
+          audio: { echoCancellation: true, noiseSuppression: true }
+        });
+        localSelfiePip.srcObject = localStream;
 
-    // SPOTLIGHT RIG
-    const trussGroup = new THREE.Group(); trussGroup.position.set(0, 8.4, -9.8);
-    const trussMat = new THREE.MeshStandardMaterial({ color: 0x3d3d4e, metalness: 0.85, roughness: 0.3 });
-    const trussArch = new THREE.Mesh(new THREE.TorusGeometry(3.6, 0.08, 8, 24, Math.PI), trussMat);
-    trussArch.rotation.x = Math.PI / 2; trussGroup.add(trussArch);
+        peer = new Peer(contestantId);
 
-    function createDownFacingSpotlight(colorHex, x, y, z) {
-      const fixGroup = new THREE.Group(); fixGroup.position.set(x, y, z);
-      const headPivot = new THREE.Group();
-      const can = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.24, 0.55, 16), new THREE.MeshStandardMaterial({ color: 0x15151e }));
-      can.rotation.x = Math.PI / 2; headPivot.add(can);
-      const lens = new THREE.Mesh(new THREE.CircleGeometry(0.19, 16), new THREE.MeshBasicMaterial({ color: 0x050505 }));
-      lens.position.set(0, 0, 0.28); headPivot.add(lens);
-      const spot = new THREE.SpotLight(colorHex, 0, 18, Math.PI / 3.4, 0.35);
-      spot.position.set(0, 0, 0.28); headPivot.add(spot);
-      const targetObj = new THREE.Object3D(); targetObj.position.set(x * 0.4, -4.5, -0.8);
-      scene.add(targetObj); spot.target = targetObj;
-      headPivot.rotation.x = Math.PI * 0.35;
-      fixGroup.add(headPivot); trussGroup.add(fixGroup);
-      return { spot, lens, color: colorHex, target: targetObj };
-    }
-    const fixtureCyan = createDownFacingSpotlight(0x00f0ff, -2.4, 0.0, 0.2);
-    const fixtureGold = createDownFacingSpotlight(0xffea00, 0.0, 0.2, -0.1);
-    const fixtureMagenta = createDownFacingSpotlight(0xff007f, 2.4, 0.0, 0.2);
-    scene.add(trussGroup);
+        peer.on('open', () => {
+          const call = peer.call("goody-main-studio", localStream, {
+            metadata: { contestant: contestantId, name: contestantName }
+          });
 
-    function updateContestantStudioLighting(power) {
-      const val = power ? 5.0 : 0;
-      deskLampLight.intensity = power ? 2.5 : 0;
-      fixtureCyan.spot.intensity = val;
-      fixtureGold.spot.intensity = val;
-      fixtureMagenta.spot.intensity = val;
-      fixtureCyan.lens.material.color.setHex(power ? fixtureCyan.color : 0x050505);
-      fixtureGold.lens.material.color.setHex(power ? fixtureGold.color : 0x050505);
-      fixtureMagenta.lens.material.color.setHex(power ? fixtureMagenta.color : 0x050505);
-    }
+          call.on('stream', (returnStudioStream) => {
+            studioStreamVideo.srcObject = returnStudioStream;
+            studioStreamVideo.play().catch(e => console.log(e));
+          });
 
-    // BEDROOM & WORKSHOP
-    const bedroomGroup = new THREE.Group();
-    const bedroomFloor = new THREE.Mesh(new THREE.PlaneGeometry(36, 36), new THREE.MeshStandardMaterial({ color: 0x1f140e }));
-    bedroomFloor.rotation.x = -Math.PI / 2; bedroomGroup.add(bedroomFloor);
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0x180f26 });
-    const backWall = new THREE.Mesh(new THREE.PlaneGeometry(36, 16), wallMat); backWall.position.set(0, 8, -18); bedroomGroup.add(backWall);
-    const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(36, 16), wallMat); leftWall.position.set(-18, 8, 0); leftWall.rotation.y = Math.PI / 2; bedroomGroup.add(leftWall);
-    const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(36, 16), wallMat); rightWall.position.set(18, 8, 0); rightWall.rotation.y = -Math.PI / 2; bedroomGroup.add(rightWall);
+          dataConn = peer.connect("goody-main-studio", {
+            metadata: { contestant: contestantId, name: contestantName }
+          });
 
-    const deskTop = new THREE.Mesh(new THREE.BoxGeometry(22, 1.0, 16), new THREE.MeshStandardMaterial({ color: 0x331c0e }));
-    deskTop.position.set(0, 3.4, -9); bedroomGroup.add(deskTop);
-    scene.add(bedroomGroup);
+          dataConn.on('open', () => {
+            statusPill.textContent = "Connected! Standby for host...";
+          });
 
-    // MINIATURE STUDIO DIORAMA
-    const miniDiorama = new THREE.Group(); miniDiorama.position.set(0, 3.95, -9);
-    const feltCarpet = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 0.08, 48), new THREE.MeshStandardMaterial({ color: 0x271147 }));
-    feltCarpet.position.y = 0.44; miniDiorama.add(feltCarpet);
+          dataConn.on('data', (data) => {
+            if (data.type === "START_DICE_COUNTDOWN") {
+              startTenSecondRoll();
+            } else if (data.type === "ENABLE_TURN_ROLL") {
+              if (data.activeContestant === contestantId) {
+                startTurnRoll();
+              } else {
+                statusPill.textContent = "Waiting for other contestant to roll...";
+              }
+            } else if (data.type === "SHOW_QUESTION_LOCKED") {
+              showQuestionLocked(data.question, data.forContestant === contestantId);
+            } else if (data.type === "UNLOCK_QUESTION_INPUT") {
+              if (data.forContestant === contestantId) {
+                unlockQuestionInput();
+              }
+            } else if (data.type === "EVALUATION_RESULT") {
+              handleEvaluationResult(data);
+            }
+          });
+        });
 
-    const miniWall = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 4.5, 32, 1, true, -Math.PI / 2, Math.PI), new THREE.MeshStandardMaterial({ color: 0x15092a, side: THREE.BackSide }));
-    miniWall.position.y = 2.65; miniDiorama.add(miniWall);
-
-    const COUNTRIES = ["France", "Netherlands", "Canada", "Sweden", "Italy", "Denmark", "Brazil", "Australia", "Spain", "Germany", "UK", "Nigeria", "United States", "Belgium"];
-    function createCountryFlagTexture(countryName) {
-      const c = document.createElement('canvas'); c.width = 256; c.height = 256;
-      const ctx = c.getContext('2d'); const w = 256; const h = 256;
-      ctx.save(); ctx.beginPath(); ctx.arc(128, 128, 126, 0, Math.PI * 2); ctx.clip();
-      ctx.fillStyle = '#111'; ctx.fillRect(0,0,w,h);
-      ctx.restore();
-      ctx.strokeStyle = '#e6c875'; ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(128, 128, 123, 0, Math.PI * 2); ctx.stroke();
-      const tex = new THREE.CanvasTexture(c); tex.needsUpdate = true; return tex;
-    }
-    const flagTextures = COUNTRIES.map(cName => createCountryFlagTexture(cName));
-
-    for (let i = 0; i < 32; i++) {
-      const angle = i * 0.48; const radius = 0.7 + (i * 0.135);
-      const x = Math.cos(angle) * radius; const z = 1.8 + (Math.sin(angle) * (radius * 0.88));
-      const tile = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.30, 0.08, 24), [
-        new THREE.MeshStandardMaterial({ color: 0x241e33 }),
-        new THREE.MeshBasicMaterial({ map: flagTextures[i % flagTextures.length] }),
-        new THREE.MeshBasicMaterial({ color: 0x110d1c })
-      ]);
-      tile.position.set(x, 0.48, z); miniDiorama.add(tile);
-    }
-
-    // CUTE PLUSHIES
-    function createCutePlushie3D(color) {
-      const pGroup = new THREE.Group();
-      const pMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.95 });
-      const pBody = new THREE.Mesh(new THREE.SphereGeometry(0.28, 14, 14), pMat); pBody.position.y = 0.28; pGroup.add(pBody);
-      const pHead = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 14), pMat); pHead.position.y = 0.58; pGroup.add(pHead);
-      const ear1 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), pMat); ear1.position.set(-0.14, 0.74, 0);
-      const ear2 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), pMat); ear2.position.set(0.14, 0.74, 0); pGroup.add(ear1, ear2);
-      const blushMat = new THREE.MeshBasicMaterial({ color: 0xff69b4 });
-      const blush1 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat); blush1.position.set(-0.11, 0.54, 0.17);
-      const blush2 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat); blush2.position.set(0.11, 0.54, 0.17); pGroup.add(blush1, blush2);
-      return pGroup;
-    }
-    const miniAudience = new THREE.Group();
-    const plushColors = [0xff7675, 0x74b9ff, 0xa29bfe, 0xffbe76, 0x55efc4, 0xfd79a8, 0xf6e58d, 0x48dbfb, 0xff9ff3];
-    [5.7, 6.4].forEach((radius, rowIdx) => {
-      const count = rowIdx === 0 ? 14 : 18;
-      for (let i = 0; i < count; i++) {
-        const theta = -Math.PI * 0.65 + (i / (count - 1)) * (Math.PI * 1.30);
-        const pGroup = createCutePlushie3D(plushColors[(i + rowIdx * 3) % plushColors.length]);
-        pGroup.position.set(Math.sin(theta) * radius, 0.46 + rowIdx * 0.25, Math.cos(theta) * (radius * 0.95) + 0.8);
-        pGroup.lookAt(0, 1.8, -2.6);
-        pGroup.userData = { initialY: pGroup.position.y, phase: Math.random() * Math.PI * 2 };
-        miniAudience.add(pGroup);
+      } catch (err) {
+        alert("Camera & microphone permissions required: " + err.message);
       }
-    });
-    miniDiorama.add(miniAudience);
+    }
 
-    // BACKSTAGE SCREENS & HOST ROBOT
-    const studioScreenCanvas = document.createElement('canvas'); studioScreenCanvas.width = 512; studioScreenCanvas.height = 256;
-    const sScreenCtx = studioScreenCanvas.getContext('2d');
-    const studioScreenTex = new THREE.CanvasTexture(studioScreenCanvas);
+    function startTenSecondRoll() {
+      hasRolled = false;
+      btnRollDice.disabled = false;
+      btnRollDice.classList.add('active-roll');
+      btnRollDice.textContent = "🎲 ROLL DICE NOW!";
 
-    function renderBackstageScreens() {
-      sScreenCtx.fillStyle = '#060210'; sScreenCtx.fillRect(0, 0, 512, 256);
-      if (studioPower) {
-        if (videoJake.readyState >= 2) sScreenCtx.drawImage(videoJake, 15, 20, 225, 215);
-        if (videoJune.readyState >= 2) sScreenCtx.drawImage(videoJune, 272, 20, 225, 215);
+      let timeLeft = 10;
+      statusPill.textContent = `⏱️ ROLL TIMER: ${timeLeft}s`;
+
+      if (rollTimer) clearInterval(rollTimer);
+      rollTimer = setInterval(() => {
+        timeLeft--;
+        if (timeLeft > 0) {
+          statusPill.textContent = `⏱️ ROLL TIMER: ${timeLeft}s`;
+        } else {
+          clearInterval(rollTimer);
+          if (!hasRolled) executeRoll(true);
+        }
+      }, 1000);
+    }
+
+    function startTurnRoll() {
+      hasRolled = false;
+      btnRollDice.disabled = false;
+      btnRollDice.classList.add('active-roll');
+      btnRollDice.textContent = "🎲 YOUR TURN: ROLL DICE!";
+      statusPill.textContent = "Tap roll to advance!";
+    }
+
+    function executeRoll(isAuto = false) {
+      if (hasRolled) return;
+      hasRolled = true;
+      btnRollDice.disabled = true;
+      btnRollDice.classList.remove('active-roll');
+      btnRollDice.textContent = "DICE ROLLED!";
+
+      const rollValue = Math.floor(Math.random() * 6) + 1;
+      statusPill.textContent = isAuto ? `⏱️ Auto-rolled: ${rollValue}` : `🎲 You rolled: ${rollValue}!`;
+
+      if (dataConn && dataConn.open) {
+        dataConn.send({
+          type: "PLAYER_ROLLED_DICE",
+          contestant: contestantId,
+          name: contestantName,
+          roll: rollValue
+        });
       }
-      studioScreenTex.needsUpdate = true;
     }
-    const studioBackScreenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshBasicMaterial({ map: studioScreenTex }));
-    studioBackScreenMesh.position.set(0, 3.4, -4.5); miniDiorama.add(studioBackScreenMesh);
+    btnRollDice.addEventListener('click', () => executeRoll(false));
 
-    const miniGoody = new THREE.Group();
-    const gPodium = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 0.6, 20), new THREE.MeshStandardMaterial({ color: 0x2b154a }));
-    gPodium.position.y = 0.74; miniGoody.add(gPodium);
-    const gBody = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.4), new THREE.MeshStandardMaterial({ color: 0x333 }));
-    gBody.position.y = 1.34; miniGoody.add(gBody);
-    const gHead = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.35, 0.35), new THREE.MeshStandardMaterial({ color: 0x333 }));
-    gHead.position.y = 1.82; miniGoody.add(gHead);
-    const gAntennaStem = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.22, 8), new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9 }));
-    gAntennaStem.position.y = 2.08; miniGoody.add(gAntennaStem);
-    const gAntOrb = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), new THREE.MeshBasicMaterial({ color: 0x111111 }));
-    gAntOrb.position.y = 2.20; miniGoody.add(gAntOrb);
+    function showQuestionLocked(qData, isMyTurn) {
+      currentQuestionData = qData;
+      selectedOptionIndex = null;
+      triviaCard.style.display = 'flex';
+      
+      qCountryTag.textContent = `🌍 ${qData.country} (${isMyTurn ? "YOUR QUESTION" : "OPPONENT'S QUESTION"})`;
+      
+      const textToDisplay = qData.text || qData.q || "Listen carefully to the question from Goody:";
+      qText.textContent = textToDisplay;
+      
+      qTimer.textContent = "🔒 LISTENING TO HOST...";
 
-    const faceCanvas = document.createElement('canvas'); faceCanvas.width = 128; faceCanvas.height = 128;
-    const fctx = faceCanvas.getContext('2d'); fctx.fillStyle = '#000'; fctx.fillRect(0, 0, 128, 128);
-    const faceTex = new THREE.CanvasTexture(faceCanvas);
-    const gFace = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 0.25), new THREE.MeshBasicMaterial({ map: faceTex }));
-    gFace.position.set(0, 1.82, 0.19); miniGoody.add(gFace);
-    miniGoody.position.set(0, 0, -2.6); miniDiorama.add(miniGoody);
+      qData.options.forEach((opt, idx) => {
+        optButtons[idx].textContent = `${["A", "B", "C", "D"][idx]}) ${opt}`;
+        optButtons[idx].className = "btn-opt";
+        optButtons[idx].disabled = true;
+      });
+    }
 
-    function updateGoodyFaceExpression(power) {
-      fctx.fillStyle = '#000'; fctx.fillRect(0, 0, 128, 128);
-      if (power) {
-        fctx.fillStyle = '#39ff14'; fctx.font = 'bold 48px monospace'; fctx.textAlign = 'center';
-        fctx.fillText("^‿^", 64, 80);
-        gAntOrb.material.color.setHex(0x39ff14);
-      } else {
-        gAntOrb.material.color.setHex(0x111111);
+    function unlockQuestionInput() {
+      qTimer.textContent = "⏱️ 30s";
+      optButtons.forEach(btn => {
+        btn.disabled = false;
+        btn.classList.add('unlocked');
+      });
+
+      let timeLeft = 30;
+      if (questionTimer) clearInterval(questionTimer);
+      questionTimer = setInterval(() => {
+        timeLeft--;
+        if (timeLeft > 0) {
+          qTimer.textContent = `⏱️ ${timeLeft}s`;
+        } else {
+          clearInterval(questionTimer);
+          qTimer.textContent = "TIME OUT!";
+          optButtons.forEach(b => b.disabled = true);
+          if (dataConn && dataConn.open) {
+            dataConn.send({ type: "PLAYER_TIMEOUT", contestant: contestantId });
+          }
+        }
+      }, 1000);
+    }
+
+    optButtons.forEach((btn, idx) => {
+      btn.addEventListener('click', () => {
+        if (selectedOptionIndex !== null) return;
+        selectedOptionIndex = idx;
+        if (questionTimer) clearInterval(questionTimer);
+
+        optButtons.forEach(b => {
+          b.disabled = true;
+          b.classList.remove('unlocked');
+        });
+        btn.classList.add('selected');
+        statusPill.textContent = "Answer locked in! Checking with Goody...";
+
+        if (dataConn && dataConn.open) {
+          dataConn.send({
+            type: "PLAYER_ANSWERED",
+            contestant: contestantId,
+            chosenAnswer: currentQuestionData.options[idx]
+          });
+        }
+      });
+    });
+
+    function handleEvaluationResult(data) {
+      if (questionTimer) clearInterval(questionTimer);
+      const isMe = data.forContestant === contestantId;
+
+      if (isMe && selectedOptionIndex !== null) {
+        if (data.isCorrect) {
+          optButtons[selectedOptionIndex].classList.add('flash-green');
+          statusPill.textContent = "🎉 CORRECT! Tile secured.";
+        } else {
+          optButtons[selectedOptionIndex].classList.add('flash-red');
+          statusPill.textContent = "❌ INCORRECT! Returning to start.";
+        }
       }
-      faceTex.needsUpdate = true;
+
+      setTimeout(() => {
+        triviaCard.style.display = 'none';
+        optButtons.forEach(b => b.className = "btn-opt");
+      }, 7000);
     }
 
-    scene.add(miniDiorama);
-
-    // TOUCH-DRAG LOOKING & D-PAD MOVEMENT
-    let camYaw = 0; let camPitch = 0;
-    let isDragging = false; let lastX = 0, lastY = 0;
-
-    window.addEventListener('touchstart', (e) => {
-      isDragging = true;
-      lastX = e.touches[0].clientX;
-      lastY = e.touches[0].clientY;
-    });
-    window.addEventListener('touchmove', (e) => {
-      if (!isDragging) return;
-      const dx = e.touches[0].clientX - lastX;
-      const dy = e.touches[0].clientY - lastY;
-      lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
-
-      camYaw -= dx * 0.005;
-      camPitch = Math.max(-1.0, Math.min(1.0, camPitch - dy * 0.005));
-      camera.rotation.set(camPitch, camYaw, 0, 'YXZ');
-    });
-    window.addEventListener('touchend', () => { isDragging = false; });
-
-    let moveDir = new THREE.Vector3();
-    function movePlayer(dir) {
-      const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), camYaw);
-      const side = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), camYaw);
-      if (dir === 'FORWARD') camera.position.addScaledVector(fwd, 0.4);
-      if (dir === 'BACK') camera.position.addScaledVector(fwd, -0.4);
-      if (dir === 'LEFT') camera.position.addScaledVector(side, -0.4);
-      if (dir === 'RIGHT') camera.position.addScaledVector(side, 0.4);
+    // Plushie Movement
+    function sendPlushieMove(direction) {
+      if (dataConn && dataConn.open) {
+        dataConn.send({ type: "PLUSHIE_MOVE", contestant: contestantId, direction: direction });
+      }
     }
-
-    const bindDpad = (id, dir) => {
-      const el = document.getElementById(id);
-      el.addEventListener('touchstart', (e) => { e.preventDefault(); movePlayer(dir); });
-      el.addEventListener('mousedown', () => movePlayer(dir));
+    const bindDpad = (btnId, dir) => {
+      const el = document.getElementById(btnId);
+      el.addEventListener('touchstart', (e) => { e.preventDefault(); sendPlushieMove(dir); });
+      el.addEventListener('mousedown', () => sendPlushieMove(dir));
     };
     bindDpad('dpad-fwd', 'FORWARD');
     bindDpad('dpad-back', 'BACK');
     bindDpad('dpad-left', 'LEFT');
     bindDpad('dpad-right', 'RIGHT');
-
-    // SETUP & PEERJS
-    document.getElementById('btn-jake').addEventListener('click', () => joinGame("goody-contestant-1", "Jake"));
-    document.getElementById('btn-june').addEventListener('click', () => joinGame("goody-contestant-2", "June"));
-
-    async function joinGame(id, name) {
-      contestantId = id; contestantName = name;
-      document.getElementById('setup-overlay').style.display = 'none';
-
-      try {
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        if (contestantId === "goody-contestant-1") { videoJake.srcObject = localStream; videoJake.play(); }
-        else { videoJune.srcObject = localStream; videoJune.play(); }
-
-        peer = new Peer(contestantId);
-        peer.on('open', () => {
-          peer.call("goody-main-studio", localStream, { metadata: { contestant: contestantId } });
-          dataConn = peer.connect("goody-main-studio", { metadata: { contestant: contestantId } });
-
-          dataConn.on('open', () => { document.getElementById('status-pill').textContent = "Live on stage!"; });
-          dataConn.on('data', (data) => {
-            if (data.type === "STUDIO_POWER") {
-              if (data.power) {
-                studioPower = true;
-                updateContestantStudioLighting(true);
-                updateGoodyFaceExpression(true);
-              }
-            } else if (data.type === "START_DICE_COUNTDOWN") {
-              document.getElementById('btn-roll-dice').disabled = false;
-              document.getElementById('btn-roll-dice').classList.add('active-roll');
-            } else if (data.type === "ENABLE_TURN_ROLL") {
-              if (data.activeContestant === contestantId) {
-                document.getElementById('btn-roll-dice').disabled = false;
-                document.getElementById('btn-roll-dice').classList.add('active-roll');
-              }
-            } else if (data.type === "SHOW_QUESTION_LOCKED") {
-              showTrivia(data.question);
-            } else if (data.type === "EVALUATION_RESULT") {
-              document.getElementById('trivia-card').style.display = 'none';
-            }
-          });
-        });
-
-        peer.on('call', (incomingCall) => {
-          incomingCall.answer(localStream);
-          incomingCall.on('stream', (stream) => {
-            if (incomingCall.metadata && incomingCall.metadata.contestant === "goody-contestant-2") {
-              videoJune.srcObject = stream; videoJune.play();
-            } else if (incomingCall.metadata && incomingCall.metadata.contestant === "goody-contestant-1") {
-              videoJake.srcObject = stream; videoJake.play();
-            }
-          });
-        });
-
-      } catch (err) { alert("Camera permission required: " + err.message); }
-    }
-
-    document.getElementById('btn-roll-dice').addEventListener('click', () => {
-      document.getElementById('btn-roll-dice').disabled = true;
-      document.getElementById('btn-roll-dice').classList.remove('active-roll');
-      const rollVal = Math.floor(Math.random() * 6) + 1;
-      if (dataConn && dataConn.open) {
-        dataConn.send({ type: "PLAYER_ROLLED_DICE", contestant: contestantId, name: contestantName, roll: rollVal });
-      }
-    });
-
-    function showTrivia(qData) {
-      const card = document.getElementById('trivia-card');
-      card.style.display = 'flex';
-      document.getElementById('q-country-tag').textContent = `🌍 ${qData.country}`;
-      document.getElementById('q-text').textContent = qData.text || qData.q;
-      qData.options.forEach((opt, idx) => {
-        const btn = document.getElementById(`opt-${idx}`);
-        btn.textContent = `${["A", "B", "C", "D"][idx]}) ${opt}`;
-        btn.disabled = false; btn.className = "btn-opt unlocked";
-        btn.onclick = () => {
-          card.style.display = 'none';
-          if (dataConn && dataConn.open) {
-            dataConn.send({ type: "PLAYER_ANSWERED", contestant: contestantId, chosenAnswer: opt });
-          }
-        };
-      });
-    }
-
-    function animate() {
-      requestAnimationFrame(animate);
-      renderBackstageScreens();
-      renderer.render(scene, camera);
-    }
-    animate();
   </script>
 </body>
 </html>
