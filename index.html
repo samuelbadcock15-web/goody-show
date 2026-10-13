@@ -54,7 +54,7 @@
   <div id="blocker">
     <div id="instructions-card">
       <h1>The Goody Tonight Show</h1>
-      <p>Goody has moved closer to the screens, and the automated studio cameras are locked onto him!</p>
+      <p>Contestant counters 1 and 2 are in place on the starting circle!</p>
       <p><strong>Click Anywhere to Enter</strong></p>
       <p>
         <span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> &nbsp;Walk around<br>
@@ -285,14 +285,135 @@
     const miniWall = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 4.5, 32, 1, true, -Math.PI / 2, Math.PI), new THREE.MeshStandardMaterial({ color: 0x15092a, side: THREE.BackSide }));
     miniWall.position.y = 2.65; miniDiorama.add(miniWall);
 
-    // FULL-STAGE GAME SHOW SPIRAL
-    const countryColors = [
-      0xe67e22, 0xd35400, 0xe74c3c, 0x8e44ad, 
-      0x27ae60, 0x2980b9, 0x16a085, 0xc0392b, 
-      0x34495e, 0x1b5e20, 0xffda66, 0x00838f, 
-      0xd35400, 0x0d47a1, 0xb71c1c, 0x4a148c
+    // ==========================================
+    // PROCEDURAL FLAG TEXTURE GENERATOR
+    // ==========================================
+    const COUNTRIES = [
+      "France", "Netherlands", "Canada", "Brazil", "Sweden",
+      "Italy", "Denmark", "Australia", "Spain", "Germany", 
+      "UK", "Nigeria", "United States", "Belgium"
     ];
 
+    function createCountryFlagTexture(countryName) {
+      const c = document.createElement('canvas');
+      c.width = 256; c.height = 256;
+      const ctx = c.getContext('2d');
+      const w = 256; const h = 256;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(128, 128, 126, 0, Math.PI * 2);
+      ctx.clip();
+
+      switch(countryName) {
+        case "France":
+          ctx.fillStyle = '#002654'; ctx.fillRect(0, 0, w / 3, h);
+          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h);
+          ctx.fillStyle = '#ED2939'; ctx.fillRect((w / 3) * 2, 0, w / 3, h);
+          break;
+        case "Netherlands":
+          ctx.fillStyle = '#AE1C28'; ctx.fillRect(0, 0, w, h / 3);
+          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, h / 3, w, h / 3);
+          ctx.fillStyle = '#21468B'; ctx.fillRect(0, (h / 3) * 2, w, h / 3);
+          break;
+        case "Canada":
+          ctx.fillStyle = '#FF0000'; ctx.fillRect(0, 0, w * 0.25, h);
+          ctx.fillRect(w * 0.75, 0, w * 0.25, h);
+          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w * 0.25, 0, w * 0.5, h);
+          ctx.fillStyle = '#FF0000'; ctx.beginPath(); ctx.arc(128, 128, 38, 0, Math.PI * 2); ctx.fill();
+          break;
+        case "Brazil":
+          ctx.fillStyle = '#009739'; ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = '#FEDD00';
+          ctx.beginPath(); ctx.moveTo(128, 24); ctx.lineTo(236, 128); ctx.lineTo(128, 232); ctx.lineTo(20, 128);
+          ctx.closePath(); ctx.fill();
+          ctx.fillStyle = '#012169'; ctx.beginPath(); ctx.arc(128, 128, 52, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(128, 134, 46, 3.4, 6.0); ctx.stroke();
+          break;
+        case "Sweden":
+          ctx.fillStyle = '#006AA7'; ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = '#FECC00'; ctx.fillRect(80, 0, 40, h); ctx.fillRect(0, 108, w, 40);
+          break;
+        case "Italy":
+          ctx.fillStyle = '#009246'; ctx.fillRect(0, 0, w / 3, h);
+          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h);
+          ctx.fillStyle = '#CE2B37'; ctx.fillRect((w / 3) * 2, 0, w / 3, h);
+          break;
+        case "Denmark":
+          ctx.fillStyle = '#C60C30'; ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(85, 0, 36, h); ctx.fillRect(0, 110, w, 36);
+          break;
+        case "Australia":
+          ctx.fillStyle = '#00008B'; ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, 120, 120);
+          ctx.fillStyle = '#CC0000'; ctx.fillRect(48, 0, 24, 120); ctx.fillRect(0, 48, 120, 24);
+          ctx.fillStyle = '#FFFFFF';
+          [[60, 180], [180, 70], [210, 120], [180, 190], [150, 130]].forEach(([sx, sy]) => {
+            ctx.beginPath(); ctx.arc(sx, sy, 10, 0, Math.PI * 2); ctx.fill();
+          });
+          break;
+        case "Spain":
+          ctx.fillStyle = '#AA151B'; ctx.fillRect(0, 0, w, h * 0.25);
+          ctx.fillStyle = '#F1BF00'; ctx.fillRect(0, h * 0.25, w, h * 0.5);
+          ctx.fillStyle = '#AA151B'; ctx.fillRect(0, h * 0.75, w, h * 0.25);
+          ctx.fillStyle = '#AA151B'; ctx.beginPath(); ctx.arc(80, 128, 22, 0, Math.PI * 2); ctx.fill();
+          break;
+        case "Germany":
+          ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w, h / 3);
+          ctx.fillStyle = '#DD0000'; ctx.fillRect(0, h / 3, w, h / 3);
+          ctx.fillStyle = '#FFCE00'; ctx.fillRect(0, (h / 3) * 2, w, h / 3);
+          break;
+        case "UK":
+          ctx.fillStyle = '#012169'; ctx.fillRect(0, 0, w, h);
+          ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 32;
+          ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke();
+          ctx.strokeStyle = '#C8102E'; ctx.lineWidth = 14;
+          ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke();
+          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(104, 0, 48, h); ctx.fillRect(0, 104, w, 48);
+          ctx.fillStyle = '#C8102E'; ctx.fillRect(114, 0, 28, h); ctx.fillRect(0, 114, w, 28);
+          break;
+        case "Nigeria":
+          ctx.fillStyle = '#008751'; ctx.fillRect(0, 0, w / 3, h);
+          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h);
+          ctx.fillStyle = '#008751'; ctx.fillRect((w / 3) * 2, 0, w / 3, h);
+          break;
+        case "United States":
+          for (let s = 0; s < 13; s++) {
+            ctx.fillStyle = s % 2 === 0 ? '#B22234' : '#FFFFFF';
+            ctx.fillRect(0, s * (h / 13), w, h / 13 + 1);
+          }
+          ctx.fillStyle = '#3C3B6E'; ctx.fillRect(0, 0, w * 0.48, h * 0.54);
+          ctx.fillStyle = '#FFFFFF';
+          for (let r = 18; r < 125; r += 26) {
+            for (let c = 16; c < 115; c += 24) {
+              ctx.beginPath(); ctx.arc(c, r, 4, 0, Math.PI * 2); ctx.fill();
+            }
+          }
+          break;
+        case "Belgium":
+          ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w / 3, h);
+          ctx.fillStyle = '#FDDA24'; ctx.fillRect(w / 3, 0, w / 3, h);
+          ctx.fillStyle = '#EF3340'; ctx.fillRect((w / 3) * 2, 0, w / 3, h);
+          break;
+      }
+      ctx.restore();
+
+      ctx.strokeStyle = '#e6c875';
+      ctx.lineWidth = 10;
+      ctx.beginPath();
+      ctx.arc(128, 128, 123, 0, Math.PI * 2);
+      ctx.stroke();
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.needsUpdate = true;
+      return tex;
+    }
+
+    const flagTextures = COUNTRIES.map(cName => createCountryFlagTexture(cName));
+
+    // ==========================================
+    // FULL-STAGE GAME SHOW SPIRAL WITH FLAGS
+    // ==========================================
     const spiralCenterZ = 1.8;
     const totalTiles = 32;
     for (let i = 0; i < totalTiles; i++) {
@@ -301,17 +422,149 @@
       const x = Math.cos(angle) * radius;
       const z = spiralCenterZ + (Math.sin(angle) * (radius * 0.88));
 
+      const flagTexture = flagTextures[i % flagTextures.length];
+
+      const sideMat = new THREE.MeshStandardMaterial({ color: 0x241e33, metalness: 0.6, roughness: 0.3 });
+      const topMat = new THREE.MeshBasicMaterial({ map: flagTexture });
+      const botMat = new THREE.MeshBasicMaterial({ color: 0x110d1c });
+
       const tile = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.28, 0.30, 0.08, 20),
-        new THREE.MeshStandardMaterial({ 
-          color: countryColors[i % countryColors.length], 
-          roughness: 0.3,
-          metalness: 0.1
-        })
+        new THREE.CylinderGeometry(0.28, 0.30, 0.08, 24),
+        [sideMat, topMat, botMat]
       );
       tile.position.set(x, 0.48, z);
       miniDiorama.add(tile);
     }
+
+    // ==========================================
+    // 3D CONTESTANT PAWNS ON STARTING TILE
+    // ==========================================
+    function createPlayerPawn(colorHex, badgeNum) {
+      const pawn = new THREE.Group();
+
+      const baseMat = new THREE.MeshStandardMaterial({ color: colorHex, metalness: 0.6, roughness: 0.25 });
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.10, 0.04, 16), baseMat);
+      base.position.y = 0.02;
+      pawn.add(base);
+
+      const body = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.16, 16), baseMat);
+      body.position.y = 0.12;
+      pawn.add(body);
+
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.055, 16, 16), baseMat);
+      head.position.y = 0.22;
+      pawn.add(head);
+
+      const badgeCanvas = document.createElement('canvas');
+      badgeCanvas.width = 64; badgeCanvas.height = 64;
+      const bctx = badgeCanvas.getContext('2d');
+      bctx.fillStyle = '#ffffff'; bctx.beginPath(); bctx.arc(32, 32, 28, 0, Math.PI * 2); bctx.fill();
+      bctx.strokeStyle = '#111111'; bctx.lineWidth = 4; bctx.stroke();
+      bctx.fillStyle = '#111111'; bctx.font = 'bold 36px monospace'; bctx.textAlign = 'center';
+      bctx.fillText(badgeNum, 32, 44);
+
+      const badgeTex = new THREE.CanvasTexture(badgeCanvas);
+      const badge = new THREE.Mesh(new THREE.PlaneGeometry(0.09, 0.09), new THREE.MeshBasicMaterial({ map: badgeTex, transparent: true }));
+      badge.position.set(0, 0.30, 0);
+      pawn.add(badge);
+
+      return pawn;
+    }
+
+    // Starting tile coordinate (i = 0): x = 0.7, z = 1.8
+    const startTileX = 0.7;
+    const startTileZ = 1.8;
+    const tileTopY = 0.52;
+
+    // Contestant 1 Pawn (Cyan - Jake)
+    const pawn1 = createPlayerPawn(0x00d2d3, "1");
+    pawn1.position.set(startTileX - 0.08, tileTopY, startTileZ);
+    miniDiorama.add(pawn1);
+
+    // Contestant 2 Pawn (Magenta/Red - June)
+    const pawn2 = createPlayerPawn(0xff3838, "2");
+    pawn2.position.set(startTileX + 0.08, tileTopY, startTileZ);
+    miniDiorama.add(pawn2);
+
+    // ==========================================
+    // CUTE PLUSHIE AUDIENCE (ALONG RIM)
+    // ==========================================
+    function createCutePlushie3D(color) {
+      const pGroup = new THREE.Group();
+      const pMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.95 });
+
+      const pBody = new THREE.Mesh(new THREE.SphereGeometry(0.28, 14, 14), pMat);
+      pBody.position.y = 0.28;
+      pGroup.add(pBody);
+
+      const pHead = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 14), pMat);
+      pHead.position.y = 0.58;
+      pGroup.add(pHead);
+
+      const earMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.95 });
+      const ear1 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), earMat);
+      ear1.position.set(-0.14, 0.74, 0);
+      const ear2 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), earMat);
+      ear2.position.set(0.14, 0.74, 0);
+      pGroup.add(ear1, ear2);
+
+      const blushMat = new THREE.MeshBasicMaterial({ color: 0xff69b4 });
+      const blush1 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat);
+      blush1.position.set(-0.11, 0.54, 0.17);
+      const blush2 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat);
+      blush2.position.set(0.11, 0.54, 0.17);
+      pGroup.add(blush1, blush2);
+
+      const eyeBlackMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+      const eyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+      const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), eyeBlackMat);
+      eyeL.position.set(-0.07, 0.60, 0.19);
+      const shineL = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 6), eyeWhiteMat);
+      shineL.position.set(-0.08, 0.612, 0.21);
+      pGroup.add(eyeL, shineL);
+
+      const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), eyeBlackMat);
+      eyeR.position.set(0.07, 0.60, 0.19);
+      const shineR = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 6), eyeWhiteMat);
+      shineR.position.set(0.06, 0.612, 0.21);
+      pGroup.add(eyeR, shineR);
+
+      const snoutMat = new THREE.MeshStandardMaterial({ color: 0xff8fab, roughness: 0.6 });
+      const snout = new THREE.Mesh(new THREE.SphereGeometry(0.042, 8, 8), snoutMat);
+      snout.scale.set(1.2, 0.8, 1);
+      snout.position.set(0, 0.56, 0.21);
+      pGroup.add(snout);
+
+      const mouthMat = new THREE.MeshBasicMaterial({ color: 0x222222 });
+      const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.007, 4, 8, Math.PI), mouthMat);
+      mouth.position.set(0, 0.525, 0.21);
+      mouth.rotation.x = Math.PI * 0.1;
+      pGroup.add(mouth);
+
+      return pGroup;
+    }
+
+    const miniAudience = new THREE.Group();
+    const plushColors = [0xff7675, 0x74b9ff, 0xa29bfe, 0xffbe76, 0x55efc4, 0xfd79a8, 0xf6e58d, 0x48dbfb, 0xff9ff3];
+    
+    [5.7, 6.4].forEach((radius, rowIdx) => {
+      const count = rowIdx === 0 ? 14 : 18;
+      for (let i = 0; i < count; i++) {
+        const theta = -Math.PI * 0.65 + (i / (count - 1)) * (Math.PI * 1.30);
+        const col = plushColors[(i + rowIdx * 3) % plushColors.length];
+        const pGroup = createCutePlushie3D(col);
+
+        const px = Math.sin(theta) * radius;
+        const pz = Math.cos(theta) * (radius * 0.95) + 0.8;
+        
+        pGroup.position.set(px, 0.46 + rowIdx * 0.25, pz);
+        pGroup.lookAt(0, 1.8, -2.6);
+        pGroup.userData = { initialY: pGroup.position.y, phase: Math.random() * Math.PI * 2 };
+        miniAudience.add(pGroup);
+      }
+    });
+    miniDiorama.add(miniAudience);
 
     // GAME SHOW RULES POSTER
     function createRulesPoster() {
@@ -418,7 +671,6 @@
     const gFace = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 0.25), new THREE.MeshBasicMaterial({ map: faceTex }));
     gFace.position.set(0, 1.82, 0.19); miniGoody.add(gFace);
 
-    // Moved back toward screens (Z changed from -1.0 to -2.6)
     miniGoody.position.set(0, 0, -2.6); 
     miniDiorama.add(miniGoody);
 
@@ -460,7 +712,6 @@
     const autoCam2 = createStudioRoboticCamera(2.4, 0.3);
 
     function updateCameraAlignment() {
-      // Goody world head position updated to Z = -11.6 (-9.0 diorama origin + -2.6 host offset)
       const hostHeadPos = new THREE.Vector3(0, 5.77, -11.6);
       if (studioPower) {
         autoCam1.headPivot.lookAt(hostHeadPos); autoCam2.headPivot.lookAt(hostHeadPos);
@@ -555,6 +806,10 @@
         updateCameraAlignment();
         fixtureCyan.target.position.x = -1.2 + Math.sin(time * 0.003) * 1.5;
         fixtureMagenta.target.position.x = 1.2 + Math.cos(time * 0.003) * 1.5;
+
+        miniAudience.children.forEach((p) => {
+          p.position.y = p.userData.initialY + Math.sin(time * 0.006 + p.userData.phase) * 0.04;
+        });
       }
 
       if (controls.isLocked) {
