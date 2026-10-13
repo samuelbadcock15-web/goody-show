@@ -3,366 +3,84 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Goody Tonight Show - Contestant Mobile Portal</title>
+  <title>Goody Tonight Show - Contestant</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
     body {
-      background: radial-gradient(circle at 50% 10%, #200d3d 0%, #080312 90%);
-      color: #fff;
+      background: #080312; color: #fff;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 14px;
+      min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 14px;
     }
-
-    .header-bar {
-      width: 100%;
-      max-width: 480px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 14px;
-      background: rgba(30, 12, 58, 0.85);
-      border: 2px solid #582b94;
-      border-radius: 14px;
-      margin-bottom: 12px;
-    }
-
-    .show-title {
-      font-size: 0.95rem;
-      font-weight: 900;
-      color: #ffda66;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .on-air-tag {
-      background: #b71c1c;
-      color: #fff;
-      font-weight: 900;
-      font-size: 0.72rem;
-      letter-spacing: 1.5px;
-      padding: 4px 8px;
-      border-radius: 6px;
-      border: 1px solid #ff7675;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .rec-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #fff;
-      animation: pulse 1s infinite alternate;
-    }
-    @keyframes pulse {
-      0% { opacity: 0.3; }
-      100% { opacity: 1; }
-    }
-
     #setup-card {
-      width: 100%;
-      max-width: 480px;
-      background: #1b0933;
-      border: 3px solid #ff79b0;
-      border-radius: 16px;
-      padding: 20px;
-      text-align: center;
-      box-shadow: 0 0 25px rgba(255, 121, 176, 0.3);
-      margin-bottom: 15px;
+      width: 100%; max-width: 480px; background: #1b0933; border: 2px solid #ff79b0;
+      border-radius: 16px; padding: 20px; text-align: center; margin-top: 20px;
     }
-    #setup-card h2 {
-      font-size: 1.25rem;
-      color: #ffda66;
-      margin-bottom: 10px;
+    .btn {
+      width: 100%; padding: 16px; margin: 10px 0; border-radius: 12px; border: none;
+      font-size: 1rem; font-weight: bold; text-transform: uppercase; cursor: pointer; color: #fff;
     }
-    #setup-card p {
-      font-size: 0.88rem;
-      color: #dcd0f0;
-      line-height: 1.4;
-      margin-bottom: 16px;
+    .btn-jake { background: #0984e3; }
+    .btn-june { background: #d63031; }
+    #viewfinder {
+      width: 100%; max-width: 480px; aspect-ratio: 4/3; background: #000;
+      border: 2px solid #00f0ff; border-radius: 12px; overflow: hidden; display: none; margin-top: 15px;
     }
-
-    .slot-btn {
-      width: 100%;
-      padding: 14px;
-      margin-bottom: 10px;
-      border-radius: 12px;
-      border: none;
-      font-size: 1rem;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      cursor: pointer;
-      color: #fff;
-      box-shadow: 0 4px 0 rgba(0,0,0,0.5);
-    }
-    .btn-jake {
-      background: linear-gradient(180deg, #0984e3, #00cec9);
-    }
-    .btn-june {
-      background: linear-gradient(180deg, #d63031, #fd79a8);
-    }
-
-    .viewfinder-card {
-      width: 100%;
-      max-width: 480px;
-      position: relative;
-      background: #000;
-      border: 3px solid #00f0ff;
-      border-radius: 16px;
-      overflow: hidden;
-      aspect-ratio: 4 / 3;
-      margin-bottom: 14px;
-      box-shadow: 0 6px 20px rgba(0, 240, 255, 0.35);
-    }
-
-    #local-video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transform: scaleX(-1);
-    }
-
-    .cam-overlay-label {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: rgba(0,0,0,0.7);
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-family: monospace;
-      color: #39ff14;
-      border: 1px solid #39ff14;
-    }
-
-    .connection-status {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      background: rgba(0,0,0,0.7);
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 0.72rem;
-      font-family: monospace;
-      color: #ffda66;
-    }
-
-    .controls-container {
-      width: 100%;
-      max-width: 480px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .buzzer-btn {
-      width: 100%;
-      padding: 20px;
-      background: linear-gradient(180deg, #ff4757, #c0392b);
-      border: 3px solid #ff6b81;
-      border-radius: 20px;
-      color: #fff;
-      font-weight: 900;
-      font-size: 1.35rem;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      box-shadow: 0 6px 0 #871926, 0 10px 20px rgba(255, 71, 87, 0.5);
-      cursor: pointer;
-    }
-    .buzzer-btn:active {
-      transform: translateY(4px);
-      box-shadow: 0 2px 0 #871926;
-    }
-
-    .action-row {
-      display: flex;
-      gap: 10px;
-    }
-    .action-btn {
-      flex: 1;
-      padding: 14px;
-      background: #2a114f;
-      border: 2px solid #a29bfe;
-      border-radius: 12px;
-      color: #fff;
-      font-size: 0.95rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      cursor: pointer;
-    }
-
-    .options-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    .opt-btn {
-      padding: 14px;
-      background: #1e0e38;
-      border: 2px solid #5d2ba8;
-      border-radius: 10px;
-      color: #ffda66;
-      font-weight: bold;
-      font-size: 1rem;
-      cursor: pointer;
-    }
-
-    #game-feedback {
-      text-align: center;
-      font-size: 0.85rem;
-      font-family: monospace;
-      color: #39ff14;
-      min-height: 20px;
-      margin-top: 4px;
-    }
+    video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+    #status { margin-top: 15px; font-family: monospace; color: #39ff14; }
   </style>
 </head>
 <body>
-
-  <header class="header-bar">
-    <div class="show-title">Goody Tonight Show</div>
-    <div class="on-air-tag">
-      <span class="rec-dot"></span> LIVE BROADCAST
-    </div>
-  </header>
-
   <div id="setup-card">
-    <h2>Select Your Contestant Slot</h2>
-    <p>Choose your slot to stream to the studio. Your phone camera and microphone will activate automatically.</p>
-    <button class="slot-btn btn-jake" id="btn-select-jake">I am Contestant 1 (Jake - London)</button>
-    <button class="slot-btn btn-june" id="btn-select-june">I am Contestant 2 (June - Nottingham)</button>
+    <h2 style="color: #ffda66; margin-bottom: 12px;">Join Game Show</h2>
+    <p style="margin-bottom: 16px; color: #ebdcf9;">Select your screen to connect your camera and microphone directly into the studio:</p>
+    <button class="btn btn-jake" id="btn-jake">I am Contestant 1 (Jake - Left Screen)</button>
+    <button class="btn btn-june" id="btn-june">I am Contestant 2 (June - Right Screen)</button>
   </div>
 
-  <div class="viewfinder-card">
+  <div id="viewfinder">
+    <!-- Local preview is kept muted so you do not hear an echo in your own phone -->
     <video id="local-video" autoplay playsinline muted></video>
-    <div class="cam-overlay-label" id="cam-label">WAITING TO CONNECT</div>
-    <div class="connection-status" id="conn-status">STATUS: STANDBY</div>
   </div>
-
-  <main class="controls-container">
-    <button class="buzzer-btn" id="btn-buzzer">🚨 HIT BUZZER</button>
-
-    <div class="action-row">
-      <button class="action-btn" id="btn-dice">🎲 Roll Dice</button>
-      <button class="action-btn" id="btn-cheer">👏 Cheer</button>
-    </div>
-
-    <div class="options-grid">
-      <button class="opt-btn" onclick="sendPlayerAction('ANSWER_A')">A: Option 1</button>
-      <button class="opt-btn" onclick="sendPlayerAction('ANSWER_B')">B: Option 2</button>
-      <button class="opt-btn" onclick="sendPlayerAction('ANSWER_C')">C: Option 3</button>
-      <button class="opt-btn" onclick="sendPlayerAction('ANSWER_D')">D: Option 4</button>
-    </div>
-
-    <div id="game-feedback">Ready to connect!</div>
-  </main>
+  <div id="status">STATUS: STANDBY</div>
 
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-
   <script>
     let localStream = null;
     let peer = null;
-    let activeCall = null;
-    let activeDataConn = null;
-    let contestantId = "";
-    let contestantName = "";
+    const statusText = document.getElementById('status');
 
-    const setupCard = document.getElementById('setup-card');
-    const localVideo = document.getElementById('local-video');
-    const camLabel = document.getElementById('cam-label');
-    const connStatus = document.getElementById('conn-status');
-    const feedback = document.getElementById('game-feedback');
+    document.getElementById('btn-jake').addEventListener('click', () => joinStudio("goody-contestant-1", "Jake"));
+    document.getElementById('btn-june').addEventListener('click', () => joinStudio("goody-contestant-2", "June"));
 
-    document.getElementById('btn-select-jake').addEventListener('click', () => {
-      startContestantStream("goody-contestant-1", "JAKE (LONDON)");
-    });
-
-    document.getElementById('btn-select-june').addEventListener('click', () => {
-      startContestantStream("goody-contestant-2", "JUNE (NOTTINGHAM)");
-    });
-
-    async function startContestantStream(id, name) {
-      contestantId = id;
-      contestantName = name;
-      setupCard.style.display = 'none';
-      camLabel.textContent = `📱 ${contestantName}`;
-      connStatus.textContent = "STATUS: OPENING CAMERA...";
+    async function joinStudio(slotId, name) {
+      document.getElementById('setup-card').style.display = 'none';
+      document.getElementById('viewfinder').style.display = 'block';
+      statusText.textContent = "STATUS: REQUESTING CAMERA & MIC...";
 
       try {
+        // AUDIO IS NOW ENABLED (echoCancellation prevents studio feedback)
         localStream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
-          audio: true
+          audio: { echoCancellation: true, noiseSuppression: true }
         });
 
-        localVideo.srcObject = localStream;
-        connStatus.textContent = "STATUS: CONNECTING TO STUDIO...";
+        document.getElementById('local-video').srcObject = localStream;
+        statusText.textContent = "STATUS: CONNECTING TO STUDIO...";
 
-        peer = new Peer(contestantId);
-
+        peer = new Peer();
         peer.on('open', () => {
-          connStatus.textContent = "DIALING STUDIO...";
-          connectToStudioHost();
+          statusText.textContent = `STATUS: DIALING STUDIO AS ${name.toUpperCase()}...`;
+          const call = peer.call("goody-main-studio", localStream, {
+            metadata: { contestant: slotId, name: name }
+          });
+          call.on('close', () => { statusText.textContent = "STATUS: DISCONNECTED"; });
+          statusText.textContent = `STATUS: 🔴 LIVE ON STAGE (${name.toUpperCase()}) [MIC ON]`;
         });
-
-        peer.on('error', (err) => {
-          connStatus.textContent = `PEER ERROR: ${err.type}`;
-          console.error(err);
-        });
-
       } catch (err) {
-        connStatus.textContent = "CAMERA ERROR: DENIED";
-        alert("Camera permission is required to stream to the studio.");
-        console.error(err);
+        statusText.textContent = "DEVICE ERROR: " + err.message;
+        alert("Camera and microphone permissions are required to stream into the studio!");
       }
     }
-
-    function connectToStudioHost() {
-      const studioHostId = "goody-main-studio";
-
-      activeDataConn = peer.connect(studioHostId, {
-        metadata: { name: contestantName, role: contestantId }
-      });
-
-      activeDataConn.on('open', () => {
-        connStatus.textContent = "STATUS: 🔴 LIVE ON STUDIO SCREEN";
-        feedback.textContent = `Streaming as ${contestantName}! Link active.`;
-      });
-
-      activeCall = peer.call(studioHostId, localStream, {
-        metadata: { contestant: contestantId, name: contestantName }
-      });
-
-      activeCall.on('close', () => {
-        connStatus.textContent = "STATUS: DISCONNECTED";
-      });
-    }
-
-    function sendPlayerAction(actionType) {
-      if (activeDataConn && activeDataConn.open) {
-        activeDataConn.send({ action: actionType, sender: contestantName, id: contestantId });
-        feedback.textContent = `Sent: ${actionType}`;
-        if (navigator.vibrate) navigator.vibrate(50);
-      } else {
-        feedback.textContent = "Not connected to studio yet!";
-      }
-    }
-
-    document.getElementById('btn-buzzer').addEventListener('click', () => sendPlayerAction('BUZZER_HIT'));
-    document.getElementById('btn-dice').addEventListener('click', () => sendPlayerAction('ROLL_DICE'));
-    document.getElementById('btn-cheer').addEventListener('click', () => sendPlayerAction('CHEER'));
   </script>
 </body>
 </html>
