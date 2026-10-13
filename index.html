@@ -104,11 +104,6 @@
     const countdownPill = document.getElementById('countdown-pill');
     const timerValEl = document.getElementById('timer-val');
 
-    // CONTESTANT VIEWPORT CONTROLS
-    let contestantCamYaw = 0;
-    let contestantCamPitch = 0;
-    let contestantCamPos = new THREE.Vector3(0, 5.0, -5.5);
-
     // AUTO-START COUNTDOWN TIMER
     let autoStartSeconds = 10;
     let autoStartInterval = setInterval(() => {
@@ -137,7 +132,6 @@
 
     let currentSubtitle = "STUDIO STANDBY - POWER OFF";
 
-    // 14 COUNTRIES QUESTIONS DATABASE
     const COUNTRY_QUESTIONS = {
       "UK": [
         { q: "In the UK, before the 2019 stake reduction, what was the maximum stake per spin on a Fixed-Odds-Betting-Terminal?", options: ["£2", "£50", "£100", "£500"], ans: "£100", recap: "In April 2019, the UK reduced the maximum FOBT stake per spin from £100 down to £2 to combat severe harms." },
@@ -219,7 +213,7 @@
     controls.addEventListener('lock', () => { blocker.style.display = 'none'; });
     controls.addEventListener('unlock', () => { blocker.style.display = 'flex'; });
 
-    // PEERJS WEBRTC WITH FULL CONTESTANT CAMERA RIGGING
+    // PEERJS WEBRTC WITH FULL CONTESTANT CAMERA RIGGING & BROADCASTING
     let studioPeer = null;
     let connectedDataConns = [];
     const connectedAudiencePeers = new Set();
@@ -233,6 +227,7 @@
         });
 
         studioPeer.on('call', (call) => {
+          // Answer incoming contestant video calls with the master studio render stream
           const returnStream = canvas.captureStream(30);
           call.answer(returnStream);
 
@@ -257,29 +252,14 @@
           conn.on('open', () => {
             connectedAudiencePeers.add(conn.peer);
             broadcastAudienceCount();
+            if (studioPower) {
+              conn.send({ type: "STUDIO_POWER", power: true });
+            }
           });
 
           conn.on('data', (data) => {
             if (data.type === "CONTESTANT_INIT_CAMERA") {
-              contestantCamPos.set(0, 5.0, -5.5);
-              camera.position.copy(contestantCamPos);
-              camera.lookAt(0, 5.7, -11.6);
-            } else if (data.type === "CONTESTANT_LOOK") {
-              contestantCamYaw -= data.deltaX;
-              contestantCamPitch = Math.max(-1.2, Math.min(1.2, contestantCamPitch - data.deltaY));
-              camera.rotation.set(contestantCamPitch, contestantCamYaw, 0, 'YXZ');
-            } else if (data.type === "CONTESTANT_MOVE_STAGE") {
-              const moveSpeed = 0.35;
-              const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), contestantCamYaw);
-              const side = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), contestantCamYaw);
-
-              if (data.direction === 'FORWARD') contestantCamPos.addScaledVector(fwd, moveSpeed);
-              if (data.direction === 'BACK') contestantCamPos.addScaledVector(fwd, -moveSpeed);
-              if (data.direction === 'LEFT') contestantCamPos.addScaledVector(side, -moveSpeed);
-              if (data.direction === 'RIGHT') contestantCamPos.addScaledVector(side, moveSpeed);
-
-              contestantCamPos.y = 5.0;
-              camera.position.copy(contestantCamPos);
+              // Handled on contestant side
             } else if (data.type === "PLAYER_ROLLED_DICE") {
               handlePlayerRoll(data.contestant, data.name, data.roll);
             } else if (data.type === "PLAYER_ANSWERED") {
@@ -380,6 +360,11 @@
       updateGoodyFaceExpression();
       updateCameraAlignment();
       startGoodyMonologue();
+
+      // Notify all connected contestants and audience that studio is live
+      connectedDataConns.forEach(c => {
+        if (c.open) c.send({ type: "STUDIO_POWER", power: true });
+      });
     }
 
     // OPENING 10-SECOND DUEL
@@ -646,7 +631,6 @@
     const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(36, 16), wallMat); leftWall.position.set(-18, 8, 0); leftWall.rotation.y = Math.PI / 2; bedroomGroup.add(leftWall);
     const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(36, 16), wallMat); rightWall.position.set(18, 8, 0); rightWall.rotation.y = -Math.PI / 2; bedroomGroup.add(rightWall);
 
-    // Workbench Desk (Clean Surface without Power Box)
     const deskTop = new THREE.Mesh(new THREE.BoxGeometry(22, 1.0, 16), new THREE.MeshStandardMaterial({ color: 0x331c0e }));
     deskTop.position.set(0, 3.4, -9); bedroomGroup.add(deskTop);
     scene.add(bedroomGroup);
@@ -679,8 +663,8 @@
           break;
         case "Netherlands":
           ctx.fillStyle = '#AE1C28'; ctx.fillRect(0, 0, w, h / 3);
-          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, h / 3, w, h / 3);
-          ctx.fillStyle = '#21468B'; ctx.fillRect(0, (h / 3) * 2, w, h / 3);
+          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, h / 3, w / 3, h);
+          ctx.fillStyle = '#21468B'; ctx.fillRect(0, (h / 3) * 2, w / 3, h);
           break;
         case "Canada":
           ctx.fillStyle = '#FF0000'; ctx.fillRect(0, 0, w * 0.25, h); ctx.fillRect(w * 0.75, 0, w * 0.25, h);
