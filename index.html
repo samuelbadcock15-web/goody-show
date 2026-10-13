@@ -213,7 +213,6 @@
     controls.addEventListener('lock', () => { blocker.style.display = 'none'; });
     controls.addEventListener('unlock', () => { blocker.style.display = 'flex'; });
 
-    // PEERJS WEBRTC WITH FULL CONTESTANT CAMERA RIGGING & BROADCASTING
     let studioPeer = null;
     let connectedDataConns = [];
     const connectedAudiencePeers = new Set();
@@ -227,7 +226,6 @@
         });
 
         studioPeer.on('call', (call) => {
-          // Answer incoming contestant video calls with the master studio render stream
           const returnStream = canvas.captureStream(30);
           call.answer(returnStream);
 
@@ -258,9 +256,7 @@
           });
 
           conn.on('data', (data) => {
-            if (data.type === "CONTESTANT_INIT_CAMERA") {
-              // Handled on contestant side
-            } else if (data.type === "PLAYER_ROLLED_DICE") {
+            if (data.type === "PLAYER_ROLLED_DICE") {
               handlePlayerRoll(data.contestant, data.name, data.roll);
             } else if (data.type === "PLAYER_ANSWERED") {
               stageSelectedOption = data.chosenAnswer;
@@ -310,7 +306,6 @@
       });
     }
 
-    // AUDIO ENGINE
     let audioCtx = null;
     let goodyUtterance = null;
     function initAudio() {
@@ -353,7 +348,6 @@
       });
     }
 
-    // DIRECT BOOT FUNCTION
     function bootStudio() {
       studioPower = true;
       updateStudioLighting(true);
@@ -361,13 +355,11 @@
       updateCameraAlignment();
       startGoodyMonologue();
 
-      // Notify all connected contestants and audience that studio is live
       connectedDataConns.forEach(c => {
         if (c.open) c.send({ type: "STUDIO_POWER", power: true });
       });
     }
 
-    // OPENING 10-SECOND DUEL
     function beginTenSecondDiceDuel() {
       gameState = "OPENING_DUEL";
       diceCountdown = 10;
@@ -444,7 +436,6 @@
       });
     }
 
-    // GAME TURN & QUESTION ROUTER
     function advanceTurnPlayer(playerSlot, roll) {
       const isP1 = playerSlot === "goody-contestant-1";
       if (isP1) {
@@ -578,12 +569,10 @@
       });
     }
 
-    // LIGHTS
     const ambientLight = new THREE.AmbientLight(0x181026, 0.85); scene.add(ambientLight);
     const ceilingLight = new THREE.PointLight(0xffecd2, 1.0, 50); ceilingLight.position.set(0, 13.5, 0); scene.add(ceilingLight);
     const deskLampLight = new THREE.PointLight(0xffea9f, 0, 20); deskLampLight.position.set(-6.5, 7.8, -4.5); scene.add(deskLampLight);
 
-    // SPOTLIGHT RIG
     const trussGroup = new THREE.Group();
     trussGroup.position.set(0, 8.4, -9.8);
     const trussMat = new THREE.MeshStandardMaterial({ color: 0x3d3d4e, metalness: 0.85, roughness: 0.3 });
@@ -622,7 +611,6 @@
       fixtureMagenta.lens.material.color.setHex(power ? fixtureMagenta.color : 0x050505);
     }
 
-    // BEDROOM
     const bedroomGroup = new THREE.Group();
     const bedroomFloor = new THREE.Mesh(new THREE.PlaneGeometry(36, 36), new THREE.MeshStandardMaterial({ color: 0x1f140e }));
     bedroomFloor.rotation.x = -Math.PI / 2; bedroomGroup.add(bedroomFloor);
@@ -635,7 +623,6 @@
     deskTop.position.set(0, 3.4, -9); bedroomGroup.add(deskTop);
     scene.add(bedroomGroup);
 
-    // MINIATURE STUDIO DIORAMA
     const miniDiorama = new THREE.Group(); miniDiorama.position.set(0, 3.95, -9);
     const feltCarpet = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 0.08, 48), new THREE.MeshStandardMaterial({ color: 0x271147 }));
     feltCarpet.position.y = 0.44; 
@@ -644,96 +631,11 @@
     const miniWall = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 4.5, 32, 1, true, -Math.PI / 2, Math.PI), new THREE.MeshStandardMaterial({ color: 0x15092a, side: THREE.BackSide }));
     miniWall.position.y = 2.65; miniDiorama.add(miniWall);
 
-    const COUNTRIES = [
-      "France", "Netherlands", "Canada", "Sweden", "Italy", "Denmark",
-      "Brazil", "Australia", "Spain", "Germany", "UK", "Nigeria",
-      "United States", "Belgium"
-    ];
-
     function createCountryFlagTexture(countryName) {
       const c = document.createElement('canvas'); c.width = 256; c.height = 256;
       const ctx = c.getContext('2d'); const w = 256; const h = 256;
       ctx.save(); ctx.beginPath(); ctx.arc(128, 128, 126, 0, Math.PI * 2); ctx.clip();
-
-      switch(countryName) {
-        case "France":
-          ctx.fillStyle = '#002654'; ctx.fillRect(0, 0, w / 3, h);
-          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h);
-          ctx.fillStyle = '#ED2939'; ctx.fillRect((w / 3) * 2, 0, w / 3, h);
-          break;
-        case "Netherlands":
-          ctx.fillStyle = '#AE1C28'; ctx.fillRect(0, 0, w, h / 3);
-          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, h / 3, w / 3, h);
-          ctx.fillStyle = '#21468B'; ctx.fillRect(0, (h / 3) * 2, w / 3, h);
-          break;
-        case "Canada":
-          ctx.fillStyle = '#FF0000'; ctx.fillRect(0, 0, w * 0.25, h); ctx.fillRect(w * 0.75, 0, w * 0.25, h);
-          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w * 0.25, 0, w * 0.5, h);
-          ctx.fillStyle = '#FF0000'; ctx.beginPath(); ctx.arc(128, 128, 38, 0, Math.PI * 2); ctx.fill();
-          break;
-        case "Brazil":
-          ctx.fillStyle = '#009739'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FEDD00';
-          ctx.beginPath(); ctx.moveTo(128, 24); ctx.lineTo(236, 128); ctx.lineTo(128, 232); ctx.lineTo(20, 128);
-          ctx.closePath(); ctx.fill();
-          ctx.fillStyle = '#012169'; ctx.beginPath(); ctx.arc(128, 128, 52, 0, Math.PI * 2); ctx.fill();
-          ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(128, 134, 46, 3.4, 6.0); ctx.stroke();
-          break;
-        case "Sweden":
-          ctx.fillStyle = '#006AA7'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FECC00';
-          ctx.fillRect(80, 0, 40, h); ctx.fillRect(0, 108, w, 40);
-          break;
-        case "Italy":
-          ctx.fillStyle = '#009246'; ctx.fillRect(0, 0, w / 3, h);
-          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h);
-          ctx.fillStyle = '#CE2B37'; ctx.fillRect((w / 3) * 2, 0, w / 3, h);
-          break;
-        case "Denmark":
-          ctx.fillStyle = '#C60C30'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FFFFFF';
-          ctx.fillRect(85, 0, 36, h); ctx.fillRect(0, 110, w, 36);
-          break;
-        case "Australia":
-          ctx.fillStyle = '#00008B'; ctx.fillRect(0, 0, w, h);
-          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, 120, 120);
-          ctx.fillStyle = '#CC0000'; ctx.fillRect(48, 0, 24, 120); ctx.fillRect(0, 48, 120, 24);
-          ctx.fillStyle = '#FFFFFF';
-          [[60, 180], [180, 70], [210, 120], [180, 190], [150, 130]].forEach(([sx, sy]) => {
-            ctx.beginPath(); ctx.arc(sx, sy, 10, 0, Math.PI * 2); ctx.fill();
-          });
-          break;
-        case "Spain":
-          ctx.fillStyle = '#AA151B'; ctx.fillRect(0, 0, w, h * 0.25);
-          ctx.fillStyle = '#F1BF00'; ctx.fillRect(0, h * 0.25, w, h * 0.5);
-          ctx.fillStyle = '#AA151B'; ctx.fillRect(0, h * 0.75, w, h * 0.25);
-          ctx.beginPath(); ctx.arc(80, 128, 22, 0, Math.PI * 2); ctx.fill();
-          break;
-        case "Germany":
-          ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w, h / 3);
-          ctx.fillStyle = '#DD0000'; ctx.fillRect(0, h / 3, w, h / 3);
-          ctx.fillStyle = '#FFCE00'; ctx.fillRect(0, (h / 3) * 2, w, h / 3);
-          break;
-        case "UK":
-          ctx.fillStyle = '#012169'; ctx.fillRect(0, 0, w, h);
-          ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 32; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke();
-          ctx.strokeStyle = '#C8102E'; ctx.lineWidth = 14; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke();
-          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(104, 0, 48, h); ctx.fillRect(0, 104, w, 48);
-          ctx.fillStyle = '#C8102E'; ctx.fillRect(114, 0, 28, h); ctx.fillRect(0, 114, w, 28);
-          break;
-        case "Nigeria":
-          ctx.fillStyle = '#008751'; ctx.fillRect(0, 0, w / 3, h);
-          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h);
-          ctx.fillStyle = '#008751'; ctx.fillRect((w / 3) * 2, 0, w / 3, h);
-          break;
-        case "United States":
-          for (let s = 0; s < 13; s++) { ctx.fillStyle = s % 2 === 0 ? '#B22234' : '#FFFFFF'; ctx.fillRect(0, s * (h / 13), w, h / 13 + 1); }
-          ctx.fillStyle = '#3C3B6E'; ctx.fillRect(0, 0, w * 0.48, h * 0.54); ctx.fillStyle = '#FFFFFF';
-          for (let r = 18; r < 125; r += 26) { for (let col = 16; col < 115; col += 24) { ctx.beginPath(); ctx.arc(col, r, 4, 0, Math.PI * 2); ctx.fill(); } }
-          break;
-        case "Belgium":
-          ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w / 3, h);
-          ctx.fillStyle = '#FDDA24'; ctx.fillRect(w / 3, 0, w / 3, h);
-          ctx.fillStyle = '#EF3340'; ctx.fillRect((w / 3) * 2, 0, w / 3, h);
-          break;
-      }
+      ctx.fillStyle = '#111'; ctx.fillRect(0,0,w,h);
       ctx.restore();
       ctx.strokeStyle = '#e6c875'; ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(128, 128, 123, 0, Math.PI * 2); ctx.stroke();
       const tex = new THREE.CanvasTexture(c); tex.needsUpdate = true; return tex;
@@ -741,7 +643,6 @@
 
     const flagTextures = COUNTRIES.map(cName => createCountryFlagTexture(cName));
 
-    // GAME SHOW BOARD TILES
     const boardTileCoords = [];
     const spiralCenterZ = 1.8;
     const totalTiles = 32;
@@ -800,7 +701,6 @@
     pawn2.position.set(boardTileCoords[0].x + 0.08, 0.52, boardTileCoords[0].z);
     miniDiorama.add(pawn2);
 
-    // STAGE QUESTION BOARD WITH REAL-TIME HIGHLIGHTS AND COUNTDOWN
     const qBoardCanvas = document.createElement('canvas');
     qBoardCanvas.width = 512; qBoardCanvas.height = 384;
     const qBoardCtx = qBoardCanvas.getContext('2d');
@@ -913,14 +813,13 @@
     qBoardMesh.rotation.y = 0.8;
     miniDiorama.add(qBoardMesh);
 
-    // CUTE PLUSHIE AUDIENCE & PLAYER CONTROL
     function createCutePlushie3D(color) {
       const pGroup = new THREE.Group();
       const pMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.95 });
       const pBody = new THREE.Mesh(new THREE.SphereGeometry(0.28, 14, 14), pMat); pBody.position.y = 0.28; pGroup.add(pBody);
       const pHead = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 14), pMat); pHead.position.y = 0.58; pGroup.add(pHead);
       const ear1 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), pMat); ear1.position.set(-0.14, 0.74, 0);
-      const ear2 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), earMat); ear2.position.set(0.14, 0.74, 0); pGroup.add(ear1, ear2);
+      const ear2 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), pMat); ear2.position.set(0.14, 0.74, 0); pGroup.add(ear1, ear2);
       const blushMat = new THREE.MeshBasicMaterial({ color: 0xff69b4 });
       const blush1 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat); blush1.position.set(-0.11, 0.54, 0.17);
       const blush2 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat); blush2.position.set(0.11, 0.54, 0.17); pGroup.add(blush1, blush2);
@@ -937,11 +836,8 @@
       return pGroup;
     }
 
-    const earMat = new THREE.MeshStandardMaterial({ color: 0xff7675, roughness: 0.95 });
     const miniAudience = new THREE.Group();
     const plushColors = [0xff7675, 0x74b9ff, 0xa29bfe, 0xffbe76, 0x55efc4, 0xfd79a8, 0xf6e58d, 0x48dbfb, 0xff9ff3];
-    let playerPlushie1 = null;
-    let playerPlushie2 = null;
 
     [5.7, 6.4].forEach((radius, rowIdx) => {
       const count = rowIdx === 0 ? 14 : 18;
@@ -954,42 +850,12 @@
         const pz = Math.cos(theta) * (radius * 0.95) + 0.8;
         pGroup.position.set(px, 0.46 + rowIdx * 0.25, pz);
         pGroup.lookAt(0, 1.8, -2.6);
-        pGroup.userData = { 
-          initialY: pGroup.position.y, 
-          phase: Math.random() * Math.PI * 2,
-          theta: theta,
-          radius: radius
-        };
+        pGroup.userData = { initialY: pGroup.position.y, phase: Math.random() * Math.PI * 2 };
         miniAudience.add(pGroup);
-
-        if (rowIdx === 0 && i === 4) playerPlushie1 = pGroup;
-        if (rowIdx === 0 && i === 9) playerPlushie2 = pGroup;
       }
     });
     miniDiorama.add(miniAudience);
 
-    function handlePlushieMovement(contestant, direction) {
-      const targetPlushie = contestant === "goody-contestant-2" ? playerPlushie2 : playerPlushie1;
-      if (!targetPlushie) return;
-
-      const uData = targetPlushie.userData;
-      let angle = uData.theta;
-      let rad = uData.radius;
-
-      if (direction === 'LEFT') angle = Math.max(-Math.PI * 0.62, angle - 0.08);
-      if (direction === 'RIGHT') angle = Math.min(Math.PI * 0.62, angle + 0.08);
-      if (direction === 'FORWARD') rad = Math.max(5.5, rad - 0.12);
-      if (direction === 'BACK') rad = Math.min(6.6, rad + 0.12);
-
-      uData.theta = angle;
-      uData.radius = rad;
-
-      targetPlushie.position.x = Math.sin(angle) * rad;
-      targetPlushie.position.z = Math.cos(angle) * (rad * 0.95) + 0.8;
-      targetPlushie.lookAt(0, 1.8, -2.6);
-    }
-
-    // BACKSTAGE CONTESTANT SCREENS
     const studioScreenCanvas = document.createElement('canvas'); studioScreenCanvas.width = 512; studioScreenCanvas.height = 256;
     const sScreenCtx = studioScreenCanvas.getContext('2d');
     const studioScreenTex = new THREE.CanvasTexture(studioScreenCanvas);
@@ -1066,7 +932,6 @@
     const studioBackScreenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshBasicMaterial({ map: studioScreenTex }));
     studioBackScreenMesh.position.set(0, 3.4, -4.5); miniDiorama.add(studioBackScreenMesh);
 
-    // HOST ROBOT
     const miniGoody = new THREE.Group();
     const gPodium = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 0.6, 20), new THREE.MeshStandardMaterial({ color: 0x2b154a }));
     gPodium.position.y = 0.74; miniGoody.add(gPodium);
@@ -1100,7 +965,6 @@
       faceTex.needsUpdate = true;
     }
 
-    // STUDIO CAMERAS
     function createStudioRoboticCamera(x, z) {
       const camRig = new THREE.Group(); camRig.position.set(x, 0.44, z);
       const darkMat = new THREE.MeshStandardMaterial({ color: 0x1f1f26 });
@@ -1163,9 +1027,7 @@
         fixtureMagenta.target.position.x = 1.2 + Math.cos(time * 0.003) * 1.5;
 
         miniAudience.children.forEach((p) => {
-          if (p !== playerPlushie1 && p !== playerPlushie2) {
-            p.position.y = p.userData.initialY + Math.sin(time * 0.006 + p.userData.phase) * 0.04;
-          }
+          p.position.y = p.userData.initialY + Math.sin(time * 0.006 + p.userData.phase) * 0.04;
         });
       }
 
