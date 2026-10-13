@@ -427,7 +427,6 @@
       }
     }
 
-    // 20-MINUTE MATCH CLOCK
     function startTwentyMinuteMatchTimer() {
       if (matchTimerInterval) clearInterval(matchTimerInterval);
       matchTimerInterval = setInterval(() => {
@@ -482,7 +481,6 @@
         pawn2.position.set(boardTileCoords[p2Index].x + 0.08, 0.52, boardTileCoords[p2Index].z);
       }
 
-      // Check immediate finish-line victory
       if (p1Index >= boardTileCoords.length - 1 || p2Index >= boardTileCoords.length - 1) {
         triggerFinishLineVictory(isP1 ? "Jake" : "June");
         return;
@@ -623,7 +621,6 @@
       });
     }
 
-    // VICTORY SEQUENCES
     function triggerFinishLineVictory(winnerName) {
       gameState = "GAME_OVER";
       if (matchTimerInterval) clearInterval(matchTimerInterval);
@@ -758,7 +755,8 @@
       new THREE.PlaneGeometry(2.4, 1.2),
       new THREE.MeshBasicMaterial({ map: wallClockTex })
     );
-    wallClockMesh.position.set(0, 5.0, -4.4);
+    // Positioned up at Y = 6.2 so it stays clear above the contestant screens
+    wallClockMesh.position.set(0, 6.2, -4.4);
     miniDiorama.add(wallClockMesh);
 
     const COUNTRIES = [
