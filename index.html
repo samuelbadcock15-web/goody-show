@@ -54,7 +54,7 @@
   <div id="blocker">
     <div id="instructions-card">
       <h1>The Goody Tonight Show</h1>
-      <p>Goody's glowing antenna and the spiral game show track are back on the studio floor!</p>
+      <p>The spiral game board is now centered in the middle of the studio floor!</p>
       <p><strong>Click Anywhere to Enter</strong></p>
       <p>
         <span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> &nbsp;Walk around<br>
@@ -285,18 +285,18 @@
     const miniWall = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 4.5, 32, 1, true, -Math.PI / 2, Math.PI), new THREE.MeshStandardMaterial({ color: 0x15092a, side: THREE.BackSide }));
     miniWall.position.y = 2.65; miniDiorama.add(miniWall);
 
-    // RESTORED: GAME SHOW BOARD (16 SPIRAL TILES)
+    // CENTERED GAME SHOW BOARD (16 TILES SPIRALING IN THE EXACT CENTER OF THE STUDIO)
     const countryColors = [0xe67e22, 0xd35400, 0xe74c3c, 0x8e44ad, 0x27ae60, 0x2980b9, 0x16a085, 0xc0392b, 0x34495e, 0x1b5e20, 0xe67e22, 0x00838f, 0xd35400, 0x0d47a1, 0xb71c1c, 0x4a148c];
     for (let i = 0; i < 16; i++) {
       const angle = 0.43 * i + 0.4;
-      const radius = 1.0 + (i * 0.16);
+      const radius = 1.1 + (i * 0.16);
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
       const tile = new THREE.Mesh(
         new THREE.CylinderGeometry(0.24, 0.26, 0.08, 16),
         new THREE.MeshStandardMaterial({ color: countryColors[i % countryColors.length], roughness: 0.35 })
       );
-      tile.position.set(x, 0.48, z - 1.0);
+      tile.position.set(x, 0.48, z);
       miniDiorama.add(tile);
     }
 
@@ -374,7 +374,7 @@
     const studioBackScreenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshBasicMaterial({ map: studioScreenTex }));
     studioBackScreenMesh.position.set(0, 3.4, -4.5); miniDiorama.add(studioBackScreenMesh);
 
-    // RESTORED: HOST ROBOT (GOODY WITH ANTENNA & GREEN ORB)
+    // HOST ROBOT (GOODY WITH ANTENNA & GREEN ORB)
     const miniGoody = new THREE.Group();
     const gPodium = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 0.6, 20), new THREE.MeshStandardMaterial({ color: 0x2b154a }));
     gPodium.position.y = 0.74; miniGoody.add(gPodium);
@@ -413,7 +413,7 @@
       if (studioPower) {
         fctx.fillStyle = '#39ff14'; fctx.font = 'bold 48px monospace'; fctx.textAlign = 'center';
         fctx.fillText("^‿^", 64, 80);
-        gAntOrb.material.color.setHex(0x39ff14); // Glowing green orb
+        gAntOrb.material.color.setHex(0x39ff14);
       } else {
         gAntOrb.material.color.setHex(0x111111);
       }
