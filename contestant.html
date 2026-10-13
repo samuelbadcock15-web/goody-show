@@ -3,84 +3,232 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Goody Tonight Show - Contestant</title>
+  <title>Goody Tonight Show - Contestant Companion</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
     body {
-      background: #080312; color: #fff;
+      background: #090314; color: #fff;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 14px;
+      min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 10px;
+      overflow-x: hidden;
     }
+
     #setup-card {
-      width: 100%; max-width: 480px; background: #1b0933; border: 2px solid #ff79b0;
-      border-radius: 16px; padding: 20px; text-align: center; margin-top: 20px;
+      width: 100%; max-width: 440px; background: #1b0933; border: 2px solid #ff79b0;
+      border-radius: 16px; padding: 20px; text-align: center; margin-top: 15px;
     }
-    .btn {
+    .btn-select {
       width: 100%; padding: 16px; margin: 10px 0; border-radius: 12px; border: none;
       font-size: 1rem; font-weight: bold; text-transform: uppercase; cursor: pointer; color: #fff;
     }
     .btn-jake { background: #0984e3; }
     .btn-june { background: #d63031; }
-    #viewfinder {
-      width: 100%; max-width: 480px; aspect-ratio: 4/3; background: #000;
-      border: 2px solid #00f0ff; border-radius: 12px; overflow: hidden; display: none; margin-top: 15px;
+
+    #live-stage-portal {
+      width: 100%; max-width: 440px; display: none; flex-direction: column; gap: 8px;
     }
-    video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-    #status { margin-top: 15px; font-family: monospace; color: #39ff14; }
+
+    /* Video split monitors */
+    .screens-container {
+      position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000;
+      border: 2px solid #ffda66; border-radius: 12px; overflow: hidden;
+      box-shadow: 0 4px 20px rgba(255, 218, 102, 0.25);
+    }
+    #studio-stream-video {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    #local-selfie-pip {
+      position: absolute; bottom: 8px; right: 8px; width: 28%; aspect-ratio: 4 / 3;
+      border: 2px solid #39ff14; border-radius: 8px; object-fit: cover;
+      transform: scaleX(-1); background: #111; z-index: 5;
+    }
+
+    .badge-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #18092d; padding: 6px 12px; border-radius: 8px; font-family: monospace; font-size: 0.8rem;
+    }
+
+    /* Game controls */
+    .action-panel {
+      display: flex; flex-direction: column; gap: 8px; width: 100%;
+    }
+
+    #btn-roll-dice {
+      width: 100%; padding: 16px; background: linear-gradient(180deg, #fdcb6e, #e17055);
+      border: 3px solid #ffeaa7; border-radius: 14px; font-size: 1.2rem; font-weight: 900;
+      color: #2d3436; text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
+      box-shadow: 0 4px 0 #b3392b;
+    }
+    #btn-roll-dice:active { transform: translateY(3px); box-shadow: 0 1px 0 #b3392b; }
+
+    #dice-result-pill {
+      text-align: center; font-family: monospace; font-size: 0.95rem; color: #39ff14; min-height: 22px;
+    }
+
+    /* Plushie Spectator D-PAD */
+    .dpad-section {
+      background: #140728; border: 2px solid #a29bfe; border-radius: 14px; padding: 10px;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+    }
+    .dpad-label {
+      font-size: 0.76rem; font-family: monospace; color: #ff9ff3; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .dpad-grid {
+      display: grid; grid-template-columns: 55px 55px 55px; grid-template-rows: 45px 45px; gap: 6px;
+    }
+    .dpad-btn {
+      background: #2b1154; border: 2px solid #ff79b0; border-radius: 8px; color: #fff;
+      font-size: 1.2rem; font-weight: bold; display: flex; justify-content: center; align-items: center;
+    }
+    .dpad-btn:active { background: #ff79b0; color: #000; }
   </style>
 </head>
 <body>
+
   <div id="setup-card">
-    <h2 style="color: #ffda66; margin-bottom: 12px;">Join Game Show</h2>
-    <p style="margin-bottom: 16px; color: #ebdcf9;">Select your screen to connect your camera and microphone directly into the studio:</p>
-    <button class="btn btn-jake" id="btn-jake">I am Contestant 1 (Jake - Left Screen)</button>
-    <button class="btn btn-june" id="btn-june">I am Contestant 2 (June - Right Screen)</button>
+    <h2 style="color: #ffda66; margin-bottom: 8px;">The Goody Tonight Show</h2>
+    <p style="color: #ebdcf9; font-size: 0.88rem; margin-bottom: 14px;">Select your contestant profile to activate your camera, mic, dice roller, and audience plushie:</p>
+    <button class="btn-select btn-jake" id="btn-jake">I am Contestant 1 (Jake)</button>
+    <button class="btn-select btn-june" id="btn-june">I am Contestant 2 (June)</button>
   </div>
 
-  <div id="viewfinder">
-    <!-- Local preview is kept muted so you do not hear an echo in your own phone -->
-    <video id="local-video" autoplay playsinline muted></video>
-  </div>
-  <div id="status">STATUS: STANDBY</div>
+  <main id="live-stage-portal">
+    <div class="badge-bar">
+      <span id="role-tag" style="color: #00f0ff;">CONNECTED</span>
+      <span style="color: #39ff14;">🔴 LIVE WEBRTC</span>
+    </div>
+
+    <!-- Live Stage Broadcast View + Picture-in-Picture Selfie -->
+    <div class="screens-container">
+      <video id="studio-stream-video" autoplay playsinline></video>
+      <video id="local-selfie-pip" autoplay playsinline muted></video>
+    </div>
+
+    <div class="action-panel">
+      <button id="btn-roll-dice">🎲 Roll Dice</button>
+      <div id="dice-result-pill">Wait for host to signal rolls...</div>
+
+      <!-- Plushie Audience Movement Controls -->
+      <div class="dpad-section">
+        <div class="dpad-label">🧸 Move Your Plushie Along Audience Rim</div>
+        <div class="dpad-grid">
+          <div></div>
+          <button class="dpad-btn" id="dpad-fwd">▲</button>
+          <div></div>
+          <button class="dpad-btn" id="dpad-left">◀</button>
+          <button class="dpad-btn" id="dpad-back">▼</button>
+          <button class="dpad-btn" id="dpad-right">▶</button>
+        </div>
+      </div>
+    </div>
+  </main>
 
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script>
     let localStream = null;
     let peer = null;
-    const statusText = document.getElementById('status');
+    let dataConn = null;
+    let activeCall = null;
+    let contestantId = "";
+    let contestantName = "";
 
-    document.getElementById('btn-jake').addEventListener('click', () => joinStudio("goody-contestant-1", "Jake"));
-    document.getElementById('btn-june').addEventListener('click', () => joinStudio("goody-contestant-2", "June"));
+    const setupCard = document.getElementById('setup-card');
+    const liveStagePortal = document.getElementById('live-stage-portal');
+    const localSelfiePip = document.getElementById('local-selfie-pip');
+    const studioStreamVideo = document.getElementById('studio-stream-video');
+    const roleTag = document.getElementById('role-tag');
+    const dicePill = document.getElementById('dice-result-pill');
 
-    async function joinStudio(slotId, name) {
-      document.getElementById('setup-card').style.display = 'none';
-      document.getElementById('viewfinder').style.display = 'block';
-      statusText.textContent = "STATUS: REQUESTING CAMERA & MIC...";
+    document.getElementById('btn-jake').addEventListener('click', () => joinGame("goody-contestant-1", "Jake"));
+    document.getElementById('btn-june').addEventListener('click', () => joinGame("goody-contestant-2", "June"));
+
+    async function joinGame(id, name) {
+      contestantId = id;
+      contestantName = name;
+      setupCard.style.display = 'none';
+      liveStagePortal.style.display = 'flex';
+      roleTag.textContent = `${name.toUpperCase()} (CONTESTANT)`;
 
       try {
-        // AUDIO IS NOW ENABLED (echoCancellation prevents studio feedback)
         localStream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
           audio: { echoCancellation: true, noiseSuppression: true }
         });
+        localSelfiePip.srcObject = localStream;
 
-        document.getElementById('local-video').srcObject = localStream;
-        statusText.textContent = "STATUS: CONNECTING TO STUDIO...";
+        peer = new Peer(contestantId);
 
-        peer = new Peer();
         peer.on('open', () => {
-          statusText.textContent = `STATUS: DIALING STUDIO AS ${name.toUpperCase()}...`;
-          const call = peer.call("goody-main-studio", localStream, {
-            metadata: { contestant: slotId, name: name }
+          // 1. Send our selfie stream to the studio
+          activeCall = peer.call("goody-main-studio", localStream, {
+            metadata: { contestant: contestantId, name: contestantName }
           });
-          call.on('close', () => { statusText.textContent = "STATUS: DISCONNECTED"; });
-          statusText.textContent = `STATUS: 🔴 LIVE ON STAGE (${name.toUpperCase()}) [MIC ON]`;
+
+          // 2. Receive the return broadcast stream from the 3D studio
+          activeCall.on('stream', (returnStudioStream) => {
+            studioStreamVideo.srcObject = returnStudioStream;
+            studioStreamVideo.play().catch(e => console.log(e));
+          });
+
+          // 3. Connect real-time game data channel
+          dataConn = peer.connect("goody-main-studio", {
+            metadata: { contestant: contestantId, name: contestantName }
+          });
+
+          dataConn.on('open', () => {
+            dicePill.textContent = "Connected! Waiting for host...";
+          });
+
+          dataConn.on('data', (data) => {
+            if (data.type === "DICE_PROMPT") {
+              dicePill.textContent = "ROLL TIME! Tap the Roll button!";
+            } else if (data.type === "RESULT_CONFIRMED") {
+              dicePill.textContent = `You rolled a ${data.roll}! Token advanced.`;
+            }
+          });
         });
+
       } catch (err) {
-        statusText.textContent = "DEVICE ERROR: " + err.message;
-        alert("Camera and microphone permissions are required to stream into the studio!");
+        alert("Camera and Microphone access are needed: " + err.message);
       }
     }
+
+    // Roll Dice Handler
+    document.getElementById('btn-roll-dice').addEventListener('click', () => {
+      const rolledNumber = Math.floor(Math.random() * 6) + 1;
+      dicePill.textContent = `🎲 You rolled: ${rolledNumber}! Moving...`;
+
+      if (dataConn && dataConn.open) {
+        dataConn.send({
+          type: "PLAYER_ROLLED_DICE",
+          contestant: contestantId,
+          name: contestantName,
+          roll: rolledNumber
+        });
+      }
+    });
+
+    // D-Pad Movement Beams
+    function sendPlushieMove(direction) {
+      if (dataConn && dataConn.open) {
+        dataConn.send({
+          type: "PLUSHIE_MOVE",
+          contestant: contestantId,
+          direction: direction
+        });
+      }
+    }
+
+    const bindDpad = (btnId, dir) => {
+      const el = document.getElementById(btnId);
+      el.addEventListener('touchstart', (e) => { e.preventDefault(); sendPlushieMove(dir); });
+      el.addEventListener('mousedown', () => sendPlushieMove(dir));
+    };
+
+    bindDpad('dpad-fwd', 'FORWARD');
+    bindDpad('dpad-back', 'BACK');
+    bindDpad('dpad-left', 'LEFT');
+    bindDpad('dpad-right', 'RIGHT');
   </script>
 </body>
 </html>
