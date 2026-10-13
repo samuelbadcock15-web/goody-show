@@ -265,7 +265,6 @@
     function renderBackstageScreens() {
       sScreenCtx.fillStyle = '#060210'; sScreenCtx.fillRect(0, 0, 512, 256);
       if (contestantStudioPower) {
-        // Left Screen (Jake)
         if (videoJake.readyState >= 2) {
           sScreenCtx.drawImage(videoJake, 15, 20, 225, 215);
         } else {
@@ -273,7 +272,6 @@
         }
         sScreenCtx.strokeStyle = '#39ff14'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(15, 20, 225, 215);
 
-        // Right Screen (June)
         if (videoJune.readyState >= 2) {
           sScreenCtx.drawImage(videoJune, 272, 20, 225, 215);
         } else {
@@ -323,7 +321,6 @@
       scene.add(tile);
     }
 
-    // Plushie Audience Rim
     const plushColors = [0xff7675, 0x74b9ff, 0xa29bfe, 0xffbe76, 0x55efc4, 0xfd79a8, 0xf6e58d, 0x48dbfb, 0xff9ff3];
     [5.7, 6.4].forEach((radius, rowIdx) => {
       const count = rowIdx === 0 ? 14 : 18;
@@ -341,7 +338,6 @@
       }
     });
 
-    // Touch-Drag Looking
     let isDragging = false;
     let lastX = 0, lastY = 0;
 
@@ -365,7 +361,6 @@
 
     viewportCanvas.addEventListener('touchend', () => { isDragging = false; });
 
-    // D-Pad Walking Movement
     const moveSpeed = 0.18;
     function movePlayer(dir) {
       const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), camYaw);
@@ -393,7 +388,6 @@
     bindDpad('dpad-left', 'LEFT');
     bindDpad('dpad-right', 'RIGHT');
 
-    // Join Flow & PeerJS Multiplexing
     document.getElementById('btn-jake').addEventListener('click', () => joinGame("goody-contestant-1", "Jake"));
     document.getElementById('btn-june').addEventListener('click', () => joinGame("goody-contestant-2", "June"));
 
@@ -411,25 +405,28 @@
           audio: { echoCancellation: true, noiseSuppression: true }
         });
 
-        // Assign local stream to respective video element
         if (contestantId === "goody-contestant-1") {
-          videoJake.srcObject = localStream;
-          videoJake.play();
+          videoJake.srcObject = localStream; videoJake.play();
         } else {
-          videoJune.srcObject = localStream;
-          videoJune.play();
+          videoJune.srcObject = localStream; videoJune.play();
         }
 
         peer = new Peer(contestantId);
 
         peer.on('open', () => {
-          // Call studio and request return stream
-          const call = peer.call("goody-main-studio", localStream, {
+          peer.call("goody-main-studio", localStream, {
             metadata: { contestant: contestantId, name: contestantName }
           });
 
-          call.on('stream', (returnStream) => {
-            // Audio/Video feedback from studio
+          // Cross-call the other contestant directly so both feeds appear on both phones
+          const otherId = contestantId === "goody-contestant-1" ? "goody-contestant-2" : "goody-contestant-1";
+          const otherCall = peer.call(otherId, localStream, {
+            metadata: { contestant: contestantId, name: contestantName }
+          });
+
+          otherCall.on('stream', (stream) => {
+            if (otherId === "goody-contestant-1") { videoJake.srcObject = stream; videoJake.play(); }
+            else { videoJune.srcObject = stream; videoJune.play(); }
           });
 
           dataConn = peer.connect("goody-main-studio", {
@@ -442,40 +439,29 @@
 
           dataConn.on('data', (data) => {
             if (data.type === "STUDIO_POWER") {
-              if (data.power) {
-                contestantStudioPower = true;
-                updateContestantLighting(true);
-              }
+              if (data.power) { contestantStudioPower = true; updateContestantLighting(true); }
             } else if (data.type === "START_DICE_COUNTDOWN") {
               startTenSecondRoll();
             } else if (data.type === "ENABLE_TURN_ROLL") {
-              if (data.activeContestant === contestantId) {
-                startTurnRoll();
-              } else {
-                statusPill.textContent = "Waiting for other contestant to roll...";
-              }
+              if (data.activeContestant === contestantId) startTurnRoll();
+              else statusPill.textContent = "Waiting for other contestant to roll...";
             } else if (data.type === "SHOW_QUESTION_LOCKED") {
               showQuestionLocked(data.question, data.forContestant === contestantId);
             } else if (data.type === "UNLOCK_QUESTION_INPUT") {
-              if (data.forContestant === contestantId) {
-                unlockQuestionInput();
-              }
+              if (data.forContestant === contestantId) unlockQuestionInput();
             } else if (data.type === "EVALUATION_RESULT") {
               handleEvaluationResult(data);
             }
           });
         });
 
-        // Also listen for incoming calls if the other contestant calls or if peer connects directly
         peer.on('call', (incomingCall) => {
           incomingCall.answer(localStream);
-          incomingCall.on('stream', (remoteStream) => {
+          incomingCall.on('stream', (stream) => {
             if (incomingCall.metadata && incomingCall.metadata.contestant === "goody-contestant-2") {
-              videoJune.srcObject = remoteStream;
-              videoJune.play();
+              videoJune.srcObject = stream; videoJune.play();
             } else if (incomingCall.metadata && incomingCall.metadata.contestant === "goody-contestant-1") {
-              videoJake.srcObject = remoteStream;
-              videoJake.play();
+              videoJake.srcObject = stream; videoJake.play();
             }
           });
         });
