@@ -54,7 +54,7 @@
   <div id="blocker">
     <div id="instructions-card">
       <h1>The Goody Tonight Show</h1>
-      <p>The spiral game board is now centered in the middle of the studio floor!</p>
+      <p>The game show board is now coiled tight in the center of the stage floor!</p>
       <p><strong>Click Anywhere to Enter</strong></p>
       <p>
         <span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> &nbsp;Walk around<br>
@@ -285,16 +285,28 @@
     const miniWall = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 4.5, 32, 1, true, -Math.PI / 2, Math.PI), new THREE.MeshStandardMaterial({ color: 0x15092a, side: THREE.BackSide }));
     miniWall.position.y = 2.65; miniDiorama.add(miniWall);
 
-    // CENTERED GAME SHOW BOARD (16 TILES SPIRALING IN THE EXACT CENTER OF THE STUDIO)
-    const countryColors = [0xe67e22, 0xd35400, 0xe74c3c, 0x8e44ad, 0x27ae60, 0x2980b9, 0x16a085, 0xc0392b, 0x34495e, 0x1b5e20, 0xe67e22, 0x00838f, 0xd35400, 0x0d47a1, 0xb71c1c, 0x4a148c];
-    for (let i = 0; i < 16; i++) {
-      const angle = 0.43 * i + 0.4;
-      const radius = 1.1 + (i * 0.16);
+    // TIGHT GAME SHOW BOARD SPIRAL (CENTERED IN THE FOREGROUND FLOOR)
+    const countryColors = [
+      0xe67e22, 0xd35400, 0xe74c3c, 0x8e44ad, 
+      0x27ae60, 0x2980b9, 0x16a085, 0xc0392b, 
+      0x34495e, 0x1b5e20, 0xffda66, 0x00838f, 
+      0xd35400, 0x0d47a1, 0xb71c1c, 0x4a148c
+    ];
+
+    const spiralCenterZ = 1.2;
+    const totalTiles = 24;
+    for (let i = 0; i < totalTiles; i++) {
+      const angle = i * 0.62; 
+      const radius = 0.35 + (i * 0.085); 
       const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
+      const z = spiralCenterZ + (Math.sin(angle) * radius);
+
       const tile = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.24, 0.26, 0.08, 16),
-        new THREE.MeshStandardMaterial({ color: countryColors[i % countryColors.length], roughness: 0.35 })
+        new THREE.CylinderGeometry(0.18, 0.20, 0.07, 16),
+        new THREE.MeshStandardMaterial({ 
+          color: countryColors[i % countryColors.length], 
+          roughness: 0.35 
+        })
       );
       tile.position.set(x, 0.48, z);
       miniDiorama.add(tile);
@@ -385,7 +397,6 @@
     const gHead = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.35, 0.35), new THREE.MeshStandardMaterial({ color: 0x333 }));
     gHead.position.y = 1.82; miniGoody.add(gHead);
 
-    // Antenna stem
     const gAntennaStem = new THREE.Mesh(
       new THREE.CylinderGeometry(0.015, 0.015, 0.22, 8),
       new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9 })
@@ -393,7 +404,6 @@
     gAntennaStem.position.y = 2.08;
     miniGoody.add(gAntennaStem);
 
-    // Antenna Green Orb
     const gAntOrb = new THREE.Mesh(
       new THREE.SphereGeometry(0.05, 8, 8),
       new THREE.MeshBasicMaterial({ color: 0x111111 })
@@ -420,7 +430,7 @@
       faceTex.needsUpdate = true;
     }
 
-    // STUDIO CAMERAS (CORRECTED AXIS POINTING AT GOODY)
+    // STUDIO CAMERAS
     function createStudioRoboticCamera(x, z) {
       const camRig = new THREE.Group(); camRig.position.set(x, 0.44, z);
       const darkMat = new THREE.MeshStandardMaterial({ color: 0x1f1f26 });
