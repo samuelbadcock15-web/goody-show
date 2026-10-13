@@ -79,7 +79,7 @@
     let hasLiveJakeStream = false;
     let hasLiveJuneStream = false;
 
-    // GAME STATE & 20-MINUTE TIMER
+    // GAME STATE & TIMERS
     let gameState = "IDLE";
     let diceCountdown = 0;
     let diceInterval = null;
@@ -94,7 +94,7 @@
 
     let activePlayer = "goody-contestant-1";
     let activeQuestion = null;
-    let activeRecap = null; // Stored recap for display board
+    let activeRecap = null;
     let questionTimer = 0;
     let questionInterval = null;
     let stageSelectedOption = null;
@@ -400,6 +400,26 @@
       }, 1000);
     }
 
+    // TURN-BASED 10-SECOND DICE COUNTDOWN
+    function startTurnDiceCountdown(turnPlayer, pName) {
+      diceCountdown = 10;
+      if (turnPlayer === "goody-contestant-2") isDiceRollingP2 = true;
+      else isDiceRollingP1 = true;
+
+      if (diceInterval) clearInterval(diceInterval);
+      diceInterval = setInterval(() => {
+        diceCountdown--;
+        if (diceCountdown > 0) {
+          playTone(440, 'triangle', 0.08, 0.03);
+        } else {
+          clearInterval(diceInterval);
+          // If the player never clicked roll, force an auto-roll on timeout
+          const autoVal = Math.floor(Math.random() * 6) + 1;
+          handlePlayerRoll(turnPlayer, pName, autoVal);
+        }
+      }, 1000);
+    }
+
     function handlePlayerRoll(contestant, name, roll) {
       if (gameState === "OPENING_DUEL") {
         if (contestant === "goody-contestant-2") { 
@@ -416,6 +436,9 @@
       } else if (gameState === "IN_PLAY") {
         if (contestant !== activePlayer) return;
         
+        if (diceInterval) clearInterval(diceInterval);
+        diceCountdown = 0;
+
         if (contestant === "goody-contestant-2") {
           p2RollVal = roll; isDiceRollingP2 = false;
         } else {
@@ -551,7 +574,6 @@
       stageOptionStatus = isCorrect ? 'correct' : 'wrong';
       renderStageQuestionBoard();
 
-      // Broadcast evaluation and recap to both contestants
       connectedDataConns.forEach(c => {
         if (c.open) c.send({
           type: "EVALUATION_RESULT",
@@ -562,7 +584,6 @@
         });
       });
 
-      // Show recap on stage board after a brief confirmation highlight
       setTimeout(() => {
         activeRecap = { country: activeQuestion.country, text: activeQuestion.recap, isCorrect };
         activeQuestion = null;
@@ -608,7 +629,6 @@
       });
     }
 
-    // Displays rules for 3 seconds after recap finishes, then starts next turn
     function transitionToRulesAndNextTurn() {
       activeRecap = null;
       activeQuestion = null;
@@ -643,7 +663,8 @@
       p2RollVal = null;
       renderStageQuestionBoard();
 
-      speakGoody(`It is now ${pName}'s turn! Please roll your dice!`, () => {
+      speakGoody(`It is now ${pName}'s turn! You have 10 seconds to roll your dice!`, () => {
+        startTurnDiceCountdown(activePlayer, pName);
         connectedDataConns.forEach(c => {
           if (c.open) c.send({ 
             type: "ENABLE_TURN_ROLL", 
@@ -658,6 +679,7 @@
       gameState = "GAME_OVER";
       if (matchTimerInterval) clearInterval(matchTimerInterval);
       if (questionInterval) clearInterval(questionInterval);
+      if (diceInterval) clearInterval(diceInterval);
 
       speakGoody(`Unbelievable! ${winnerName} has crossed the final tile and conquered the game floor! ${winnerName} is tonight's grand champion!`);
       broadcastGameOver(winnerName, "REACHED_THE_END");
@@ -666,6 +688,7 @@
     function triggerTimeOutVictory() {
       gameState = "GAME_OVER";
       if (questionInterval) clearInterval(questionInterval);
+      if (diceInterval) clearInterval(diceInterval);
 
       let winner = "It's a draw";
       if (p1Index > p2Index) winner = "Jake";
@@ -960,7 +983,6 @@
       qBoardCtx.lineWidth = 6;
       qBoardCtx.strokeRect(3, 3, 506, 378);
 
-      // 1. RECAP SCREEN (Shows what we learned)
       if (activeRecap) {
         qBoardCtx.fillStyle = activeRecap.isCorrect ? '#00b894' : '#ff7675';
         qBoardCtx.font = 'bold 22px sans-serif';
@@ -974,7 +996,6 @@
         qBoardCtx.fillStyle = '#00f0ff';
         qBoardCtx.fillRect(36, 94, 440, 2);
 
-        // Word wrapped recap content
         qBoardCtx.fillStyle = '#ffffff';
         qBoardCtx.font = '16px sans-serif';
         qBoardCtx.textAlign = 'center';
@@ -998,9 +1019,7 @@
         qBoardCtx.fillStyle = '#39ff14';
         qBoardCtx.font = '14px monospace';
         qBoardCtx.fillText("RETURNING TO RULES BEFORE NEXT ROLL...", 256, 342);
-      }
-      // 2. ACTIVE QUESTION SCREEN
-      else if (activeQuestion) {
+      } else if (activeQuestion) {
         const pName = activePlayer === "goody-contestant-1" ? "JAKE" : "JUNE";
         qBoardCtx.fillStyle = '#ffda66';
         qBoardCtx.font = 'bold 18px monospace';
@@ -1067,9 +1086,7 @@
           const trimmed = opt.length > 48 ? opt.substring(0, 48) + "..." : opt;
           qBoardCtx.fillText(trimmed, 64, optY - 2);
         });
-      }
-      // 3. RULES & PRE-SHOW SCREEN
-      else {
+      } else {
         if (!studioPower && autoStartSeconds > 0) {
           qBoardCtx.fillStyle = '#ffda66';
           qBoardCtx.font = 'bold 26px sans-serif';
@@ -1095,7 +1112,7 @@
           qBoardCtx.fillRect(36, 56, 440, 2);
 
           const rules = [
-            "🎲 1. Roll to advance across international country tiles.",
+            "🎲 1. You have 10 seconds to roll your dice when active.",
             "🌍 2. Land on a tile to trigger that country's trivia.",
             "⏱️ 3. You have 30 seconds to lock in your final answer.",
             "✅ 4. Correct answer secures your position on the tile.",
@@ -1466,12 +1483,10 @@
 
       syncContestantCameras();
 
-      // Invisible to Audience/Host camera
       if (playerPlushie1) playerPlushie1.visible = false;
       if (playerPlushie2) playerPlushie2.visible = false;
       renderer.render(scene, camera);
 
-      // Visible to private companion cameras
       if (showJake) {
         if (playerPlushie1) playerPlushie1.visible = true;
         rendererJake.render(scene, camJake);
