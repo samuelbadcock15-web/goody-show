@@ -259,21 +259,81 @@
     }
     updateGoodyFace(false);
 
-    // Backstage Screens
-    const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshStandardMaterial({ color: 0x11111a }));
-    screenMesh.position.set(0, 2.2, -4.5);
-    scene.add(screenMesh);
+    // Backstage Contestant Screens Canvas Texture
+    const studioScreenCanvas = document.createElement('canvas'); studioScreenCanvas.width = 512; studioScreenCanvas.height = 256;
+    const sScreenCtx = studioScreenCanvas.getContext('2d');
+    const studioScreenTex = new THREE.CanvasTexture(studioScreenCanvas);
 
-    // 14 Game Show Floor Counters
+    function renderBackstageScreens() {
+      sScreenCtx.fillStyle = '#060210'; sScreenCtx.fillRect(0, 0, 512, 256);
+      if (contestantStudioPower) {
+        sScreenCtx.strokeStyle = '#ffb300'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(15, 20, 225, 215);
+        sScreenCtx.fillStyle = '#ffda66'; sScreenCtx.font = 'bold 22px sans-serif'; sScreenCtx.textAlign = 'center';
+        sScreenCtx.fillText("CONTESTANT 1", 127, 120);
+        sScreenCtx.fillStyle = '#39ff14'; sScreenCtx.font = '14px monospace'; sScreenCtx.fillText("LIVE FEED", 127, 150);
+
+        sScreenCtx.strokeStyle = '#ffb300'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(272, 20, 225, 215);
+        sScreenCtx.fillStyle = '#ffda66'; sScreenCtx.font = 'bold 22px sans-serif'; sScreenCtx.textAlign = 'center';
+        sScreenCtx.fillText("CONTESTANT 2", 384, 120);
+        sScreenCtx.fillStyle = '#39ff14'; sScreenCtx.font = '14px monospace'; sScreenCtx.fillText("LIVE FEED", 384, 150);
+      }
+      studioScreenTex.needsUpdate = true;
+    }
+    const studioBackScreenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshBasicMaterial({ map: studioScreenTex }));
+    studioBackScreenMesh.position.set(0, 2.2, -4.5);
+    scene.add(studioBackScreenMesh);
+
+    // 14 Country Flags & Spiral Tiles
+    const COUNTRIES = [
+      "France", "Netherlands", "Canada", "Sweden", "Italy", "Denmark",
+      "Brazil", "Australia", "Spain", "Germany", "UK", "Nigeria",
+      "United States", "Belgium"
+    ];
+
+    function createCountryFlagTexture(countryName) {
+      const c = document.createElement('canvas'); c.width = 256; c.height = 256;
+      const ctx = c.getContext('2d'); const w = 256; const h = 256;
+      ctx.save(); ctx.beginPath(); ctx.arc(128, 128, 126, 0, Math.PI * 2); ctx.clip();
+      ctx.fillStyle = '#111'; ctx.fillRect(0,0,w,h);
+      ctx.restore();
+      ctx.strokeStyle = '#e6c875'; ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(128, 128, 123, 0, Math.PI * 2); ctx.stroke();
+      const tex = new THREE.CanvasTexture(c); tex.needsUpdate = true; return tex;
+    }
+
     for (let i = 0; i < 32; i++) {
-      const angle = i * 0.48;
-      const radius = 0.7 + (i * 0.135);
+      const angle = i * 0.48; 
+      const radius = 0.7 + (i * 0.135); 
       const x = Math.cos(angle) * radius;
       const z = 1.8 + (Math.sin(angle) * (radius * 0.88));
-      const tile = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.3, 0.06, 16), new THREE.MeshStandardMaterial({ color: (i % 2 === 0 ? 0xff7675 : 0x00f0ff) }));
-      tile.position.set(x, 0.05, z);
+      const tile = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.28, 0.30, 0.08, 24),
+        [
+          new THREE.MeshStandardMaterial({ color: 0x241e33 }),
+          new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0xff7675 : 0x00f0ff }),
+          new THREE.MeshBasicMaterial({ color: 0x110d1c })
+        ]
+      );
+      tile.position.set(x, 0.08, z);
       scene.add(tile);
     }
+
+    // Plushie Audience Rim
+    const plushColors = [0xff7675, 0x74b9ff, 0xa29bfe, 0xffbe76, 0x55efc4, 0xfd79a8, 0xf6e58d, 0x48dbfb, 0xff9ff3];
+    [5.7, 6.4].forEach((radius, rowIdx) => {
+      const count = rowIdx === 0 ? 14 : 18;
+      for (let i = 0; i < count; i++) {
+        const theta = -Math.PI * 0.65 + (i / (count - 1)) * (Math.PI * 1.30);
+        const col = plushColors[(i + rowIdx * 3) % plushColors.length];
+        const pGroup = new THREE.Group();
+        const pMat = new THREE.MeshStandardMaterial({ color: col, roughness: 0.95 });
+        const pBody = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 10), pMat); pBody.position.y = 0.28; pGroup.add(pBody);
+        const px = Math.sin(theta) * radius;
+        const pz = Math.cos(theta) * (radius * 0.95) + 0.8;
+        pGroup.position.set(px, 0.46 + rowIdx * 0.25, pz);
+        pGroup.lookAt(0, 1.8, -2.6);
+        scene.add(pGroup);
+      }
+    });
 
     // Touch-Drag Looking
     let isDragging = false;
@@ -525,6 +585,7 @@
 
     function renderLoop() {
       requestAnimationFrame(renderLoop);
+      renderBackstageScreens();
       renderer.render(scene, camera);
     }
     renderLoop();
