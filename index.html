@@ -76,12 +76,9 @@
     let showJune = false;
 
     const videoJake = document.createElement('video');
-    videoJake.autoplay = true; videoJake.playsInline = true; videoJake.muted = false;
+    videoJake.autoplay = true; videoJake.playsInline = true; videoJake.muted = true;
     const videoJune = document.createElement('video');
-    videoJune.autoplay = true; videoJune.playsInline = true; videoJune.muted = false;
-
-    let hasLiveJakeStream = false;
-    let hasLiveJuneStream = false;
+    videoJune.autoplay = true; videoJune.playsInline = true; videoJune.muted = true;
 
     let gameState = "IDLE";
     let diceCountdown = 0;
@@ -127,8 +124,6 @@
       "And let's meet contestant number 2! This is June from Nottingham! " +
       "Now we need to determine who moves first! " +
       "Contestants, you both have 10 seconds to roll your dice!";
-
-    let currentSubtitle = "STUDIO STANDBY - POWER OFF";
 
     const COUNTRY_QUESTIONS = {
       "UK": [
@@ -224,18 +219,16 @@
         });
 
         studioPeer.on('call', (call) => {
-          // Do not answer with the captureStream to prevent feedback loops; just accept data/relay
           call.answer();
-
           call.on('stream', (remoteStream) => {
             if (call.metadata && call.metadata.contestant === "goody-contestant-2") {
               videoJune.srcObject = remoteStream;
-              videoJune.muted = false;
+              videoJune.muted = true;
               videoJune.play().catch(e => console.log(e));
               hasLiveJuneStream = true; showJune = true;
             } else if (call.metadata && call.metadata.contestant === "goody-contestant-1") {
               videoJake.srcObject = remoteStream;
-              videoJake.muted = false;
+              videoJake.muted = true;
               videoJake.play().catch(e => console.log(e));
               hasLiveJakeStream = true; showJake = true;
             }
@@ -309,8 +302,6 @@
     function initAudio() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') audioCtx.resume();
-      if (videoJake.srcObject) videoJake.play();
-      if (videoJune.srcObject) videoJune.play();
     }
     function playTone(freq, type, duration, gainVal = 0.05) {
       if (!audioCtx) return;
