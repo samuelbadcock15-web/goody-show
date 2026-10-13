@@ -42,7 +42,7 @@
       background: #18092d; padding: 6px 12px; border-radius: 8px; font-family: monospace; font-size: 0.8rem;
     }
 
-    /* Dice Panel */
+    /* Dice Button */
     #btn-roll-dice {
       width: 100%; padding: 14px; background: #444; border: 3px solid #777;
       border-radius: 12px; font-size: 1.1rem; font-weight: 900; color: #888;
@@ -58,23 +58,27 @@
       text-align: center; font-family: monospace; font-size: 0.92rem; color: #39ff14; min-height: 22px;
     }
 
-    /* Trivia Panel */
+    /* Trivia Card */
     #trivia-card {
-      background: #190930; border: 2px solid #00f0ff; border-radius: 14px; padding: 12px;
-      display: none; flex-direction: column; gap: 8px;
+      background: #190930; border: 2px solid #00f0ff; border-radius: 14px; padding: 14px;
+      display: none; flex-direction: column; gap: 10px;
     }
     #q-country-tag {
-      font-size: 0.8rem; font-weight: bold; color: #ffda66; text-transform: uppercase;
+      font-size: 0.85rem; font-weight: bold; color: #ffda66; text-transform: uppercase; letter-spacing: 0.5px;
     }
-    #q-text { font-size: 0.95rem; font-weight: 600; line-height: 1.35; color: #fff; }
     #q-timer { font-family: monospace; font-weight: bold; color: #ff7675; text-align: right; }
+    
+    #q-text { 
+      font-size: 1.05rem; font-weight: 700; line-height: 1.4; color: #ffffff;
+      background: rgba(0,0,0,0.35); padding: 10px; border-radius: 8px; border-left: 4px solid #00f0ff;
+    }
 
     .options-grid {
       display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 4px;
     }
     .btn-opt {
       padding: 12px 14px; background: #2f1454; border: 2px solid #9c4dd6; border-radius: 10px;
-      color: #fff; font-size: 0.9rem; font-weight: bold; text-align: left; cursor: not-allowed; opacity: 0.6;
+      color: #fff; font-size: 0.92rem; font-weight: bold; text-align: left; cursor: not-allowed; opacity: 0.6;
     }
     .btn-opt.unlocked { cursor: pointer; opacity: 1; border-color: #00f0ff; }
     .btn-opt.selected { background: #6c5ce7; border-color: #a29bfe; }
@@ -119,11 +123,11 @@
 
     <!-- Interactive Country Trivia Screen -->
     <div id="trivia-card">
-      <div style="display: flex; justify-content: space-between;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
         <span id="q-country-tag">COUNTRY</span>
         <span id="q-timer">⏱️ 30s</span>
       </div>
-      <div id="q-text">Listening to Goody ask the question...</div>
+      <div id="q-text">Loading question...</div>
       <div class="options-grid">
         <button class="btn-opt" id="opt-0" disabled>A) ...</button>
         <button class="btn-opt" id="opt-1" disabled>B) ...</button>
@@ -240,7 +244,6 @@
       }
     }
 
-    // 10-Second Duel Roll
     function startTenSecondRoll() {
       hasRolled = false;
       btnRollDice.disabled = false;
@@ -262,7 +265,6 @@
       }, 1000);
     }
 
-    // Individual Turn Roll
     function startTurnRoll() {
       hasRolled = false;
       btnRollDice.disabled = false;
@@ -292,14 +294,19 @@
     }
     btnRollDice.addEventListener('click', () => executeRoll(false));
 
-    // Question Handling
+    // Question display handling
     function showQuestionLocked(qData, isMyTurn) {
       currentQuestionData = qData;
       selectedOptionIndex = null;
       triviaCard.style.display = 'flex';
-      qCountryTag.textContent = `${qData.country} (${isMyTurn ? "YOUR QUESTION" : "OPPONENT'S QUESTION"})`;
-      qText.textContent = qData.question;
-      qTimer.textContent = "🔒 LISTENING TO GOODY...";
+      
+      qCountryTag.textContent = `🌍 ${qData.country} (${isMyTurn ? "YOUR QUESTION" : "OPPONENT'S QUESTION"})`;
+      
+      // Fallback check to resolve both .text and .q naming
+      const textToDisplay = qData.text || qData.q || "Listen carefully to the question from Goody:";
+      qText.textContent = textToDisplay;
+      
+      qTimer.textContent = "🔒 LISTENING TO HOST...";
 
       qData.options.forEach((opt, idx) => {
         optButtons[idx].textContent = `${["A", "B", "C", "D"][idx]}) ${opt}`;
