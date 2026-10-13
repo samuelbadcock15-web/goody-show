@@ -296,7 +296,7 @@
       const c = document.createElement('canvas'); c.width = 256; c.height = 256;
       const ctx = c.getContext('2d'); const w = 256; const h = 256;
       ctx.save(); ctx.beginPath(); ctx.arc(128, 128, 126, 0, Math.PI * 2); ctx.clip();
-      ctx.fillStyle = '#222'; ctx.fillRect(0,0,w,h);
+      ctx.fillStyle = '#111'; ctx.fillRect(0,0,w,h);
       ctx.restore();
       ctx.strokeStyle = '#e6c875'; ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(128, 128, 123, 0, Math.PI * 2); ctx.stroke();
       const tex = new THREE.CanvasTexture(c); tex.needsUpdate = true; return tex;
@@ -418,7 +418,6 @@
             metadata: { contestant: contestantId, name: contestantName }
           });
 
-          // Cross-call the other contestant directly so both feeds appear on both phones
           const otherId = contestantId === "goody-contestant-1" ? "goody-contestant-2" : "goody-contestant-1";
           const otherCall = peer.call(otherId, localStream, {
             metadata: { contestant: contestantId, name: contestantName }
