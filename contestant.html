@@ -11,7 +11,7 @@
       width: 100%;
       height: 100%;
       height: 100dvh;
-      overflow: hidden; /* No scrollbars */
+      overflow: hidden;
       background: #090314;
       color: #fff;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -35,7 +35,6 @@
     .btn-jake { background: #0984e3; }
     .btn-june { background: #d63031; }
 
-    /* Live Portal Layout constrained to 100dvh */
     #live-stage-portal {
       width: 100%;
       max-width: 440px;
@@ -56,7 +55,7 @@
       position: relative;
       width: 100%;
       aspect-ratio: 16 / 9;
-      max-height: 25vh; /* Scales down to ensure controls stay in view */
+      max-height: 25vh;
       background: #000;
       border: 2px solid #ffda66;
       border-radius: 10px;
@@ -126,7 +125,6 @@
       background: rgba(0,0,0,0.35); padding: 6px; border-radius: 6px; border-left: 3px solid #00f0ff;
     }
 
-    /* 2x2 Grid fits neatly without eating screen height */
     .options-grid {
       display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
     }
@@ -140,7 +138,15 @@
     .btn-opt.flash-green { background: #00b894 !important; border-color: #55efc4 !important; }
     .btn-opt.flash-red { background: #d63031 !important; border-color: #ff7675 !important; }
 
-    /* Compact D-Pad anchored at bottom */
+    /* Educational Recap Card */
+    #recap-card {
+      background: #1c0a32; border: 2px solid #fdcb6e; border-radius: 10px;
+      padding: 8px 10px; display: none; flex-direction: column; gap: 4px; flex-shrink: 1;
+    }
+    #recap-header { font-size: 0.76rem; font-weight: bold; color: #fdcb6e; text-transform: uppercase; }
+    #recap-body { font-size: 0.82rem; line-height: 1.3; color: #ffffff; }
+
+    /* Compact D-Pad */
     .dpad-section {
       background: #140728; border: 1.5px solid #a29bfe; border-radius: 10px;
       padding: 4px; display: flex; flex-direction: column; align-items: center;
@@ -201,6 +207,11 @@
       </div>
     </div>
 
+    <div id="recap-card">
+      <div id="recap-header">💡 RECAP: WHAT WE LEARNED</div>
+      <div id="recap-body">Recap loading...</div>
+    </div>
+
     <div class="dpad-section">
       <div style="font-size: 0.65rem; color: #ff9ff3; font-family: monospace;">🧸 STUDIO NAVIGATION D-PAD</div>
       <div class="dpad-grid">
@@ -249,6 +260,10 @@
       document.getElementById('opt-3')
     ];
 
+    const recapCard = document.getElementById('recap-card');
+    const recapHeader = document.getElementById('recap-header');
+    const recapBody = document.getElementById('recap-body');
+
     document.getElementById('btn-jake').addEventListener('click', () => joinGame("goody-contestant-1", "Jake"));
     document.getElementById('btn-june').addEventListener('click', () => joinGame("goody-contestant-2", "June"));
 
@@ -292,10 +307,13 @@
             } else if (data.type === "SYNC_MATCH_TIMER") {
               matchTimerBadge.textContent = `⏱️ ${data.timeStr}`;
             } else if (data.type === "ENABLE_TURN_ROLL") {
+              recapCard.style.display = 'none';
+              btnRollDice.style.display = 'block';
+
               const isMe = data.activeContestantId === contestantId;
               updateTurnBanner(isMe, `${data.activeContestantName}'S TURN TO ROLL`);
               if (isMe) {
-                startTurnRoll();
+                startTenSecondRoll();
               } else {
                 statusPill.textContent = `Waiting for ${data.activeContestantName} to roll...`;
                 btnRollDice.disabled = true;
@@ -303,6 +321,7 @@
                 btnRollDice.textContent = `🎲 WAITING FOR ${data.activeContestantName.toUpperCase()}...`;
               }
             } else if (data.type === "SHOW_QUESTION_LOCKED") {
+              recapCard.style.display = 'none';
               const isMe = data.activeContestantId === contestantId;
               updateTurnBanner(isMe, `${data.activeContestantName}'S QUESTION`);
               showQuestionLocked(data.question, isMe, data.activeContestantName);
@@ -361,6 +380,7 @@
       }
     }, { passive: true });
 
+    // 10-SECOND TIMER FOR ALL ROLLS
     function startTenSecondRoll() {
       hasRolled = false;
       btnRollDice.disabled = false;
@@ -382,17 +402,11 @@
       }, 1000);
     }
 
-    function startTurnRoll() {
-      hasRolled = false;
-      btnRollDice.disabled = false;
-      btnRollDice.classList.add('active-roll');
-      btnRollDice.textContent = "🎲 YOUR TURN: ROLL DICE!";
-      statusPill.textContent = "Tap roll to advance!";
-    }
-
     function executeRoll(isAuto = false) {
       if (hasRolled) return;
       hasRolled = true;
+      if (rollTimer) clearInterval(rollTimer);
+
       btnRollDice.disabled = true;
       btnRollDice.classList.remove('active-roll');
       btnRollDice.textContent = "DICE ROLLED!";
@@ -414,7 +428,8 @@
     function showQuestionLocked(qData, isMyTurn, activeName) {
       currentQuestionData = qData;
       selectedOptionIndex = null;
-      btnRollDice.style.display = 'none'; // Temporarily hide roll button to maximize screen space
+      btnRollDice.style.display = 'none';
+      recapCard.style.display = 'none';
       triviaCard.style.display = 'flex';
       
       qCountryTag.textContent = `🌍 ${qData.country} (${isMyTurn ? "YOUR QUESTION" : activeName.toUpperCase() + "'S QUESTION"})`;
@@ -491,12 +506,15 @@
 
       setTimeout(() => {
         triviaCard.style.display = 'none';
-        btnRollDice.style.display = 'block'; // Restore dice button
-        optButtons.forEach(b => b.className = "btn-opt");
-      }, 5000);
+        recapHeader.textContent = `💡 WHAT WE LEARNED (${data.country}):`;
+        recapBody.textContent = data.recap;
+        recapCard.style.display = 'flex';
+        statusPill.textContent = "Goody is reviewing the recap...";
+      }, 1200);
     }
 
     function handleGameOver(data) {
+      if (rollTimer) clearInterval(rollTimer);
       turnBanner.style.display = 'block';
       turnBanner.className = 'turn-mine';
       turnBanner.textContent = `🏆 ${data.winner.toUpperCase()} WINS!`;
