@@ -47,14 +47,14 @@
   <div id="interaction-prompt">PRESS [E] OR LEFT CLICK</div>
   <div id="hud">
     <div class="hud-title" id="mode-title" style="color: #ffda66;">🏠 BEDROOM WORKSHOP (CREATOR SCALE)</div>
-    <div class="hud-sub" id="mode-sub">WebRTC Studio Host: ONLINE</div>
+    <div class="hud-sub" id="mode-sub">WebRTC Studio Host: ONLINE • LIVE AUDIO READY</div>
     <div class="hud-hint" id="mode-hint">Walk up to the table. Click the red 3D switch to start!</div>
   </div>
 
   <div id="blocker">
     <div id="instructions-card">
       <h1>The Goody Tonight Show</h1>
-      <p>Goody will introduce the contestants immediately! The game show rules are posted on the studio wall.</p>
+      <p>Mobile audio is now connected! Speak into your phone to be heard through your PC speakers.</p>
       <p><strong>Click Anywhere to Enter</strong></p>
       <p>
         <span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> &nbsp;Walk around<br>
@@ -73,24 +73,24 @@
   <script>
     let currentMode = 'BEDROOM';
     let studioPower = false;
-    let studioPaused = false;
-    let tvChannel = 0;
-    const totalTvChannels = 8;
-    let isTransitioning = false;
 
     let showJake = false;
     let showJune = false;
 
-    // Incoming Video Elements
+    // Incoming Video/Audio Elements
     const videoJake = document.createElement('video');
-    videoJake.autoplay = true; videoJake.playsInline = true; videoJake.muted = true;
+    videoJake.autoplay = true; 
+    videoJake.playsInline = true; 
+    videoJake.muted = false; // Enabled so Jake's microphone plays through computer speakers
+
     const videoJune = document.createElement('video');
-    videoJune.autoplay = true; videoJune.playsInline = true; videoJune.muted = true;
+    videoJune.autoplay = true; 
+    videoJune.playsInline = true; 
+    videoJune.muted = false; // Enabled so June's microphone plays through computer speakers
 
     let hasLiveJakeStream = false;
     let hasLiveJuneStream = false;
 
-    // FAST INTRO SCRIPT - NO RULES DELAY
     const INTRO_SPEECH = 
       "Hello, good evening, and welcome to The Goody Tonight Show! " +
       "I'm your host, Goody! " +
@@ -138,12 +138,14 @@
           call.on('stream', (remoteStream) => {
             if (call.metadata && call.metadata.contestant === "goody-contestant-2") {
               videoJune.srcObject = remoteStream;
-              videoJune.play();
+              videoJune.muted = false;
+              videoJune.play().catch(e => console.log(e));
               hasLiveJuneStream = true;
               showJune = true;
             } else {
               videoJake.srcObject = remoteStream;
-              videoJake.play();
+              videoJake.muted = false;
+              videoJake.play().catch(e => console.log(e));
               hasLiveJakeStream = true;
               showJake = true;
             }
@@ -159,25 +161,15 @@
     }
     initStudioWebRTC();
 
-    // Direct Local Webcam Option for Screen 1
-    function connectLocalWebcamDirectly() {
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
-        .then((stream) => {
-          videoJake.srcObject = stream;
-          videoJake.play();
-          hasLiveJakeStream = true;
-          showJake = true;
-          currentSubtitle = "LOCAL WEBCAM DIRECTLY STREAMING TO CONTESTANT 1!";
-        })
-        .catch((err) => alert("Webcam access error: " + err.message));
-    }
-
-    // AUDIO
+    // AUDIO ENGINE
     let audioCtx = null;
     let goodyUtterance = null;
     function initAudio() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') audioCtx.resume();
+      // Ensure video elements have permission to output sound
+      if (videoJake.srcObject) videoJake.play();
+      if (videoJune.srcObject) videoJune.play();
     }
     function playTone(freq, type, duration, gainVal = 0.05) {
       if (!audioCtx) return;
@@ -284,9 +276,6 @@
 
     const btnPowerCap = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.16, 16), new THREE.MeshStandardMaterial({ color: 0xd63031 }));
     btnPowerCap.position.set(-0.6, 0.58, 0.15); btnPowerCap.name = "PHYSICAL_BTN_POWER"; consoleBoxGroup.add(btnPowerCap);
-
-    const btnCamDirect = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.16, 16), new THREE.MeshStandardMaterial({ color: 0x00cec9 }));
-    btnCamDirect.position.set(0.6, 0.58, 0.15); btnCamDirect.name = "PHYSICAL_BTN_WEBCAM"; consoleBoxGroup.add(btnCamDirect);
     scene.add(consoleBoxGroup);
 
     // MINIATURE STUDIO DIORAMA
@@ -297,7 +286,7 @@
     const miniWall = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 4.5, 32, 1, true, -Math.PI / 2, Math.PI), new THREE.MeshStandardMaterial({ color: 0x15092a, side: THREE.BackSide }));
     miniWall.position.y = 2.65; miniDiorama.add(miniWall);
 
-    // GAME SHOW RULES POSTER (ON THE STUDIO WALL)
+    // GAME SHOW RULES POSTER
     function createRulesPoster() {
       const c = document.createElement('canvas'); c.width = 512; c.height = 384;
       const ctx = c.getContext('2d');
@@ -345,7 +334,7 @@
       }
       ctx.fillStyle = 'rgba(0,0,0,0.8)'; ctx.fillRect(x, y + height - 26, width, 26);
       ctx.fillStyle = isLive ? '#39ff14' : '#ffda66'; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
-      ctx.fillText(`${isLive ? '🔴 LIVE' : '📱 CALL'} ${name.toUpperCase()} [${city.toUpperCase()}]`, x + width/2, y + height - 8);
+      ctx.fillText(`${isLive ? '🔴 LIVE 🎙️' : '📱 CALL'} ${name.toUpperCase()} [${city.toUpperCase()}]`, x + width/2, y + height - 8);
     }
 
     function renderBackstageScreens() {
@@ -396,7 +385,7 @@
       faceTex.needsUpdate = true;
     }
 
-    // STUDIO CAMERAS (CORRECTED AXIS - EXTENDS TOWARDS -Z SO LOOKAT FACES HOST)
+    // STUDIO CAMERAS (CORRECTED AXIS POINTING AT GOODY)
     function createStudioRoboticCamera(x, z) {
       const camRig = new THREE.Group(); camRig.position.set(x, 0.44, z);
       const darkMat = new THREE.MeshStandardMaterial({ color: 0x1f1f26 });
@@ -406,12 +395,8 @@
       const headPivot = new THREE.Group(); headPivot.position.y = 1.0;
       const cameraBox = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.24, 0.42), darkMat); headPivot.add(cameraBox);
 
-      // Lens barrel extending along -Z (Optical front towards target)
       const lensBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.095, 0.26, 16), new THREE.MeshStandardMaterial({ color: 0x0a0a0a }));
       lensBarrel.rotation.x = Math.PI / 2; lensBarrel.position.set(0, 0, -0.24); headPivot.add(lensBarrel);
-
-      const matteBox = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.20, 0.10), darkMat);
-      matteBox.position.set(0, 0, -0.38); headPivot.add(matteBox);
 
       const frontGlass = new THREE.Mesh(new THREE.CircleGeometry(0.08, 16), new THREE.MeshBasicMaterial({ color: 0x00f0ff }));
       frontGlass.position.set(0, 0, -0.431); frontGlass.rotation.y = Math.PI; headPivot.add(frontGlass);
@@ -426,11 +411,10 @@
     const autoCam2 = createStudioRoboticCamera(2.4, 0.3);
 
     function updateCameraAlignment() {
-      // In Three.js, lookAt aligns +Z away from target, so headPivot looks at Goody with -Z lens pointing at Goody
       const hostHeadPos = new THREE.Vector3(0, 5.77, -10.0);
       if (studioPower) {
         autoCam1.headPivot.lookAt(hostHeadPos); autoCam2.headPivot.lookAt(hostHeadPos);
-        autoCam1.headPivot.rotation.y += Math.PI; // Inverts 180 degrees so front lens locks straight onto Goody!
+        autoCam1.headPivot.rotation.y += Math.PI;
         autoCam2.headPivot.rotation.y += Math.PI;
         autoCam1.tallyLamp.material.color.setHex(0xff0000);
         autoCam2.tallyLamp.material.color.setHex(0xff0000);
@@ -459,12 +443,11 @@
 
     function checkIntersections() {
       raycaster.setFromCamera(centerPoint, camera);
-      const hits = raycaster.intersectObjects([btnPowerCap, btnCamDirect, feltCarpet], true);
+      const hits = raycaster.intersectObjects([btnPowerCap, feltCarpet], true);
       if (hits.length > 0 && hits[0].distance < 16) {
         const obj = hits[0].object;
         crosshair.classList.add('hover-active'); promptEl.style.display = 'block';
         if (obj.name === "PHYSICAL_BTN_POWER") promptEl.innerHTML = studioPower ? "⚡ POWER OFF" : "⚡ POWER ON";
-        if (obj.name === "PHYSICAL_BTN_WEBCAM") promptEl.innerHTML = "📹 DIRECT WEBCAM STREAM TO SCREEN 1";
         if (obj.name === "MINIATURE_CLICK_PORTAL") promptEl.innerHTML = "🔍 ENTER MINIATURE AUDIENCE";
         return obj;
       } else {
@@ -478,7 +461,6 @@
       const hit = checkIntersections();
       if (!hit) return;
       if (hit.name === "PHYSICAL_BTN_POWER") triggerPhysicalPowerButton();
-      else if (hit.name === "PHYSICAL_BTN_WEBCAM") connectLocalWebcamDirectly();
       else if (hit.name === "MINIATURE_CLICK_PORTAL") enterMiniatureMode();
     });
 
