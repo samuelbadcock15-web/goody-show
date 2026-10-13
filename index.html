@@ -54,7 +54,7 @@
   <div id="blocker">
     <div id="instructions-card">
       <h1>The Goody Tonight Show</h1>
-      <p>The game show track now fills out the entire circular arena floor!</p>
+      <p>Goody has moved closer to the screens, and the automated studio cameras are locked onto him!</p>
       <p><strong>Click Anywhere to Enter</strong></p>
       <p>
         <span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> &nbsp;Walk around<br>
@@ -232,7 +232,7 @@
       lens.position.set(0, 0, 0.28); headPivot.add(lens);
       const spot = new THREE.SpotLight(colorHex, 0, 18, Math.PI / 3.4, 0.35);
       spot.position.set(0, 0, 0.28); headPivot.add(spot);
-      const targetObj = new THREE.Object3D(); targetObj.position.set(x * 0.4, -4.5, 0.8);
+      const targetObj = new THREE.Object3D(); targetObj.position.set(x * 0.4, -4.5, -0.8);
       scene.add(targetObj); spot.target = targetObj;
       headPivot.rotation.x = Math.PI * 0.35;
       fixGroup.add(headPivot); trussGroup.add(fixGroup);
@@ -285,7 +285,7 @@
     const miniWall = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 4.5, 32, 1, true, -Math.PI / 2, Math.PI), new THREE.MeshStandardMaterial({ color: 0x15092a, side: THREE.BackSide }));
     miniWall.position.y = 2.65; miniDiorama.add(miniWall);
 
-    // FULL-STAGE GAME SHOW SPIRAL (SPREAD ACROSS THE ENTIRE ARENA FLOOR)
+    // FULL-STAGE GAME SHOW SPIRAL
     const countryColors = [
       0xe67e22, 0xd35400, 0xe74c3c, 0x8e44ad, 
       0x27ae60, 0x2980b9, 0x16a085, 0xc0392b, 
@@ -387,7 +387,7 @@
     const studioBackScreenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshBasicMaterial({ map: studioScreenTex }));
     studioBackScreenMesh.position.set(0, 3.4, -4.5); miniDiorama.add(studioBackScreenMesh);
 
-    // HOST ROBOT (GOODY WITH ANTENNA & GREEN ORB)
+    // HOST ROBOT (GOODY POSITIONED BACK TOWARDS SCREENS AT Z = -2.6)
     const miniGoody = new THREE.Group();
     const gPodium = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 0.6, 20), new THREE.MeshStandardMaterial({ color: 0x2b154a }));
     gPodium.position.y = 0.74; miniGoody.add(gPodium);
@@ -417,7 +417,10 @@
     const faceTex = new THREE.CanvasTexture(faceCanvas);
     const gFace = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 0.25), new THREE.MeshBasicMaterial({ map: faceTex }));
     gFace.position.set(0, 1.82, 0.19); miniGoody.add(gFace);
-    miniGoody.position.set(0, 0, -1.0); miniDiorama.add(miniGoody);
+
+    // Moved back toward screens (Z changed from -1.0 to -2.6)
+    miniGoody.position.set(0, 0, -2.6); 
+    miniDiorama.add(miniGoody);
 
     function updateGoodyFaceExpression() {
       fctx.fillStyle = '#000'; fctx.fillRect(0, 0, 128, 128);
@@ -457,7 +460,8 @@
     const autoCam2 = createStudioRoboticCamera(2.4, 0.3);
 
     function updateCameraAlignment() {
-      const hostHeadPos = new THREE.Vector3(0, 5.77, -10.0);
+      // Goody world head position updated to Z = -11.6 (-9.0 diorama origin + -2.6 host offset)
+      const hostHeadPos = new THREE.Vector3(0, 5.77, -11.6);
       if (studioPower) {
         autoCam1.headPivot.lookAt(hostHeadPos); autoCam2.headPivot.lookAt(hostHeadPos);
         autoCam1.headPivot.rotation.y += Math.PI;
