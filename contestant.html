@@ -47,6 +47,23 @@
       background: #18092d; padding: 6px 12px; border-radius: 8px; font-family: monospace; font-size: 0.8rem;
     }
 
+    #turn-banner {
+      width: 100%; padding: 8px 12px; border-radius: 8px; text-align: center;
+      font-weight: 900; font-size: 0.88rem; font-family: monospace; text-transform: uppercase;
+      letter-spacing: 0.5px; display: none;
+    }
+    .turn-mine {
+      background: #00b894; color: #fff; border: 2px solid #55efc4;
+      animation: pulseGlow 1.2s infinite alternate;
+    }
+    .turn-theirs {
+      background: #2d1847; color: #dfe6e9; border: 2px solid #636e72;
+    }
+    @keyframes pulseGlow {
+      from { box-shadow: 0 0 5px #00b894; }
+      to { box-shadow: 0 0 16px #55efc4; }
+    }
+
     #btn-roll-dice {
       width: 100%; padding: 14px; background: #444; border: 3px solid #777;
       border-radius: 12px; font-size: 1.1rem; font-weight: 900; color: #888;
@@ -112,7 +129,8 @@
   <main id="live-stage-portal">
     <div class="badge-bar">
       <span id="role-tag" style="color: #00f0ff;">CONNECTING...</span>
-      <span style="color: #39ff14;">🔴 LIVE BROADCAST</span>
+      <span id="match-timer-badge" style="color: #ffda66;">⏱️ 20:00</span>
+      <span style="color: #39ff14;">🔴 LIVE</span>
     </div>
 
     <div class="screens-container" id="interactive-viewport">
@@ -120,6 +138,9 @@
       <video id="studio-stream-video" autoplay playsinline muted></video>
       <video id="local-selfie-pip" autoplay playsinline muted></video>
     </div>
+
+    <!-- Clear Turn Banner -->
+    <div id="turn-banner"></div>
 
     <div id="status-pill">Waiting for host...</div>
 
@@ -170,6 +191,8 @@
     const localSelfiePip = document.getElementById('local-selfie-pip');
     const studioStreamVideo = document.getElementById('studio-stream-video');
     const roleTag = document.getElementById('role-tag');
+    const matchTimerBadge = document.getElementById('match-timer-badge');
+    const turnBanner = document.getElementById('turn-banner');
     const statusPill = document.getElementById('status-pill');
     const btnRollDice = document.getElementById('btn-roll-dice');
     const interactiveViewport = document.getElementById('interactive-viewport');
@@ -211,7 +234,7 @@
 
           call.on('stream', (returnStudioStream) => {
             studioStreamVideo.srcObject = returnStudioStream;
-            studioStreamVideo.play().catch(e => console.log(e));
+            studioStreamVideo.play().catch(console.error);
           });
 
           dataConn = peer.connect("goody-main-studio", {
@@ -225,20 +248,31 @@
           dataConn.on('data', (data) => {
             if (data.type === "START_DICE_COUNTDOWN") {
               startTenSecondRoll();
+            } else if (data.type === "SYNC_MATCH_TIMER") {
+              matchTimerBadge.textContent = `⏱️ ${data.timeStr}`;
             } else if (data.type === "ENABLE_TURN_ROLL") {
-              if (data.activeContestant === contestantId) {
+              const isMe = data.activeContestantId === contestantId;
+              updateTurnBanner(isMe, `${data.activeContestantName}'S TURN TO ROLL`);
+              if (isMe) {
                 startTurnRoll();
               } else {
-                statusPill.textContent = "Waiting for other contestant to roll...";
+                statusPill.textContent = `Waiting for ${data.activeContestantName} to roll...`;
+                btnRollDice.disabled = true;
+                btnRollDice.classList.remove('active-roll');
+                btnRollDice.textContent = `🎲 WAITING FOR ${data.activeContestantName.toUpperCase()}...`;
               }
             } else if (data.type === "SHOW_QUESTION_LOCKED") {
-              showQuestionLocked(data.question, data.forContestant === contestantId);
+              const isMe = data.activeContestantId === contestantId;
+              updateTurnBanner(isMe, `${data.activeContestantName}'S QUESTION`);
+              showQuestionLocked(data.question, isMe, data.activeContestantName);
             } else if (data.type === "UNLOCK_QUESTION_INPUT") {
-              if (data.forContestant === contestantId) {
+              if (data.activeContestantId === contestantId) {
                 unlockQuestionInput();
               }
             } else if (data.type === "EVALUATION_RESULT") {
               handleEvaluationResult(data);
+            } else if (data.type === "GAME_OVER") {
+              handleGameOver(data);
             }
           });
         });
@@ -248,7 +282,18 @@
       }
     }
 
-    // SWIPE / TOUCH LOOK-AROUND ON STUDIO SCREEN
+    function updateTurnBanner(isMe, subText) {
+      turnBanner.style.display = 'block';
+      if (isMe) {
+        turnBanner.className = 'turn-mine';
+        turnBanner.textContent = `👉 YOUR TURN (${subText})!`;
+      } else {
+        turnBanner.className = 'turn-theirs';
+        turnBanner.textContent = `⏳ WAITING: ${subText}`;
+      }
+    }
+
+    // SWIPE / TOUCH LOOK-AROUND
     let touchStartX = 0;
     let touchStartY = 0;
 
@@ -275,7 +320,6 @@
       }
     }, { passive: true });
 
-    // Mouse drag support for desktop testing
     let isMouseDown = false;
     interactiveViewport.addEventListener('mousedown', (e) => {
       isMouseDown = true;
@@ -349,14 +393,14 @@
     }
     btnRollDice.addEventListener('click', () => executeRoll(false));
 
-    function showQuestionLocked(qData, isMyTurn) {
+    function showQuestionLocked(qData, isMyTurn, activeName) {
       currentQuestionData = qData;
       selectedOptionIndex = null;
       triviaCard.style.display = 'flex';
       
-      qCountryTag.textContent = `🌍 ${qData.country} (${isMyTurn ? "YOUR QUESTION" : "OPPONENT'S QUESTION"})`;
+      qCountryTag.textContent = `🌍 ${qData.country} (${isMyTurn ? "YOUR QUESTION" : activeName.toUpperCase() + "'S QUESTION"})`;
       
-      const textToDisplay = qData.text || qData.q || "Listen carefully to the question from Goody:";
+      const textToDisplay = qData.text || qData.q || "Listen carefully to Goody:";
       qText.textContent = textToDisplay;
       
       qTimer.textContent = "🔒 LISTENING TO HOST...";
@@ -435,28 +479,29 @@
       }, 7000);
     }
 
-    // Plushie Movement & Continuous Controls
-    let dpadInterval = null;
+    function handleGameOver(data) {
+      turnBanner.style.display = 'block';
+      turnBanner.className = 'turn-mine';
+      turnBanner.textContent = `🏆 GAME OVER: ${data.winner.toUpperCase()} WINS!`;
+      statusPill.textContent = `Game ended (${data.reason}). Thanks for playing!`;
+      btnRollDice.disabled = true;
+      btnRollDice.classList.remove('active-roll');
+    }
 
+    // Plushie Navigation
+    let dpadInterval = null;
     function sendPlushieMove(direction) {
       if (dataConn && dataConn.open) {
         dataConn.send({ type: "PLUSHIE_MOVE", contestant: contestantId, direction: direction });
       }
     }
-
     function startPlushieMove(direction) {
       sendPlushieMove(direction);
       if (dpadInterval) clearInterval(dpadInterval);
-      dpadInterval = setInterval(() => {
-        sendPlushieMove(direction);
-      }, 100);
+      dpadInterval = setInterval(() => sendPlushieMove(direction), 100);
     }
-
     function stopPlushieMove() {
-      if (dpadInterval) {
-        clearInterval(dpadInterval);
-        dpadInterval = null;
-      }
+      if (dpadInterval) { clearInterval(dpadInterval); dpadInterval = null; }
     }
 
     const bindDpad = (btnId, dir) => {
