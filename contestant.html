@@ -6,113 +6,155 @@
   <title>Goody Tonight Show - Contestant Companion</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
-    body {
-      background: #090314; color: #fff;
+    
+    html, body {
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden; /* No scrollbars */
+      background: #090314;
+      color: #fff;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 10px;
-      overflow-x: hidden;
     }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 6px;
+    }
+
     #setup-card {
-      width: 100%; max-width: 440px; background: #1b0933; border: 2px solid #ff79b0;
-      border-radius: 16px; padding: 20px; text-align: center; margin-top: 15px;
+      width: 100%; max-width: 420px; background: #1b0933; border: 2px solid #ff79b0;
+      border-radius: 16px; padding: 20px; text-align: center; margin-top: 20px;
     }
     .btn-select {
-      width: 100%; padding: 16px; margin: 10px 0; border-radius: 12px; border: none;
-      font-size: 1rem; font-weight: bold; text-transform: uppercase; cursor: pointer; color: #fff;
+      width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: none;
+      font-size: 0.95rem; font-weight: bold; text-transform: uppercase; cursor: pointer; color: #fff;
     }
     .btn-jake { background: #0984e3; }
     .btn-june { background: #d63031; }
 
+    /* Live Portal Layout constrained to 100dvh */
     #live-stage-portal {
-      width: 100%; max-width: 440px; display: none; flex-direction: column; gap: 8px;
+      width: 100%;
+      max-width: 440px;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 4px;
     }
+
+    .badge-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #18092d; padding: 4px 8px; border-radius: 6px;
+      font-family: monospace; font-size: 0.72rem; flex-shrink: 0;
+    }
+
     .screens-container {
-      position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000;
-      border: 2px solid #ffda66; border-radius: 12px; overflow: hidden;
-      box-shadow: 0 4px 20px rgba(255, 218, 102, 0.25); touch-action: none;
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      max-height: 25vh; /* Scales down to ensure controls stay in view */
+      background: #000;
+      border: 2px solid #ffda66;
+      border-radius: 10px;
+      overflow: hidden;
+      touch-action: none;
+      flex-shrink: 0;
+      margin: 0 auto;
     }
     #studio-stream-video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
     #local-selfie-pip {
-      position: absolute; bottom: 8px; right: 8px; width: 28%; aspect-ratio: 4 / 3;
-      border: 2px solid #39ff14; border-radius: 8px; object-fit: cover;
+      position: absolute; bottom: 4px; right: 4px; width: 26%; aspect-ratio: 4 / 3;
+      border: 2px solid #39ff14; border-radius: 6px; object-fit: cover;
       transform: scaleX(-1); background: #111; z-index: 5; pointer-events: none;
     }
     .swipe-hint {
-      position: absolute; top: 6px; left: 8px; font-size: 0.68rem;
-      background: rgba(0,0,0,0.65); padding: 2px 6px; border-radius: 4px;
+      position: absolute; top: 4px; left: 6px; font-size: 0.62rem;
+      background: rgba(0,0,0,0.65); padding: 2px 4px; border-radius: 4px;
       color: #00f0ff; font-family: monospace; pointer-events: none; z-index: 6;
-    }
-    .badge-bar {
-      display: flex; justify-content: space-between; align-items: center;
-      background: #18092d; padding: 6px 12px; border-radius: 8px; font-family: monospace; font-size: 0.8rem;
     }
 
     #turn-banner {
-      width: 100%; padding: 8px 12px; border-radius: 8px; text-align: center;
-      font-weight: 900; font-size: 0.88rem; font-family: monospace; text-transform: uppercase;
-      letter-spacing: 0.5px; display: none;
+      width: 100%; padding: 5px 8px; border-radius: 6px; text-align: center;
+      font-weight: 900; font-size: 0.75rem; font-family: monospace; text-transform: uppercase;
+      letter-spacing: 0.5px; display: none; flex-shrink: 0;
     }
     .turn-mine {
-      background: #00b894; color: #fff; border: 2px solid #55efc4;
+      background: #00b894; color: #fff; border: 1.5px solid #55efc4;
       animation: pulseGlow 1.2s infinite alternate;
     }
     .turn-theirs {
-      background: #2d1847; color: #dfe6e9; border: 2px solid #636e72;
+      background: #2d1847; color: #dfe6e9; border: 1.5px solid #636e72;
     }
     @keyframes pulseGlow {
-      from { box-shadow: 0 0 5px #00b894; }
-      to { box-shadow: 0 0 16px #55efc4; }
+      from { box-shadow: 0 0 4px #00b894; }
+      to { box-shadow: 0 0 10px #55efc4; }
+    }
+
+    #status-pill {
+      text-align: center; font-family: monospace; font-size: 0.78rem;
+      color: #39ff14; min-height: 18px; line-height: 18px; flex-shrink: 0;
     }
 
     #btn-roll-dice {
-      width: 100%; padding: 14px; background: #444; border: 3px solid #777;
-      border-radius: 12px; font-size: 1.1rem; font-weight: 900; color: #888;
-      text-transform: uppercase; letter-spacing: 1px; cursor: not-allowed; transition: all 0.2s;
+      width: 100%; padding: 10px; background: #444; border: 2px solid #777;
+      border-radius: 10px; font-size: 0.95rem; font-weight: 900; color: #888;
+      text-transform: uppercase; letter-spacing: 0.5px; cursor: not-allowed; transition: all 0.2s;
+      flex-shrink: 0;
     }
     #btn-roll-dice.active-roll {
       background: linear-gradient(180deg, #fdcb6e, #e17055);
       border-color: #ffeaa7; color: #2d3436; cursor: pointer;
-      box-shadow: 0 4px 0 #b3392b, 0 0 15px #fdcb6e;
+      box-shadow: 0 2px 0 #b3392b, 0 0 10px #fdcb6e;
     }
 
-    #status-pill {
-      text-align: center; font-family: monospace; font-size: 0.92rem; color: #39ff14; min-height: 22px;
-    }
-
+    /* Compact Question Card */
     #trivia-card {
-      background: #190930; border: 2px solid #00f0ff; border-radius: 14px; padding: 14px;
-      display: none; flex-direction: column; gap: 10px;
+      background: #190930; border: 2px solid #00f0ff; border-radius: 10px;
+      padding: 8px; display: none; flex-direction: column; gap: 6px; flex-shrink: 1;
     }
     #q-country-tag {
-      font-size: 0.85rem; font-weight: bold; color: #ffda66; text-transform: uppercase; letter-spacing: 0.5px;
+      font-size: 0.75rem; font-weight: bold; color: #ffda66; text-transform: uppercase;
     }
-    #q-timer { font-family: monospace; font-weight: bold; color: #ff7675; text-align: right; }
+    #q-timer { font-family: monospace; font-weight: bold; color: #ff7675; font-size: 0.8rem; text-align: right; }
     
     #q-text { 
-      font-size: 1.05rem; font-weight: 700; line-height: 1.4; color: #ffffff;
-      background: rgba(0,0,0,0.35); padding: 10px; border-radius: 8px; border-left: 4px solid #00f0ff;
+      font-size: 0.82rem; font-weight: 600; line-height: 1.3; color: #ffffff;
+      background: rgba(0,0,0,0.35); padding: 6px; border-radius: 6px; border-left: 3px solid #00f0ff;
     }
 
+    /* 2x2 Grid fits neatly without eating screen height */
     .options-grid {
-      display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 4px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
     }
     .btn-opt {
-      padding: 12px 14px; background: #2f1454; border: 2px solid #9c4dd6; border-radius: 10px;
-      color: #fff; font-size: 0.92rem; font-weight: bold; text-align: left; cursor: not-allowed; opacity: 0.6;
+      padding: 8px 6px; background: #2f1454; border: 1.5px solid #9c4dd6; border-radius: 8px;
+      color: #fff; font-size: 0.75rem; font-weight: bold; text-align: left; cursor: not-allowed;
+      opacity: 0.6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .btn-opt.unlocked { cursor: pointer; opacity: 1; border-color: #00f0ff; }
     .btn-opt.selected { background: #6c5ce7; border-color: #a29bfe; }
     .btn-opt.flash-green { background: #00b894 !important; border-color: #55efc4 !important; }
     .btn-opt.flash-red { background: #d63031 !important; border-color: #ff7675 !important; }
 
+    /* Compact D-Pad anchored at bottom */
     .dpad-section {
-      background: #140728; border: 2px solid #a29bfe; border-radius: 12px; padding: 8px;
-      display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 4px;
+      background: #140728; border: 1.5px solid #a29bfe; border-radius: 10px;
+      padding: 4px; display: flex; flex-direction: column; align-items: center;
+      gap: 2px; flex-shrink: 0; margin-bottom: 2px;
     }
-    .dpad-grid { display: grid; grid-template-columns: 46px 46px 46px; grid-template-rows: 38px 38px; gap: 4px; }
+    .dpad-grid { 
+      display: grid; 
+      grid-template-columns: 46px 46px 46px; 
+      grid-template-rows: 32px 32px; 
+      gap: 4px; 
+    }
     .dpad-btn {
       background: #2b1154; border: 2px solid #ff79b0; border-radius: 6px; color: #fff;
-      font-size: 1.1rem; font-weight: bold; display: flex; justify-content: center; align-items: center;
+      font-size: 1rem; font-weight: bold; display: flex; justify-content: center; align-items: center;
       cursor: pointer;
     }
   </style>
@@ -120,8 +162,8 @@
 <body>
 
   <div id="setup-card">
-    <h2 style="color: #ffda66; margin-bottom: 8px;">The Goody Tonight Show</h2>
-    <p style="color: #ebdcf9; font-size: 0.88rem; margin-bottom: 14px;">Select your contestant profile to activate camera, audio, and companion game pad:</p>
+    <h2 style="color: #ffda66; margin-bottom: 8px; font-size: 1.3rem;">The Goody Tonight Show</h2>
+    <p style="color: #ebdcf9; font-size: 0.85rem; margin-bottom: 12px;">Select profile to activate controls:</p>
     <button class="btn-select btn-jake" id="btn-jake">I am Contestant 1 (Jake)</button>
     <button class="btn-select btn-june" id="btn-june">I am Contestant 2 (June)</button>
   </div>
@@ -134,12 +176,11 @@
     </div>
 
     <div class="screens-container" id="interactive-viewport">
-      <div class="swipe-hint">👆 Drag finger to look around</div>
+      <div class="swipe-hint">👆 Drag to look</div>
       <video id="studio-stream-video" autoplay playsinline muted></video>
       <video id="local-selfie-pip" autoplay playsinline muted></video>
     </div>
 
-    <!-- Clear Turn Banner -->
     <div id="turn-banner"></div>
 
     <div id="status-pill">Waiting for host...</div>
@@ -161,7 +202,7 @@
     </div>
 
     <div class="dpad-section">
-      <div style="font-size: 0.72rem; color: #ff9ff3; font-family: monospace;">🧸 STUDIO NAVIGATION D-PAD</div>
+      <div style="font-size: 0.65rem; color: #ff9ff3; font-family: monospace;">🧸 STUDIO NAVIGATION D-PAD</div>
       <div class="dpad-grid">
         <div></div>
         <button class="dpad-btn" id="dpad-fwd">▲</button>
@@ -293,7 +334,7 @@
       }
     }
 
-    // SWIPE / TOUCH LOOK-AROUND
+    // SWIPE LOOK-AROUND
     let touchStartX = 0;
     let touchStartY = 0;
 
@@ -319,29 +360,6 @@
         });
       }
     }, { passive: true });
-
-    let isMouseDown = false;
-    interactiveViewport.addEventListener('mousedown', (e) => {
-      isMouseDown = true;
-      touchStartX = e.clientX;
-      touchStartY = e.clientY;
-    });
-    window.addEventListener('mouseup', () => { isMouseDown = false; });
-    window.addEventListener('mousemove', (e) => {
-      if (isMouseDown && dataConn && dataConn.open) {
-        const deltaX = e.clientX - touchStartX;
-        const deltaY = e.clientY - touchStartY;
-        touchStartX = e.clientX;
-        touchStartY = e.clientY;
-
-        dataConn.send({
-          type: "PLUSHIE_LOOK",
-          contestant: contestantId,
-          deltaX: -deltaX,
-          deltaY: deltaY
-        });
-      }
-    });
 
     function startTenSecondRoll() {
       hasRolled = false;
@@ -396,14 +414,12 @@
     function showQuestionLocked(qData, isMyTurn, activeName) {
       currentQuestionData = qData;
       selectedOptionIndex = null;
+      btnRollDice.style.display = 'none'; // Temporarily hide roll button to maximize screen space
       triviaCard.style.display = 'flex';
       
       qCountryTag.textContent = `🌍 ${qData.country} (${isMyTurn ? "YOUR QUESTION" : activeName.toUpperCase() + "'S QUESTION"})`;
-      
-      const textToDisplay = qData.text || qData.q || "Listen carefully to Goody:";
-      qText.textContent = textToDisplay;
-      
-      qTimer.textContent = "🔒 LISTENING TO HOST...";
+      qText.textContent = qData.text || qData.q || "Listen to host:";
+      qTimer.textContent = "🔒 LISTENING...";
 
       qData.options.forEach((opt, idx) => {
         optButtons[idx].textContent = `${["A", "B", "C", "D"][idx]}) ${opt}`;
@@ -447,7 +463,7 @@
           b.classList.remove('unlocked');
         });
         btn.classList.add('selected');
-        statusPill.textContent = "Answer locked in! Checking with Goody...";
+        statusPill.textContent = "Locked in! Checking...";
 
         if (dataConn && dataConn.open) {
           dataConn.send({
@@ -469,26 +485,27 @@
           statusPill.textContent = "🎉 CORRECT! Tile secured.";
         } else {
           optButtons[selectedOptionIndex].classList.add('flash-red');
-          statusPill.textContent = "❌ INCORRECT! Returning to start.";
+          statusPill.textContent = "❌ INCORRECT! Back to start.";
         }
       }
 
       setTimeout(() => {
         triviaCard.style.display = 'none';
+        btnRollDice.style.display = 'block'; // Restore dice button
         optButtons.forEach(b => b.className = "btn-opt");
-      }, 7000);
+      }, 5000);
     }
 
     function handleGameOver(data) {
       turnBanner.style.display = 'block';
       turnBanner.className = 'turn-mine';
-      turnBanner.textContent = `🏆 GAME OVER: ${data.winner.toUpperCase()} WINS!`;
-      statusPill.textContent = `Game ended (${data.reason}). Thanks for playing!`;
+      turnBanner.textContent = `🏆 ${data.winner.toUpperCase()} WINS!`;
+      statusPill.textContent = `Show finished (${data.reason}).`;
       btnRollDice.disabled = true;
       btnRollDice.classList.remove('active-roll');
     }
 
-    // Plushie Navigation
+    // Navigation D-Pad Handlers
     let dpadInterval = null;
     function sendPlushieMove(direction) {
       if (dataConn && dataConn.open) {
