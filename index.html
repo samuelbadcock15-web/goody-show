@@ -1,0 +1,1496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>The Goody Tonight Show - Bedroom Creator & Miniature World</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #05020a;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    #canvas3d {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    #crosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 8px;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      box-shadow: 0 0 8px #00f0ff;
+      transition: transform 0.15s, background-color 0.15s;
+      z-index: 10;
+    }
+    #crosshair.hover-active {
+      transform: translate(-50%, -50%) scale(2.2);
+      background: #ff69b4;
+      box-shadow: 0 0 14px #ff69b4;
+    }
+
+    #blocker {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(8, 4, 16, 0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      z-index: 100;
+      text-align: center;
+      backdrop-filter: blur(6px);
+    }
+
+    #instructions-card {
+      background: #1c0a32;
+      border: 3px solid #ff79b0;
+      border-radius: 18px;
+      padding: 28px 40px;
+      box-shadow: 0 0 35px rgba(255, 121, 176, 0.35);
+      max-width: 560px;
+      cursor: pointer;
+    }
+
+    h1 {
+      color: #ffda66;
+      margin-top: 0;
+      font-size: 1.6rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    p {
+      color: #ebdcf9;
+      font-size: 0.92rem;
+      line-height: 1.5;
+      margin: 8px 0;
+    }
+
+    .key {
+      background: #391563;
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid #9c4dd6;
+      font-weight: bold;
+      color: #ff69b4;
+    }
+
+    #hud {
+      position: absolute;
+      top: 18px;
+      left: 20px;
+      background: rgba(22, 9, 44, 0.88);
+      border: 2px solid #ff79b0;
+      border-radius: 12px;
+      padding: 12px 18px;
+      color: #fff;
+      font-family: monospace;
+      font-size: 0.85rem;
+      pointer-events: none;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      z-index: 20;
+    }
+    .hud-title {
+      font-weight: bold;
+      font-size: 0.95rem;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .hud-sub {
+      color: #39ff14;
+    }
+    .hud-hint {
+      color: #ffb8d9;
+      margin-top: 6px;
+      font-size: 0.78rem;
+    }
+
+    #interaction-prompt {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(18, 6, 36, 0.92);
+      border: 2px solid #ff69b4;
+      color: #fff;
+      padding: 8px 22px;
+      border-radius: 20px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      pointer-events: none;
+      display: none;
+      z-index: 25;
+      box-shadow: 0 0 15px rgba(255, 105, 180, 0.5);
+    }
+  </style>
+</head>
+<body>
+
+  <div id="crosshair"></div>
+  <div id="interaction-prompt">PRESS [E] OR LEFT CLICK</div>
+
+  <div id="hud">
+    <div class="hud-title" id="mode-title" style="color: #ffda66;">🏠 BEDROOM WORKSHOP (CREATOR SCALE)</div>
+    <div class="hud-sub" id="mode-sub">Scale: 1:1 Human Creator</div>
+    <div class="hud-hint" id="mode-hint">Walk up to the table. Click the physical 3D Power Button on the table to start the show!</div>
+  </div>
+
+  <div id="blocker">
+    <div id="instructions-card">
+      <h1>The Goody Tonight Show</h1>
+      <p>The studio starts in complete standby. Walk up to the table and click the physical <strong>3D Power Button</strong> to turn on the lights, cameras, host, remote mobile contestants, and broadcast!</p>
+      <p><strong>Click Anywhere to Enter</strong></p>
+      <p>
+        <span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> &nbsp;Walk around<br>
+        <span class="key">Mouse</span> &nbsp;Look around<br>
+        <span class="key">Left Click</span> &nbsp;Click 3D Desk Buttons, Table Diorama, TV & Radio<br>
+        <span class="key">ESC</span> or <span class="key">Q</span> &nbsp;Exit miniature mode & return to bedroom
+      </p>
+    </div>
+  </div>
+
+  <canvas id="canvas3d"></canvas>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
+
+  <script>
+    let currentMode = 'BEDROOM';
+    let studioPower = false;
+    let studioPaused = false;
+    let tvChannel = 0;
+    const totalTvChannels = 8;
+    let radioPlaying = false;
+    let blindsOpen = true;
+    let isTransitioning = false;
+
+    // Contestant Display State
+    let showJake = false;
+    let showJune = false;
+
+    const INTRO_SPEECH = 
+      "Hello, good evening, and welcome to The Goody Tonight Show. " +
+      "I'm your host, Goody! " +
+      "You are now part of the world's first and only televised self-exclusion game show, ever to be played! " +
+      "Play along at home and join in the fun! " +
+      "Tonight, two contestants will battle it out to see who can be the first to reach the end of the board before the timer runs out. " +
+      "And tonight's winner will take home our grand prize. " +
+      "But before we meet our contestants, let's quickly explain how the game works. " +
+      "At the start of the game, both contestants will roll the dice. " +
+      "The player with the highest roll goes first. " +
+      "Players then take turns rolling the dice and moving forward that number of spaces on the board. " +
+      "The space a player lands on determines the self-exclusion question they are asked. " +
+      "Each contestant has 30 seconds to answer their question. " +
+      "Answer correctly, and you stay where you are. " +
+      "Answer incorrectly, and you must return to the starting square. " +
+      "The game lasts for 20 minutes. " +
+      "If either player reaches the end of the board before the timer runs out, they win the game and take home the grand prize gift voucher. " +
+      "If the timer runs out before either player reaches the end, the contestant who is furthest ahead at that moment is declared the winner. " +
+      "If the game reaches the final question with less than 30 seconds remaining, the clock will be extended to ensure the contestant answering the question receives their full 30 seconds. " +
+      "If the final contestant answers correctly, they win the grand prize. " +
+      "If nobody wins the game, the prize rolls over to the next episode. " +
+      "And that's everything you need to know! " +
+      "Now, let's meet tonight's contestants! " +
+      "Contestant number 1! This is Jake from London! " +
+      "And let's meet contestant number 2! This is June from Nottingham!";
+
+    let currentSubtitle = "STUDIO STANDBY - POWER OFF";
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x040208);
+    scene.fog = new THREE.FogExp2(0x040208, 0.015);
+
+    const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 150);
+    camera.position.set(0, 5.5, 9);
+
+    const canvas = document.getElementById('canvas3d');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    const controls = new THREE.PointerLockControls(camera, document.body);
+    const blocker = document.getElementById('blocker');
+    const crosshair = document.getElementById('crosshair');
+    const promptEl = document.getElementById('interaction-prompt');
+
+    blocker.addEventListener('click', () => {
+      initAudio();
+      controls.lock();
+    });
+
+    controls.addEventListener('lock', () => { blocker.style.display = 'none'; });
+    controls.addEventListener('unlock', () => {
+      if (currentMode === 'MINIATURE') {
+        exitToBedroom();
+      } else {
+        blocker.style.display = 'flex';
+      }
+    });
+
+    // ==========================================
+    // AUDIO ENGINE
+    // ==========================================
+    let audioCtx = null;
+    let radioInterval = null;
+    let tvSoundInterval = null;
+    let staticNoiseNode = null;
+    let goodyUtterance = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playTone(freq, type, duration, gainVal = 0.05) {
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        g.gain.setValueAtTime(gainVal, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.connect(g);
+        g.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch(e) {}
+    }
+
+    function playMechanicalSwitchClick() {
+      initAudio();
+      playTone(180, 'square', 0.04, 0.08);
+      setTimeout(() => playTone(320, 'triangle', 0.06, 0.05), 30);
+    }
+
+    function startGoodyMonologue() {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+
+      showJake = false;
+      showJune = false;
+
+      goodyUtterance = new SpeechSynthesisUtterance(INTRO_SPEECH);
+      goodyUtterance.rate = 0.95;
+      goodyUtterance.pitch = 1.25;
+
+      const voices = window.speechSynthesis.getVoices();
+      const engVoice = voices.find(v => v.lang.includes('en') || v.lang.includes('GB') || v.lang.includes('US'));
+      if (engVoice) goodyUtterance.voice = engVoice;
+
+      goodyUtterance.onboundary = (event) => {
+        if (event.name === 'word' || event.name === 'sentence') {
+          const charIdx = event.charIndex;
+          const chunk = INTRO_SPEECH.substring(charIdx, charIdx + 70);
+          currentSubtitle = chunk.length > 55 ? chunk.substring(0, 55) + "..." : chunk;
+          playTone(480 + Math.random() * 220, 'triangle', 0.06, 0.02);
+
+          // Synchronise Contestant Video Screen Appearance with Goody's lines
+          const fullTextSoFar = INTRO_SPEECH.substring(0, charIdx + 20);
+          if (fullTextSoFar.includes("Contestant number 1") || fullTextSoFar.includes("Jake from London")) {
+            showJake = true;
+          }
+          if (fullTextSoFar.includes("contestant number 2") || fullTextSoFar.includes("June from Nottingham")) {
+            showJune = true;
+          }
+        }
+      };
+
+      goodyUtterance.onend = () => {
+        currentSubtitle = "JAKE AND JUNE ARE READY! LET THE GAME BEGIN!";
+      };
+
+      window.speechSynthesis.speak(goodyUtterance);
+    }
+
+    function pauseGoodySpeech(pause) {
+      if (!('speechSynthesis' in window)) return;
+      if (pause) window.speechSynthesis.pause();
+      else window.speechSynthesis.resume();
+    }
+
+    function stopGoodySpeech() {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      currentSubtitle = "STUDIO STANDBY - POWER OFF";
+      showJake = false;
+      showJune = false;
+    }
+
+    const plushMelody = [523.25, 659.25, 783.99, 1046.50, 880.00, 783.99, 659.25, 587.33, 523.25, 587.33, 659.25, 783.99, 659.25, 587.33, 523.25, 523.25];
+    const plushBass   = [130.81, 130.81, 174.61, 196.00, 220.00, 196.00, 174.61, 146.83, 130.81, 146.83, 164.81, 196.00, 174.61, 196.00, 130.81, 130.81];
+    let radioStep = 0;
+
+    function toggleRadioMusic(play) {
+      initAudio();
+      if (!play) {
+        if (radioInterval) { clearInterval(radioInterval); radioInterval = null; }
+        return;
+      }
+      radioStep = 0;
+      radioInterval = setInterval(() => {
+        const mFreq = plushMelody[radioStep % plushMelody.length];
+        playTone(mFreq, 'sine', 0.22, 0.05);
+        const bFreq = plushBass[radioStep % plushBass.length];
+        playTone(bFreq, 'triangle', 0.28, 0.07);
+        radioStep++;
+      }, 230);
+    }
+
+    let tvStep = 0;
+    function stopTvAudio() {
+      if (tvSoundInterval) { clearInterval(tvSoundInterval); tvSoundInterval = null; }
+      if (staticNoiseNode) {
+        try { staticNoiseNode.stop(); staticNoiseNode.disconnect(); } catch(e){}
+        staticNoiseNode = null;
+      }
+    }
+
+    function updateTvAudio() {
+      initAudio();
+      stopTvAudio();
+
+      if (tvChannel === 0) {
+        const gameShowNotes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63];
+        tvSoundInterval = setInterval(() => {
+          if (studioPower && !studioPaused) {
+            playTone(gameShowNotes[tvStep % gameShowNotes.length], 'sine', 0.2, 0.015);
+            tvStep++;
+          }
+        }, 340);
+      } else if (tvChannel === 1) {
+        const mvNotes = [587.33, 659.25, 783.99, 880, 987.77, 880, 783.99, 659.25];
+        tvSoundInterval = setInterval(() => {
+          playTone(mvNotes[tvStep % mvNotes.length], 'sawtooth', 0.16, 0.035);
+          playTone(110 + (tvStep % 2 === 0 ? 0 : 36), 'square', 0.12, 0.04);
+          tvStep++;
+        }, 160);
+      } else if (tvChannel === 2) {
+        const dramaNotes = [261.63, 311.13, 392.00, 311.13, 246.94, 293.66, 369.99, 293.66];
+        tvSoundInterval = setInterval(() => {
+          playTone(dramaNotes[tvStep % dramaNotes.length], 'sine', 0.7, 0.045);
+          tvStep++;
+        }, 750);
+      } else if (tvChannel === 3) {
+        const newsNotes = [440, 440, 554.37, 659.25, 440, 0, 880, 0];
+        tvSoundInterval = setInterval(() => {
+          if (newsNotes[tvStep % newsNotes.length] > 0) playTone(newsNotes[tvStep % newsNotes.length], 'triangle', 0.15, 0.05);
+          tvStep++;
+        }, 190);
+      } else if (tvChannel === 4) {
+        const natureNotes = [783.99, 1046.50, 1318.51, 1567.98];
+        tvSoundInterval = setInterval(() => {
+          if (Math.random() > 0.4) playTone(natureNotes[Math.floor(Math.random() * natureNotes.length)], 'sine', 0.18, 0.025);
+        }, 320);
+      } else if (tvChannel === 5) {
+        const bakeNotes = [523.25, 659.25, 783.99, 659.25, 880, 783.99, 659.25, 587.33];
+        tvSoundInterval = setInterval(() => {
+          playTone(bakeNotes[tvStep % bakeNotes.length], 'triangle', 0.12, 0.035);
+          tvStep++;
+        }, 180);
+      } else if (tvChannel === 6) {
+        try {
+          const bufferSize = audioCtx.sampleRate * 1.5;
+          const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+          staticNoiseNode = audioCtx.createBufferSource();
+          staticNoiseNode.buffer = buffer;
+          staticNoiseNode.loop = true;
+          const gainNode = audioCtx.createGain();
+          gainNode.gain.setValueAtTime(0.025, audioCtx.currentTime);
+          staticNoiseNode.connect(gainNode);
+          gainNode.connect(audioCtx.destination);
+          staticNoiseNode.start();
+        } catch(e) {}
+      } else {
+        stopTvAudio();
+      }
+    }
+
+    // ==========================================
+    // BEDROOM LIGHTING
+    // ==========================================
+    const ambientLight = new THREE.AmbientLight(0x181026, 0.85);
+    scene.add(ambientLight);
+
+    const ceilingLight = new THREE.PointLight(0xffecd2, 1.0, 50);
+    ceilingLight.position.set(0, 13.5, 0);
+    ceilingLight.castShadow = true;
+    scene.add(ceilingLight);
+
+    const deskLampLight = new THREE.PointLight(0xffea9f, 0, 20);
+    deskLampLight.position.set(-6.5, 7.8, -4.5);
+    deskLampLight.castShadow = true;
+    scene.add(deskLampLight);
+
+    const moonLight = new THREE.DirectionalLight(0x4a75a0, 0.75);
+    moonLight.position.set(-18, 12, 5);
+    scene.add(moonLight);
+
+    // ==========================================
+    // OVERHEAD LIGHT TRUSS & SPOTLIGHTS
+    // ==========================================
+    const trussGroup = new THREE.Group();
+    trussGroup.position.set(0, 8.4, -9.8);
+
+    const trussMat = new THREE.MeshStandardMaterial({ color: 0x3d3d4e, metalness: 0.85, roughness: 0.3 });
+    const trussArch = new THREE.Mesh(new THREE.TorusGeometry(3.6, 0.08, 8, 24, Math.PI), trussMat);
+    trussArch.rotation.x = Math.PI / 2;
+    trussGroup.add(trussArch);
+
+    const barGeo = new THREE.CylinderGeometry(0.05, 0.05, 7.2);
+    const crossBar = new THREE.Mesh(barGeo, trussMat);
+    crossBar.rotation.z = Math.PI / 2;
+    trussGroup.add(crossBar);
+
+    function createDownFacingSpotlight(colorHex, x, y, z, angleY) {
+      const fixGroup = new THREE.Group();
+      fixGroup.position.set(x, y, z);
+
+      const arm = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.03, 8, 16, Math.PI), trussMat);
+      arm.rotation.x = Math.PI / 2;
+      fixGroup.add(arm);
+
+      const headPivot = new THREE.Group();
+
+      const canMat = new THREE.MeshStandardMaterial({ color: 0x15151e, metalness: 0.85, roughness: 0.3 });
+      const can = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.24, 0.55, 16), canMat);
+      can.rotation.x = Math.PI / 2;
+      headPivot.add(can);
+
+      const lensMat = new THREE.MeshBasicMaterial({ color: 0x050505 });
+      const lens = new THREE.Mesh(new THREE.CircleGeometry(0.19, 16), lensMat);
+      lens.position.set(0, 0, 0.28);
+      headPivot.add(lens);
+
+      const spot = new THREE.SpotLight(colorHex, 0, 18, Math.PI / 3.4, 0.35);
+      spot.position.set(0, 0, 0.28);
+      spot.castShadow = true;
+      headPivot.add(spot);
+
+      const targetObj = new THREE.Object3D();
+      targetObj.position.set(x * 0.4, -4.5, 0.8);
+      scene.add(targetObj);
+      spot.target = targetObj;
+
+      headPivot.rotation.x = Math.PI * 0.35;
+      headPivot.rotation.y = angleY;
+
+      fixGroup.add(headPivot);
+      trussGroup.add(fixGroup);
+
+      return { spot: spot, lens: lens, color: colorHex, pivot: headPivot, target: targetObj };
+    }
+
+    const fixtureCyan = createDownFacingSpotlight(0x00f0ff, -2.4, 0.0, 0.2, 0.2);
+    const fixtureGold = createDownFacingSpotlight(0xffea00, 0.0, 0.2, -0.1, 0.0);
+    const fixtureMagenta = createDownFacingSpotlight(0xff007f, 2.4, 0.0, 0.2, -0.2);
+
+    scene.add(trussGroup);
+
+    function updateStudioLighting(power, paused) {
+      if (!power || paused) {
+        deskLampLight.intensity = 0;
+        fixtureCyan.spot.intensity = 0;
+        fixtureMagenta.spot.intensity = 0;
+        fixtureGold.spot.intensity = 0;
+        fixtureCyan.lens.material.color.setHex(0x0a0a0a);
+        fixtureMagenta.lens.material.color.setHex(0x0a0a0a);
+        fixtureGold.lens.material.color.setHex(0x0a0a0a);
+      } else {
+        deskLampLight.intensity = 2.5;
+        fixtureCyan.spot.intensity = 5.0;
+        fixtureMagenta.spot.intensity = 5.0;
+        fixtureGold.spot.intensity = 5.5;
+        fixtureCyan.lens.material.color.setHex(fixtureCyan.color);
+        fixtureMagenta.lens.material.color.setHex(fixtureMagenta.color);
+        fixtureGold.lens.material.color.setHex(fixtureGold.color);
+      }
+    }
+
+    // ==========================================
+    // BEDROOM SETUP
+    // ==========================================
+    const bedroomGroup = new THREE.Group();
+
+    const floorGeo = new THREE.PlaneGeometry(36, 36);
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x1f140e, roughness: 0.8 });
+    const bedroomFloor = new THREE.Mesh(floorGeo, floorMat);
+    bedroomFloor.rotation.x = -Math.PI / 2;
+    bedroomFloor.receiveShadow = true;
+    bedroomGroup.add(bedroomFloor);
+
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x180f26, roughness: 0.95 });
+    
+    const backWall = new THREE.Mesh(new THREE.PlaneGeometry(36, 16), wallMat);
+    backWall.position.set(0, 8, -18);
+    bedroomGroup.add(backWall);
+
+    const frontWall = new THREE.Mesh(new THREE.PlaneGeometry(36, 16), wallMat);
+    frontWall.position.set(0, 8, 18);
+    frontWall.rotation.y = Math.PI;
+    bedroomGroup.add(frontWall);
+
+    const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(36, 16), wallMat);
+    leftWall.position.set(-18, 8, 0);
+    leftWall.rotation.y = Math.PI / 2;
+    bedroomGroup.add(leftWall);
+
+    const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(36, 16), wallMat);
+    rightWall.position.set(18, 8, 0);
+    rightWall.rotation.y = -Math.PI / 2;
+    bedroomGroup.add(rightWall);
+
+    const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(36, 36), wallMat);
+    ceiling.position.set(0, 16, 0);
+    ceiling.rotation.x = Math.PI / 2;
+    bedroomGroup.add(ceiling);
+
+    const bedFrame = new THREE.Mesh(new THREE.BoxGeometry(8, 1.2, 12), new THREE.MeshStandardMaterial({ color: 0x24120a }));
+    bedFrame.position.set(12, 0.6, 10);
+    bedroomGroup.add(bedFrame);
+
+    const mattress = new THREE.Mesh(new THREE.BoxGeometry(7.6, 1.2, 11.6), new THREE.MeshStandardMaterial({ color: 0x4a2a6b, roughness: 0.9 }));
+    mattress.position.set(12, 1.6, 10);
+    bedroomGroup.add(mattress);
+
+    const pillow = new THREE.Mesh(new THREE.BoxGeometry(5.5, 0.6, 2.5), new THREE.MeshStandardMaterial({ color: 0xe0e0e0 }));
+    pillow.position.set(12, 2.4, 14);
+    bedroomGroup.add(pillow);
+
+    const sideTable = new THREE.Mesh(new THREE.BoxGeometry(3, 2.8, 3), new THREE.MeshStandardMaterial({ color: 0x24120a }));
+    sideTable.position.set(6, 1.4, 15);
+    bedroomGroup.add(sideTable);
+
+    const radioMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(1.6, 0.9, 0.8),
+      new THREE.MeshStandardMaterial({ color: 0xff69b4, metalness: 0.2, roughness: 0.4 })
+    );
+    radioMesh.position.set(6, 3.25, 15);
+    radioMesh.name = "INTERACTIVE_RADIO";
+    bedroomGroup.add(radioMesh);
+
+    const radioAntenna = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.02, 0.02, 1.8),
+      new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9 })
+    );
+    radioAntenna.position.set(6.6, 4.2, 14.8);
+    radioAntenna.rotation.z = -0.3;
+    bedroomGroup.add(radioAntenna);
+
+    const winFrame = new THREE.Mesh(new THREE.BoxGeometry(0.4, 7, 9), new THREE.MeshStandardMaterial({ color: 0x2b1509 }));
+    winFrame.position.set(-17.8, 8, 2);
+    winFrame.name = "INTERACTIVE_WINDOW";
+    bedroomGroup.add(winFrame);
+
+    const skyCanvas = document.createElement('canvas');
+    skyCanvas.width = 512; skyCanvas.height = 512;
+    const sctx = skyCanvas.getContext('2d');
+    sctx.fillStyle = '#050814'; sctx.fillRect(0, 0, 512, 512);
+    sctx.fillStyle = '#fffae8'; sctx.beginPath(); sctx.arc(380, 100, 45, 0, Math.PI * 2); sctx.fill();
+    sctx.fillStyle = '#0a0d1a';
+    for (let x = 0; x < 512; x += 36) {
+      const h = 80 + Math.sin(x * 12.5) * 60 + (x % 50) * 2;
+      sctx.fillRect(x, 512 - h, 32, h);
+      sctx.fillStyle = '#ffda66';
+      if (x % 3 === 0) sctx.fillRect(x + 8, 512 - h + 20, 6, 8);
+      sctx.fillStyle = '#0a0d1a';
+    }
+    const windowGlass = new THREE.Mesh(new THREE.PlaneGeometry(8.6, 6.6), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(skyCanvas) }));
+    windowGlass.position.set(-17.7, 8, 2);
+    windowGlass.rotation.y = Math.PI / 2;
+    bedroomGroup.add(windowGlass);
+
+    const windowBlinds = new THREE.Mesh(new THREE.BoxGeometry(0.2, 6.6, 8.6), new THREE.MeshStandardMaterial({ color: 0x8e83a3 }));
+    windowBlinds.position.set(-17.6, 8, 2);
+    windowBlinds.visible = false;
+    bedroomGroup.add(windowBlinds);
+
+    // ==========================================
+    // WALL TV SCREEN (LOWER LEVEL BROADCAST)
+    // ==========================================
+    const tvBox = new THREE.Mesh(
+      new THREE.BoxGeometry(0.6, 5.5, 9.5),
+      new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.8, roughness: 0.2 })
+    );
+    tvBox.position.set(17.6, 8.5, -4);
+    bedroomGroup.add(tvBox);
+
+    const tvScreenCanvas = document.createElement('canvas');
+    tvScreenCanvas.width = 512; tvScreenCanvas.height = 300;
+    const tvCtx = tvScreenCanvas.getContext('2d');
+    const tvTexture = new THREE.CanvasTexture(tvScreenCanvas);
+
+    const tvScreenMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(9.1, 5.1),
+      new THREE.MeshBasicMaterial({ map: tvTexture })
+    );
+    tvScreenMesh.position.set(17.28, 8.5, -4);
+    tvScreenMesh.rotation.y = -Math.PI / 2;
+    tvScreenMesh.name = "INTERACTIVE_TV";
+    bedroomGroup.add(tvScreenMesh);
+
+    function drawHumanContestant(ctx, x, y, width, height, name, city, isGuy = true) {
+      // Monitor frame
+      ctx.fillStyle = '#0a0d1a';
+      ctx.fillRect(x, y, width, height);
+      ctx.strokeStyle = '#00f0ff';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, width, height);
+
+      // Living Room background
+      ctx.fillStyle = isGuy ? '#1b2a47' : '#3d1b38';
+      ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
+
+      // Human character holding mobile phone
+      const cx = x + width / 2;
+      const cy = y + height * 0.58;
+
+      // Body / Shirt
+      ctx.fillStyle = isGuy ? '#4a69bd' : '#e84393';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 25, 26, 32, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Head
+      ctx.fillStyle = '#f8c291';
+      ctx.beginPath();
+      ctx.arc(cx, cy - 10, 16, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Hair
+      ctx.fillStyle = isGuy ? '#2d3436' : '#f6b93b';
+      ctx.beginPath();
+      ctx.arc(cx, cy - 16, 17, Math.PI, Math.PI * 2);
+      ctx.fill();
+
+      // Eyes & Smile
+      ctx.fillStyle = '#111';
+      ctx.beginPath(); ctx.arc(cx - 5, cy - 10, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx + 5, cy - 10, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#111'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(cx, cy - 6, 4, 0.2, Math.PI - 0.2); ctx.stroke();
+
+      // Smartphone held in hand with green call indicator
+      ctx.fillStyle = '#111';
+      ctx.fillRect(cx + 10, cy + 2, 10, 18);
+      ctx.fillStyle = '#00f0ff';
+      ctx.fillRect(cx + 11, cy + 4, 8, 14);
+
+      // Name & Connection Badge
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+      ctx.fillRect(x, y + height - 24, width, 24);
+      ctx.fillStyle = '#39ff14';
+      ctx.font = 'bold 10px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(`📱 ${name.toUpperCase()} [${city.toUpperCase()}]`, cx, y + height - 8);
+    }
+
+    let tvAnimTime = 0;
+    function renderTVScreen() {
+      tvAnimTime += 0.04;
+      const t = tvAnimTime;
+
+      if (tvChannel === 0) {
+        tvCtx.fillStyle = studioPower ? '#110524' : '#05020a';
+        tvCtx.fillRect(0, 0, 512, 300);
+
+        if (!studioPower) {
+          tvCtx.fillStyle = '#ff7675';
+          tvCtx.font = 'bold 24px monospace';
+          tvCtx.textAlign = 'center';
+          tvCtx.fillText("🔴 LIVE CAM 1: STANDBY", 256, 120);
+          tvCtx.fillStyle = '#fff';
+          tvCtx.font = '16px monospace';
+          tvCtx.fillText("STUDIO POWER IS CURRENTLY OFF", 256, 160);
+          tvCtx.fillText("CLICK 3D POWER BUTTON ON TABLE TO COMMENCE", 256, 190);
+          tvCtx.textAlign = 'left';
+        } else {
+          tvCtx.fillStyle = '#2b104d';
+          tvCtx.fillRect(0, 180, 512, 120);
+
+          tvCtx.strokeStyle = 'rgba(0, 240, 255, 0.35)';
+          tvCtx.lineWidth = 8;
+          tvCtx.beginPath(); tvCtx.moveTo(100, 0); tvCtx.lineTo(256 + Math.sin(t*3)*60, 220);
+          tvCtx.stroke();
+
+          tvCtx.strokeStyle = 'rgba(255, 0, 127, 0.35)';
+          tvCtx.beginPath(); tvCtx.moveTo(412, 0); tvCtx.lineTo(256 - Math.sin(t*3)*60, 220);
+          tvCtx.stroke();
+
+          // Render Goody Robot on TV Screen
+          const rX = 256; const rY = 160;
+          tvCtx.fillStyle = '#333'; tvCtx.fillRect(rX - 35, rY - 45, 70, 50);
+          tvCtx.fillStyle = '#000'; tvCtx.fillRect(rX - 30, rY - 40, 60, 40);
+          tvCtx.fillStyle = '#39ff14'; tvCtx.font = 'bold 26px monospace'; tvCtx.textAlign = 'center';
+          tvCtx.fillText(studioPaused ? "-_-" : "^‿^", rX, rY - 12);
+
+          tvCtx.fillStyle = '#444'; tvCtx.fillRect(rX - 40, rY + 8, 80, 45);
+          tvCtx.fillStyle = '#00f0ff'; tvCtx.fillRect(rX - 25, rY + 18, 50, 12);
+          tvCtx.fillStyle = '#000'; tvCtx.font = 'bold 9px monospace';
+          tvCtx.fillText("GOODY HOST", rX, rY + 27);
+
+          // Video in Video Split Boxes on TV when Contestants are introduced!
+          if (showJake) {
+            drawHumanContestant(tvCtx, 18, 48, 120, 105, "Jake", "London", true);
+          }
+          if (showJune) {
+            drawHumanContestant(tvCtx, 374, 48, 120, 105, "June", "Nottingham", false);
+          }
+
+          tvCtx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+          tvCtx.fillRect(0, 0, 512, 38);
+          tvCtx.fillStyle = '#ff2a5f';
+          tvCtx.beginPath(); tvCtx.arc(22, 18, 7, 0, Math.PI * 2); tvCtx.fill();
+          tvCtx.fillStyle = '#fff';
+          tvCtx.font = 'bold 15px monospace';
+          tvCtx.textAlign = 'left';
+          tvCtx.fillText("🔴 LIVE PTZ-CAM 1 • THE GOODY TONIGHT SHOW", 38, 23);
+
+          tvCtx.fillStyle = 'rgba(10, 3, 22, 0.9)';
+          tvCtx.fillRect(0, 240, 512, 60);
+          tvCtx.fillStyle = '#ffda66';
+          tvCtx.font = 'bold 14px monospace';
+          tvCtx.fillText(`[GOODY]: "${currentSubtitle}"`, 14, 275);
+        }
+      } else {
+        tvCtx.fillStyle = '#060606'; tvCtx.fillRect(0, 0, 512, 300);
+      }
+
+      tvTexture.needsUpdate = true;
+    }
+
+    const deskGroup = new THREE.Group();
+    const deskTop = new THREE.Mesh(
+      new THREE.BoxGeometry(22, 1.0, 16),
+      new THREE.MeshStandardMaterial({ color: 0x331c0e, roughness: 0.65 })
+    );
+    deskTop.position.set(0, 3.4, -9);
+    deskTop.receiveShadow = true;
+    deskTop.castShadow = true;
+    deskGroup.add(deskTop);
+
+    const dLegGeo = new THREE.CylinderGeometry(0.4, 0.4, 3.4, 16);
+    const dLegMat = new THREE.MeshStandardMaterial({ color: 0x111, metalness: 0.8 });
+    [[-10, 1.7, -16], [10, 1.7, -16], [-10, 1.7, -2], [10, 1.7, -2]].forEach(([x, y, z]) => {
+      const l = new THREE.Mesh(dLegGeo, dLegMat);
+      l.position.set(x, y, z);
+      deskGroup.add(l);
+    });
+
+    const lampArm = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 5.5), dLegMat);
+    lampArm.position.set(-8, 5.8, -5);
+    lampArm.rotation.z = -0.3;
+    deskGroup.add(lampArm);
+
+    const lampShade = new THREE.Mesh(new THREE.ConeGeometry(0.9, 1.4, 16, 1, true), new THREE.MeshStandardMaterial({ color: 0xffda66, side: THREE.DoubleSide }));
+    lampShade.position.set(-6.8, 8.0, -4.5);
+    lampShade.rotation.z = 1.0;
+    deskGroup.add(lampShade);
+
+    bedroomGroup.add(deskGroup);
+    scene.add(bedroomGroup);
+
+    // =======================================================
+    // 3D DESK CONTROLLER
+    // =======================================================
+    const consoleBoxGroup = new THREE.Group();
+    consoleBoxGroup.position.set(8.2, 3.92, -5.5);
+
+    const boxMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(2.4, 0.45, 1.8),
+      new THREE.MeshStandardMaterial({ color: 0x1a1a24, metalness: 0.7, roughness: 0.35 })
+    );
+    boxMesh.position.y = 0.225;
+    boxMesh.castShadow = true;
+    consoleBoxGroup.add(boxMesh);
+
+    const faceplateMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.2, 1.6),
+      new THREE.MeshStandardMaterial({ color: 0x2d1d4d, roughness: 0.8 })
+    );
+    faceplateMesh.rotation.x = -Math.PI / 2;
+    faceplateMesh.position.set(0, 0.455, 0);
+    consoleBoxGroup.add(faceplateMesh);
+
+    const btnPowerBase = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.12, 16), new THREE.MeshStandardMaterial({ color: 0x333 }));
+    btnPowerBase.position.set(-0.6, 0.48, 0.15);
+    consoleBoxGroup.add(btnPowerBase);
+
+    const btnPowerCap = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.16, 16), new THREE.MeshStandardMaterial({ color: 0xd63031, roughness: 0.3 }));
+    btnPowerCap.position.set(-0.6, 0.58, 0.15);
+    btnPowerCap.name = "PHYSICAL_BTN_POWER";
+    consoleBoxGroup.add(btnPowerCap);
+
+    const ledPower = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), new THREE.MeshBasicMaterial({ color: 0x1a0000 }));
+    ledPower.position.set(-0.6, 0.52, -0.45);
+    consoleBoxGroup.add(ledPower);
+
+    const btnPauseBase = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.12, 16), new THREE.MeshStandardMaterial({ color: 0x333 }));
+    btnPauseBase.position.set(0.6, 0.48, 0.15);
+    consoleBoxGroup.add(btnPauseBase);
+
+    const btnPauseCap = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.16, 16), new THREE.MeshStandardMaterial({ color: 0xf1c40f, roughness: 0.3 }));
+    btnPauseCap.position.set(0.6, 0.58, 0.15);
+    btnPauseCap.name = "PHYSICAL_BTN_PAUSE";
+    consoleBoxGroup.add(btnPauseCap);
+
+    const ledPause = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), new THREE.MeshBasicMaterial({ color: 0x111111 }));
+    ledPause.position.set(0.6, 0.52, -0.45);
+    consoleBoxGroup.add(ledPause);
+
+    scene.add(consoleBoxGroup);
+
+    const wireMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.7 });
+    const wireCurve1 = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(7.2, 4.15, -5.5),
+      new THREE.Vector3(6.0, 3.98, -6.2),
+      new THREE.Vector3(4.8, 3.98, -7.5),
+      new THREE.Vector3(4.5, 4.18, -8.2)
+    ]);
+    const wireMesh1 = new THREE.Mesh(new THREE.TubeGeometry(wireCurve1, 24, 0.05, 8, false), wireMat);
+    scene.add(wireMesh1);
+
+    const wireMatRed = new THREE.MeshStandardMaterial({ color: 0xb71c1c, roughness: 0.7 });
+    const wireCurve2 = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(7.2, 4.15, -5.8),
+      new THREE.Vector3(5.8, 3.98, -6.6),
+      new THREE.Vector3(4.5, 3.98, -8.0),
+      new THREE.Vector3(4.2, 4.18, -8.6)
+    ]);
+    const wireMesh2 = new THREE.Mesh(new THREE.TubeGeometry(wireCurve2, 24, 0.045, 8, false), wireMatRed);
+    scene.add(wireMesh2);
+
+    // ==========================================
+    // MINIATURE TV STUDIO WITH DYNAMIC SCREEN
+    // ==========================================
+    const miniDiorama = new THREE.Group();
+    miniDiorama.position.set(0, 3.95, -9);
+
+    const trayBase = new THREE.Mesh(
+      new THREE.CylinderGeometry(7.2, 7.4, 0.4, 48),
+      new THREE.MeshStandardMaterial({ color: 0x1c0b33, roughness: 0.6 })
+    );
+    trayBase.position.y = 0.2;
+    trayBase.receiveShadow = true;
+    miniDiorama.add(trayBase);
+
+    const feltCarpet = new THREE.Mesh(
+      new THREE.CylinderGeometry(7.0, 7.0, 0.08, 48),
+      new THREE.MeshStandardMaterial({ color: 0x271147, roughness: 0.85 })
+    );
+    feltCarpet.position.y = 0.44;
+    feltCarpet.name = "MINIATURE_CLICK_PORTAL";
+    miniDiorama.add(feltCarpet);
+
+    const miniWall = new THREE.Mesh(
+      new THREE.CylinderGeometry(7.0, 7.0, 4.5, 32, 1, true, -Math.PI / 2, Math.PI),
+      new THREE.MeshStandardMaterial({ color: 0x15092a, side: THREE.BackSide })
+    );
+    miniWall.position.y = 2.65;
+    miniDiorama.add(miniWall);
+
+    // Studio Backstage Screens: Left (Jake) & Right (June)
+    const studioScreenCanvas = document.createElement('canvas');
+    studioScreenCanvas.width = 512;
+    studioScreenCanvas.height = 256;
+    const sScreenCtx = studioScreenCanvas.getContext('2d');
+    const studioScreenTex = new THREE.CanvasTexture(studioScreenCanvas);
+
+    function renderStudioBackstageScreen() {
+      sScreenCtx.fillStyle = '#0a0518';
+      sScreenCtx.fillRect(0, 0, 512, 256);
+
+      if (studioPower) {
+        // Left Screen: Jake
+        if (showJake) {
+          drawHumanContestant(sScreenCtx, 15, 20, 225, 215, "Jake", "London", true);
+        } else {
+          sScreenCtx.strokeStyle = '#ffb300';
+          sScreenCtx.lineWidth = 4;
+          sScreenCtx.strokeRect(15, 20, 225, 215);
+          sScreenCtx.fillStyle = '#ffda66';
+          sScreenCtx.font = 'bold 22px sans-serif';
+          sScreenCtx.textAlign = 'center';
+          sScreenCtx.fillText("CONTESTANT 1", 127, 120);
+          sScreenCtx.font = '14px monospace';
+          sScreenCtx.fillStyle = '#39ff14';
+          sScreenCtx.fillText("STANDBY FOR CALL...", 127, 150);
+        }
+
+        // Right Screen: June
+        if (showJune) {
+          drawHumanContestant(sScreenCtx, 272, 20, 225, 215, "June", "Nottingham", false);
+        } else {
+          sScreenCtx.strokeStyle = '#ffb300';
+          sScreenCtx.lineWidth = 4;
+          sScreenCtx.strokeRect(272, 20, 225, 215);
+          sScreenCtx.fillStyle = '#ffda66';
+          sScreenCtx.font = 'bold 22px sans-serif';
+          sScreenCtx.textAlign = 'center';
+          sScreenCtx.fillText("CONTESTANT 2", 384, 120);
+          sScreenCtx.font = '14px monospace';
+          sScreenCtx.fillStyle = '#39ff14';
+          sScreenCtx.fillText("STANDBY FOR CALL...", 384, 150);
+        }
+      }
+
+      studioScreenTex.needsUpdate = true;
+    }
+
+    const studioBackScreenMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(6.4, 2.8),
+      new THREE.MeshBasicMaterial({ map: studioScreenTex })
+    );
+    studioBackScreenMesh.position.set(0, 3.4, -4.5);
+    miniDiorama.add(studioBackScreenMesh);
+
+    // Goody Robot Host
+    const miniGoody = new THREE.Group();
+    const gMetalMat = new THREE.MeshStandardMaterial({ color: 0x333, metalness: 0.75, roughness: 0.3 });
+
+    const gPodium = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 0.6, 20), new THREE.MeshStandardMaterial({ color: 0x2b154a }));
+    gPodium.position.y = 0.74;
+    miniGoody.add(gPodium);
+
+    const gBody = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.4), gMetalMat);
+    gBody.position.y = 1.34;
+    miniGoody.add(gBody);
+
+    const gHead = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.35, 0.35), gMetalMat);
+    gHead.position.y = 1.82;
+    miniGoody.add(gHead);
+
+    const faceCanvas = document.createElement('canvas');
+    faceCanvas.width = 128; faceCanvas.height = 128;
+    const fctx = faceCanvas.getContext('2d');
+    fctx.fillStyle = '#000'; fctx.fillRect(0, 0, 128, 128);
+    const faceTex = new THREE.CanvasTexture(faceCanvas);
+    const gFace = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 0.25), new THREE.MeshBasicMaterial({ map: faceTex }));
+    gFace.position.set(0, 1.82, 0.19);
+    miniGoody.add(gFace);
+
+    const gAntOrb = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), new THREE.MeshBasicMaterial({ color: 0x111111 }));
+    gAntOrb.position.y = 2.15;
+    miniGoody.add(gAntOrb);
+
+    miniGoody.position.set(0, 0, -1.0);
+    miniDiorama.add(miniGoody);
+
+    function updateGoodyFaceExpression() {
+      fctx.fillStyle = '#000'; fctx.fillRect(0, 0, 128, 128);
+      if (!studioPower) {
+        gAntOrb.material.color.setHex(0x111111);
+      } else if (studioPaused) {
+        fctx.fillStyle = '#ffaa00';
+        fctx.font = 'bold 48px monospace'; fctx.textAlign = 'center';
+        fctx.fillText("o_O", 64, 80);
+        gAntOrb.material.color.setHex(0xffaa00);
+      } else {
+        fctx.fillStyle = '#39ff14';
+        fctx.font = 'bold 48px monospace'; fctx.textAlign = 'center';
+        fctx.fillText("^‿^", 64, 80);
+        gAntOrb.material.color.setHex(0x39ff14);
+      }
+      faceTex.needsUpdate = true;
+    }
+
+    // =========================================================================
+    // CORRECTED BROADCAST CAMERAS (LENS BUILT DIRECTLY ALONG LOOKAT VECTOR)
+    // =========================================================================
+    function createStudioRoboticCamera(x, z) {
+      const camRig = new THREE.Group();
+      camRig.position.set(x, 0.44, z);
+
+      const darkMat = new THREE.MeshStandardMaterial({ color: 0x1f1f26, metalness: 0.8, roughness: 0.3 });
+      const chromeMat = new THREE.MeshStandardMaterial({ color: 0xdcdde1, metalness: 0.95, roughness: 0.1 });
+
+      const basePlate = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.42, 0.08, 16), darkMat);
+      basePlate.position.y = 0.04;
+      camRig.add(basePlate);
+
+      for (let i = 0; i < 3; i++) {
+        const ang = (i / 3) * Math.PI * 2;
+        const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.04, 8), darkMat);
+        wheel.position.set(Math.cos(ang) * 0.34, 0.04, Math.sin(ang) * 0.34);
+        camRig.add(wheel);
+      }
+
+      const outerCol = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.13, 0.55, 16), darkMat);
+      outerCol.position.y = 0.35;
+      camRig.add(outerCol);
+
+      const liftGroup = new THREE.Group();
+      liftGroup.position.y = 0.58;
+
+      const innerPiston = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.45, 16), chromeMat);
+      innerPiston.position.y = 0.2;
+      liftGroup.add(innerPiston);
+
+      const headPivot = new THREE.Group();
+      headPivot.position.y = 0.42;
+
+      const cameraBox = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.24, 0.42), darkMat);
+      cameraBox.position.set(0, 0, -0.05);
+      headPivot.add(cameraBox);
+
+      // Lens barrel extending toward +Z
+      const lensBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.095, 0.26, 16), new THREE.MeshStandardMaterial({ color: 0x0a0a0a }));
+      lensBarrel.rotation.x = Math.PI / 2;
+      lensBarrel.position.set(0, 0, 0.24);
+      headPivot.add(lensBarrel);
+
+      const matteBox = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.20, 0.10), darkMat);
+      matteBox.position.set(0, 0, 0.38);
+      headPivot.add(matteBox);
+
+      const frontGlass = new THREE.Mesh(new THREE.CircleGeometry(0.08, 16), new THREE.MeshBasicMaterial({ color: 0x050505 }));
+      frontGlass.position.set(0, 0, 0.431);
+      headPivot.add(frontGlass);
+
+      const tallyMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+      const tallyLamp = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), tallyMat);
+      tallyLamp.position.set(0, 0.15, 0.28);
+      headPivot.add(tallyLamp);
+
+      const vfScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.12), new THREE.MeshBasicMaterial({ color: 0x050505 }));
+      vfScreen.position.set(0, 0.02, -0.261);
+      vfScreen.rotation.y = Math.PI;
+      headPivot.add(vfScreen);
+
+      liftGroup.add(headPivot);
+      camRig.add(liftGroup);
+      miniDiorama.add(camRig);
+
+      return {
+        rig: camRig,
+        liftGroup: liftGroup,
+        headPivot: headPivot,
+        tallyLamp: tallyLamp,
+        vfScreen: vfScreen,
+        frontGlass: frontGlass,
+        baseLiftY: 0.58
+      };
+    }
+
+    const autoCam1 = createStudioRoboticCamera(-2.4, 0.3);
+    const autoCam2 = createStudioRoboticCamera(2.4, 0.3);
+
+    function updateCameraAlignment() {
+      const hostHeadPos = new THREE.Vector3(0, 1.82, -1.0);
+      if (studioPower) {
+        autoCam1.headPivot.lookAt(hostHeadPos);
+        autoCam2.headPivot.lookAt(hostHeadPos);
+        autoCam1.tallyLamp.material.color.setHex(0xff0000);
+        autoCam2.tallyLamp.material.color.setHex(0xff0000);
+        autoCam1.vfScreen.material.color.setHex(0x39ff14);
+        autoCam2.vfScreen.material.color.setHex(0x39ff14);
+        autoCam1.frontGlass.material.color.setHex(0x00f0ff);
+        autoCam2.frontGlass.material.color.setHex(0x00f0ff);
+      } else {
+        autoCam1.headPivot.rotation.set(0.6, 0.2, 0);
+        autoCam2.headPivot.rotation.set(0.6, -0.2, 0);
+        autoCam1.tallyLamp.material.color.setHex(0x111111);
+        autoCam2.tallyLamp.material.color.setHex(0x111111);
+        autoCam1.vfScreen.material.color.setHex(0x050505);
+        autoCam2.vfScreen.material.color.setHex(0x050505);
+        autoCam1.frontGlass.material.color.setHex(0x050505);
+        autoCam2.frontGlass.material.color.setHex(0x050505);
+      }
+    }
+    updateCameraAlignment();
+
+    const countryColors = [0xe67e22, 0xd35400, 0xe74c3c, 0x8e44ad, 0x27ae60, 0x2980b9, 0x16a085, 0xc0392b, 0x34495e, 0x1b5e20, 0xe67e22, 0x00838f, 0xd35400, 0x0d47a1, 0xb71c1c, 0x4a148c];
+    for (let i = 0; i < 16; i++) {
+      const angle = 0.43 * i + 0.4;
+      const radius = 1.0 + (i * 0.16);
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      const tile = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.24, 0.26, 0.08, 16),
+        new THREE.MeshStandardMaterial({ color: countryColors[i % countryColors.length], roughness: 0.35 })
+      );
+      tile.position.set(x, 0.48, z - 1.0);
+      miniDiorama.add(tile);
+    }
+
+    function createCutePlushie3D(color) {
+      const pGroup = new THREE.Group();
+      const pMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.95 });
+
+      const pBody = new THREE.Mesh(new THREE.SphereGeometry(0.28, 14, 14), pMat);
+      pBody.position.y = 0.28;
+      pGroup.add(pBody);
+
+      const pHead = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 14), pMat);
+      pHead.position.y = 0.58;
+      pGroup.add(pHead);
+
+      const earMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.95 });
+      const ear1 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), earMat);
+      ear1.position.set(-0.14, 0.74, 0);
+      const ear2 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), earMat);
+      ear2.position.set(0.14, 0.74, 0);
+      pGroup.add(ear1, ear2);
+
+      const blushMat = new THREE.MeshBasicMaterial({ color: 0xff69b4 });
+      const blush1 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat);
+      blush1.position.set(-0.11, 0.54, 0.17);
+      const blush2 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat);
+      blush2.position.set(0.11, 0.54, 0.17);
+      pGroup.add(blush1, blush2);
+
+      const eyeBlackMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+      const eyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+      const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), eyeBlackMat);
+      eyeL.position.set(-0.07, 0.60, 0.19);
+      const shineL = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 6), eyeWhiteMat);
+      shineL.position.set(-0.08, 0.612, 0.21);
+      pGroup.add(eyeL, shineL);
+
+      const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), eyeBlackMat);
+      eyeR.position.set(0.07, 0.60, 0.19);
+      const shineR = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 6), eyeWhiteMat);
+      shineR.position.set(0.06, 0.612, 0.21);
+      pGroup.add(eyeR, shineR);
+
+      const snoutMat = new THREE.MeshStandardMaterial({ color: 0xff8fab, roughness: 0.6 });
+      const snout = new THREE.Mesh(new THREE.SphereGeometry(0.042, 8, 8), snoutMat);
+      snout.scale.set(1.2, 0.8, 1);
+      snout.position.set(0, 0.56, 0.21);
+      pGroup.add(snout);
+
+      const mouthMat = new THREE.MeshBasicMaterial({ color: 0x222222 });
+      const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.007, 4, 8, Math.PI), mouthMat);
+      mouth.position.set(0, 0.525, 0.21);
+      mouth.rotation.x = Math.PI * 0.1;
+      pGroup.add(mouth);
+
+      return pGroup;
+    }
+
+    const miniAudience = new THREE.Group();
+    const plushColors = [0xff7675, 0x74b9ff, 0xa29bfe, 0xffbe76, 0x55efc4, 0xfd79a8, 0xf6e58d, 0x48dbfb, 0xff9ff3];
+    for (let r = 4.2; r <= 5.8; r += 1.3) {
+      const count = r === 4.2 ? 11 : 15;
+      for (let i = 0; i < count; i++) {
+        const theta = -Math.PI * 0.7 + (i / (count - 1)) * (Math.PI * 1.4);
+        const col = plushColors[Math.floor(Math.random() * plushColors.length)];
+        const pGroup = createCutePlushie3D(col);
+        
+        const px = Math.sin(theta) * r;
+        const pz = Math.cos(theta) * r;
+        pGroup.position.set(px, 0.45 + (r - 4.2) * 0.3, pz);
+        pGroup.lookAt(0, 1.2, -1.0);
+        pGroup.userData = { initialY: pGroup.position.y, phase: Math.random() * Math.PI * 2 };
+        miniAudience.add(pGroup);
+      }
+    }
+    miniDiorama.add(miniAudience);
+    scene.add(miniDiorama);
+
+    // ==========================================
+    // 3. MASTER POWER & PAUSE STATE HANDLERS
+    // ==========================================
+    function triggerPhysicalPowerButton() {
+      playMechanicalSwitchClick();
+      studioPower = !studioPower;
+      studioPaused = false;
+
+      btnPowerCap.position.y = 0.51;
+      setTimeout(() => { btnPowerCap.position.y = 0.58; }, 140);
+
+      if (studioPower) {
+        btnPowerCap.material.color.setHex(0x00b894);
+        ledPower.material.color.setHex(0x00ff00);
+        ledPause.material.color.setHex(0x222222);
+        updateStudioLighting(true, false);
+        updateGoodyFaceExpression();
+        updateCameraAlignment();
+        startGoodyMonologue();
+      } else {
+        btnPowerCap.material.color.setHex(0xd63031);
+        ledPower.material.color.setHex(0x1a0000);
+        ledPause.material.color.setHex(0x111111);
+        updateStudioLighting(false, false);
+        updateGoodyFaceExpression();
+        updateCameraAlignment();
+        stopGoodySpeech();
+      }
+      renderStudioBackstageScreen();
+      updateTvAudio();
+    }
+
+    function triggerPhysicalPauseButton() {
+      if (!studioPower) return;
+      playMechanicalSwitchClick();
+      studioPaused = !studioPaused;
+
+      btnPauseCap.position.y = 0.51;
+      setTimeout(() => { btnPauseCap.position.y = 0.58; }, 140);
+
+      if (studioPaused) {
+        ledPause.material.color.setHex(0xffaa00);
+        updateStudioLighting(false, true);
+        pauseGoodySpeech(true);
+      } else {
+        ledPause.material.color.setHex(0x222222);
+        updateStudioLighting(true, false);
+        pauseGoodySpeech(false);
+      }
+      updateGoodyFaceExpression();
+      updateTvAudio();
+    }
+
+    // ==========================================
+    // 4. INTERACTION & RAYCASTING
+    // ==========================================
+    const raycaster = new THREE.Raycaster();
+    const centerPoint = new THREE.Vector2(0, 0);
+
+    function checkCenterIntersections() {
+      raycaster.setFromCamera(centerPoint, camera);
+
+      if (currentMode === 'BEDROOM') {
+        const targets = [
+          feltCarpet,
+          tvScreenMesh,
+          radioMesh,
+          winFrame,
+          btnPowerCap,
+          btnPauseCap
+        ];
+        const hits = raycaster.intersectObjects(targets, true);
+
+        if (hits.length > 0 && hits[0].distance < 16) {
+          const hitName = hits[0].object.name;
+          crosshair.classList.add('hover-active');
+          promptEl.style.display = 'block';
+
+          if (hitName === "PHYSICAL_BTN_POWER") {
+            promptEl.innerHTML = studioPower ? "⚡ [LEFT CLICK]: 3D SWITCH - POWER OFF" : "⚡ [LEFT CLICK]: 3D SWITCH - POWER ON";
+          } else if (hitName === "PHYSICAL_BTN_PAUSE") {
+            promptEl.innerHTML = studioPaused ? "⏸️ [LEFT CLICK]: 3D SWITCH - RESUME" : "⏸️ [LEFT CLICK]: 3D SWITCH - PAUSE";
+          } else if (hitName === "MINIATURE_CLICK_PORTAL") {
+            promptEl.innerHTML = "🔍 [LEFT CLICK]: SHRINK INTO MINIATURE AUDIENCE";
+          } else if (hitName === "INTERACTIVE_TV") {
+            promptEl.innerHTML = "📺 [LEFT CLICK]: CYCLE TV CHANNELS (CH 1 = LIVE STUDIO!)";
+          } else if (hitName === "INTERACTIVE_RADIO") {
+            promptEl.innerHTML = radioPlaying ? "📻 [LEFT CLICK]: STOP PLUSHIE SONG" : "📻 [LEFT CLICK]: PLAY PLUSHIE SONG";
+          } else if (hitName === "INTERACTIVE_WINDOW") {
+            promptEl.innerHTML = blindsOpen ? "🪟 [LEFT CLICK]: CLOSE BLINDS" : "🪟 [LEFT CLICK]: OPEN BLINDS";
+          }
+          return hits[0].object;
+        } else {
+          crosshair.classList.remove('hover-active');
+          promptEl.style.display = 'none';
+          return null;
+        }
+      }
+      return null;
+    }
+
+    window.addEventListener('click', () => {
+      if (!controls.isLocked) return;
+
+      const hit = checkCenterIntersections();
+      if (!hit) return;
+
+      if (hit.name === "PHYSICAL_BTN_POWER") {
+        triggerPhysicalPowerButton();
+      } else if (hit.name === "PHYSICAL_BTN_PAUSE") {
+        triggerPhysicalPauseButton();
+      } else if (hit.name === "MINIATURE_CLICK_PORTAL") {
+        playTone(780, 'sine', 0.08, 0.05);
+        enterMiniatureMode();
+      } else if (hit.name === "INTERACTIVE_TV") {
+        playTone(780, 'sine', 0.08, 0.05);
+        tvChannel = (tvChannel + 1) % totalTvChannels;
+        updateTvAudio();
+      } else if (hit.name === "INTERACTIVE_RADIO") {
+        playTone(780, 'sine', 0.08, 0.05);
+        radioPlaying = !radioPlaying;
+        toggleRadioMusic(radioPlaying);
+      } else if (hit.name === "INTERACTIVE_WINDOW") {
+        playTone(780, 'sine', 0.08, 0.05);
+        blindsOpen = !blindsOpen;
+        windowBlinds.visible = !blindsOpen;
+      }
+    });
+
+    // ==========================================
+    // 5. MODE SWITCHING
+    // ==========================================
+    const modeTitle = document.getElementById('mode-title');
+    const modeSub = document.getElementById('mode-sub');
+    const modeHint = document.getElementById('mode-hint');
+
+    const move = { forward: false, backward: false, left: false, right: false };
+    const velocity = new THREE.Vector3();
+    const direction = new THREE.Vector3();
+
+    function resetMovementState() {
+      move.forward = false; move.backward = false; move.left = false; move.right = false;
+      velocity.set(0, 0, 0); direction.set(0, 0, 0);
+    }
+
+    function enterMiniatureMode() {
+      if (isTransitioning) return;
+      isTransitioning = true;
+      resetMovementState();
+
+      currentMode = 'MINIATURE';
+
+      camera.position.set(0, 5.15, -3.5);
+      camera.lookAt(0, 5.0, -10.0);
+
+      modeTitle.textContent = "🧸 AUDIENCE PLUSHIE SCALE (MINIATURE WORLD)";
+      modeTitle.style.color = "#ff69b4";
+      modeSub.textContent = "Scale: Cute Plushie watching Goody live on stage!";
+      modeHint.innerHTML = "💡 <b>WASD</b>: Walk around stage | <b>Mouse</b>: Watch Goody & the studio cameras | <b>ESC</b> or <b>Q</b>: Pop back to bedroom";
+      promptEl.style.display = 'none';
+
+      setTimeout(() => { isTransitioning = false; }, 200);
+    }
+
+    function exitToBedroom() {
+      if (currentMode !== 'MINIATURE') return;
+      currentMode = 'BEDROOM';
+      resetMovementState();
+
+      camera.position.set(0, 5.5, 2.0);
+      camera.lookAt(0, 4.5, -9.0);
+
+      modeTitle.textContent = "🏠 BEDROOM WORKSHOP (CREATOR SCALE)";
+      modeTitle.style.color = "#ffda66";
+      modeSub.textContent = "Scale: 1:1 Human Creator";
+      modeHint.innerHTML = "Walk up to the table. Click the 3D console buttons on the desk to power on the gameshow!";
+
+      if (!controls.isLocked) {
+        setTimeout(() => { if (currentMode === 'BEDROOM') controls.lock(); }, 80);
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'KeyQ' && currentMode === 'MINIATURE') {
+        exitToBedroom();
+        return;
+      }
+      switch (e.code) {
+        case 'KeyW': move.forward = true; break;
+        case 'KeyS': move.backward = true; break;
+        case 'KeyA': move.left = true; break;
+        case 'KeyD': move.right = true; break;
+      }
+    });
+
+    document.addEventListener('keyup', (e) => {
+      switch (e.code) {
+        case 'KeyW': move.forward = false; break;
+        case 'KeyS': move.backward = false; break;
+        case 'KeyA': move.left = false; break;
+        case 'KeyD': move.right = false; break;
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    setTimeout(() => { updateTvAudio(); }, 500);
+
+    // ==========================================
+    // 6. ANIMATION & RENDER LOOP
+    // ==========================================
+    let prevTime = performance.now();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const time = performance.now();
+      const delta = Math.min((time - prevTime) / 1000, 0.1);
+
+      renderTVScreen();
+      renderStudioBackstageScreen();
+
+      if (studioPower && !studioPaused) {
+        const hostHeadPos = new THREE.Vector3(0, 1.82, -1.0);
+        autoCam1.headPivot.lookAt(hostHeadPos);
+        autoCam2.headPivot.lookAt(hostHeadPos);
+
+        miniGoody.children[2].rotation.y = Math.sin(time * 0.004) * 0.25;
+        miniGoody.children[3].rotation.y = Math.sin(time * 0.004) * 0.25;
+
+        fixtureCyan.target.position.x = -1.2 + Math.sin(time * 0.003) * 1.5;
+        fixtureMagenta.target.position.x = 1.2 + Math.cos(time * 0.003) * 1.5;
+
+        miniAudience.children.forEach((p) => {
+          p.position.y = p.userData.initialY + Math.sin(time * 0.006 + p.userData.phase) * 0.05;
+        });
+      }
+
+      if (controls.isLocked) {
+        velocity.x -= velocity.x * 10.0 * delta;
+        velocity.z -= velocity.z * 10.0 * delta;
+
+        direction.z = Number(move.forward) - Number(move.backward);
+        direction.x = Number(move.right) - Number(move.left);
+        direction.normalize();
+
+        const speed = currentMode === 'BEDROOM' ? 45.0 : 16.0;
+        if (move.forward || move.backward) velocity.z -= direction.z * speed * delta;
+        if (move.left || move.right) velocity.x -= direction.x * speed * delta;
+
+        controls.moveRight(-velocity.x * delta);
+        controls.moveForward(-velocity.z * delta);
+
+        if (currentMode === 'BEDROOM') {
+          camera.position.x = Math.max(-16, Math.min(16, camera.position.x));
+          camera.position.z = Math.max(-16, Math.min(16, camera.position.z));
+          camera.position.y = 5.5;
+          checkCenterIntersections();
+        } else if (currentMode === 'MINIATURE') {
+          const relX = camera.position.x - 0;
+          const relZ = camera.position.z - (-9);
+          const dist = Math.sqrt(relX * relX + relZ * relZ);
+          if (dist > 6.2) {
+            const ratio = 6.2 / dist;
+            camera.position.x = 0 + relX * ratio;
+            camera.position.z = -9 + relZ * ratio;
+          }
+          camera.position.y = 5.15;
+        }
+      }
+
+      prevTime = time;
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
