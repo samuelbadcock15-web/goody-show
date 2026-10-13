@@ -54,7 +54,7 @@
   <div id="blocker">
     <div id="instructions-card">
       <h1>The Goody Tonight Show</h1>
-      <p>The game show board is now coiled tight in the center of the stage floor!</p>
+      <p>The game show board has been pulled forward with full clearance from the host podium!</p>
       <p><strong>Click Anywhere to Enter</strong></p>
       <p>
         <span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> &nbsp;Walk around<br>
@@ -285,7 +285,7 @@
     const miniWall = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 4.5, 32, 1, true, -Math.PI / 2, Math.PI), new THREE.MeshStandardMaterial({ color: 0x15092a, side: THREE.BackSide }));
     miniWall.position.y = 2.65; miniDiorama.add(miniWall);
 
-    // TIGHT GAME SHOW BOARD SPIRAL (CENTERED IN THE FOREGROUND FLOOR)
+    // TIGHT GAME SHOW BOARD SPIRAL (PULLED FORWARD AWAY FROM HOST PODIUM)
     const countryColors = [
       0xe67e22, 0xd35400, 0xe74c3c, 0x8e44ad, 
       0x27ae60, 0x2980b9, 0x16a085, 0xc0392b, 
@@ -293,16 +293,16 @@
       0xd35400, 0x0d47a1, 0xb71c1c, 0x4a148c
     ];
 
-    const spiralCenterZ = 1.2;
+    const spiralCenterZ = 1.65;
     const totalTiles = 24;
     for (let i = 0; i < totalTiles; i++) {
-      const angle = i * 0.62; 
-      const radius = 0.35 + (i * 0.085); 
+      const angle = i * 0.65; 
+      const radius = 0.28 + (i * 0.075);
       const x = Math.cos(angle) * radius;
       const z = spiralCenterZ + (Math.sin(angle) * radius);
 
       const tile = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.18, 0.20, 0.07, 16),
+        new THREE.CylinderGeometry(0.16, 0.18, 0.07, 16),
         new THREE.MeshStandardMaterial({ 
           color: countryColors[i % countryColors.length], 
           roughness: 0.35 
