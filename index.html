@@ -83,7 +83,6 @@
     let hasLiveJakeStream = false;
     let hasLiveJuneStream = false;
 
-    // GAME STATE
     let gameState = "IDLE";
     let diceCountdown = 0;
     let diceInterval = null;
@@ -104,7 +103,6 @@
     const countdownPill = document.getElementById('countdown-pill');
     const timerValEl = document.getElementById('timer-val');
 
-    // AUTO-START COUNTDOWN TIMER
     let autoStartSeconds = 10;
     let autoStartInterval = setInterval(() => {
       autoStartSeconds--;
@@ -226,8 +224,8 @@
         });
 
         studioPeer.on('call', (call) => {
-          const returnStream = canvas.captureStream(30);
-          call.answer(returnStream);
+          // Do not answer with the captureStream to prevent feedback loops; just accept data/relay
+          call.answer();
 
           call.on('stream', (remoteStream) => {
             if (call.metadata && call.metadata.contestant === "goody-contestant-2") {
@@ -860,72 +858,26 @@
     const sScreenCtx = studioScreenCanvas.getContext('2d');
     const studioScreenTex = new THREE.CanvasTexture(studioScreenCanvas);
 
-    function drawDiceFace(ctx, x, y, size, value) {
-      ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#222222'; ctx.lineWidth = 3;
-      ctx.fillRect(x, y, size, size); ctx.strokeRect(x, y, size, size);
-      ctx.fillStyle = '#e74c3c';
-      const dot = (dx, dy) => {
-        ctx.beginPath(); ctx.arc(x + dx * size, y + dy * size, size * 0.08, 0, Math.PI * 2); ctx.fill();
-      };
-      if (value % 2 === 1) dot(0.5, 0.5);
-      if (value > 1) { dot(0.25, 0.25); dot(0.75, 0.75); }
-      if (value > 3) { dot(0.75, 0.25); dot(0.25, 0.75); }
-      if (value === 6) { dot(0.25, 0.5); dot(0.75, 0.5); }
-    }
-
-    function drawScreenFeed(ctx, x, y, width, height, name, city, isLive, videoElem, isGuy, currentRoll, isRolling) {
-      ctx.fillStyle = '#05020a'; ctx.fillRect(x, y, width, height);
-      ctx.strokeStyle = isLive ? '#39ff14' : '#ffb300'; ctx.lineWidth = 3; ctx.strokeRect(x, y, width, height);
-
-      if (isLive && videoElem.readyState >= 2) {
-        ctx.save(); ctx.drawImage(videoElem, x + 2, y + 2, width - 4, height - 4); ctx.restore();
-      } else {
-        ctx.fillStyle = isGuy ? '#1b2a47' : '#3d1b38'; ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
-        const cx = x + width / 2; const cy = y + height * 0.58;
-        ctx.fillStyle = isGuy ? '#4a69bd' : '#e84393'; ctx.beginPath(); ctx.ellipse(cx, cy + 25, 26, 32, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#f8c291'; ctx.beginPath(); ctx.arc(cx, cy - 10, 16, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(cx - 5, cy - 10, 2, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(cx + 5, cy - 10, 2, 0, Math.PI * 2); ctx.fill();
-      }
-
-      if (diceCountdown > 0) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.75)'; ctx.fillRect(x + 8, y + 8, 120, 28);
-        ctx.fillStyle = '#ff7675'; ctx.font = 'bold 13px monospace'; ctx.textAlign = 'center';
-        ctx.fillText(`⏱️ ROLL: ${diceCountdown}s`, x + 68, y + 26);
-      }
-
-      const diceSize = 42;
-      const diceX = x + width - diceSize - 12;
-      const diceY = y + 12;
-
-      if (isRolling) {
-        const animVal = Math.floor((performance.now() / 80) % 6) + 1;
-        drawDiceFace(ctx, diceX, diceY, diceSize, animVal);
-      } else if (currentRoll !== null) {
-        drawDiceFace(ctx, diceX, diceY, diceSize, currentRoll);
-      }
-
-      ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(x, y + height - 26, width, 26);
-      ctx.fillStyle = isLive ? '#39ff14' : '#ffda66'; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
-      ctx.fillText(`${isLive ? '🔴 LIVE 🎙️' : '📱 CALL'} ${name.toUpperCase()} [${city.toUpperCase()}]`, x + width/2, y + height - 8);
-    }
-
     function renderBackstageScreens() {
       sScreenCtx.fillStyle = '#060210'; sScreenCtx.fillRect(0, 0, 512, 256);
       if (studioPower) {
-        if (showJake) drawScreenFeed(sScreenCtx, 15, 20, 225, 215, "Jake", "London", hasLiveJakeStream, videoJake, true, p1RollVal, isDiceRollingP1);
-        else {
-          sScreenCtx.strokeStyle = '#ffb300'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(15, 20, 225, 215);
-          sScreenCtx.fillStyle = '#ffda66'; sScreenCtx.font = 'bold 22px sans-serif'; sScreenCtx.textAlign = 'center';
+        if (showJake && videoJake.readyState >= 2) {
+          sScreenCtx.drawImage(videoJake, 15, 20, 225, 215);
+        } else {
+          sScreenCtx.fillStyle = '#1b2a47'; sScreenCtx.fillRect(15, 20, 225, 215);
+          sScreenCtx.fillStyle = '#ffda66'; sScreenCtx.font = 'bold 18px sans-serif'; sScreenCtx.textAlign = 'center';
           sScreenCtx.fillText("CONTESTANT 1", 127, 120);
-          sScreenCtx.fillStyle = '#39ff14'; sScreenCtx.font = '14px monospace'; sScreenCtx.fillText("STANDBY...", 127, 150);
         }
-        if (showJune) drawScreenFeed(sScreenCtx, 272, 20, 225, 215, "June", "Nottingham", hasLiveJuneStream, videoJune, false, p2RollVal, isDiceRollingP2);
-        else {
-          sScreenCtx.strokeStyle = '#ffb300'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(272, 20, 225, 215);
-          sScreenCtx.fillStyle = '#ffda66'; sScreenCtx.font = 'bold 22px sans-serif'; sScreenCtx.textAlign = 'center';
+        sScreenCtx.strokeStyle = '#39ff14'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(15, 20, 225, 215);
+
+        if (showJune && videoJune.readyState >= 2) {
+          sScreenCtx.drawImage(videoJune, 272, 20, 225, 215);
+        } else {
+          sScreenCtx.fillStyle = '#3d1b38'; sScreenCtx.fillRect(272, 20, 225, 215);
+          sScreenCtx.fillStyle = '#ffda66'; sScreenCtx.font = 'bold 18px sans-serif'; sScreenCtx.textAlign = 'center';
           sScreenCtx.fillText("CONTESTANT 2", 384, 120);
-          sScreenCtx.fillStyle = '#39ff14'; sScreenCtx.font = '14px monospace'; sScreenCtx.fillText("STANDBY...", 384, 150);
         }
+        sScreenCtx.strokeStyle = '#39ff14'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(272, 20, 225, 215);
       }
       studioScreenTex.needsUpdate = true;
     }
