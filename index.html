@@ -207,6 +207,21 @@
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
 
+    // INDIVIDUAL OFFSCREEN CAMERAS & RENDERERS FOR JAKE AND JUNE
+    const canvasJake = document.createElement('canvas');
+    canvasJake.width = 640; canvasJake.height = 360;
+    const rendererJake = new THREE.WebGLRenderer({ canvas: canvasJake, antialias: true });
+
+    const canvasJune = document.createElement('canvas');
+    canvasJune.width = 640; canvasJune.height = 360;
+    const rendererJune = new THREE.WebGLRenderer({ canvas: canvasJune, antialias: true });
+
+    const camJake = new THREE.PerspectiveCamera(60, 16 / 9, 0.1, 100);
+    const camJune = new THREE.PerspectiveCamera(60, 16 / 9, 0.1, 100);
+
+    const streamJake = canvasJake.captureStream(30);
+    const streamJune = canvasJune.captureStream(30);
+
     const controls = new THREE.PointerLockControls(camera, document.body);
     const blocker = document.getElementById('blocker');
 
@@ -228,16 +243,17 @@
         });
 
         studioPeer.on('call', (call) => {
-          const returnStream = canvas.captureStream(30);
+          const isJune = call.metadata && call.metadata.contestant === "goody-contestant-2";
+          const returnStream = isJune ? streamJune : streamJake;
           call.answer(returnStream);
 
           call.on('stream', (remoteStream) => {
-            if (call.metadata && call.metadata.contestant === "goody-contestant-2") {
+            if (isJune) {
               videoJune.srcObject = remoteStream;
               videoJune.muted = false;
               videoJune.play().catch(e => console.log(e));
               hasLiveJuneStream = true; showJune = true;
-            } else if (call.metadata && call.metadata.contestant === "goody-contestant-1") {
+            } else {
               videoJake.srcObject = remoteStream;
               videoJake.muted = false;
               videoJake.play().catch(e => console.log(e));
@@ -348,7 +364,6 @@
       });
     }
 
-    // DIRECT BOOT FUNCTION
     function bootStudio() {
       studioPower = true;
       updateStudioLighting(true);
@@ -357,7 +372,6 @@
       startGoodyMonologue();
     }
 
-    // OPENING 10-SECOND DUEL
     function beginTenSecondDiceDuel() {
       gameState = "OPENING_DUEL";
       diceCountdown = 10;
@@ -434,7 +448,6 @@
       });
     }
 
-    // GAME TURN & QUESTION ROUTER
     function advanceTurnPlayer(playerSlot, roll) {
       const isP1 = playerSlot === "goody-contestant-1";
       if (isP1) {
@@ -791,7 +804,7 @@
     pawn2.position.set(boardTileCoords[0].x + 0.08, 0.52, boardTileCoords[0].z);
     miniDiorama.add(pawn2);
 
-    // STAGE QUESTION BOARD WITH REAL-TIME HIGHLIGHTS AND COUNTDOWN
+    // STAGE QUESTION BOARD
     const qBoardCanvas = document.createElement('canvas');
     qBoardCanvas.width = 512; qBoardCanvas.height = 384;
     const qBoardCtx = qBoardCanvas.getContext('2d');
@@ -1140,6 +1153,26 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
+    function syncContestantCameras() {
+      if (playerPlushie1) {
+        camJake.position.set(
+          playerPlushie1.position.x,
+          playerPlushie1.position.y + 4.4,
+          playerPlushie1.position.z - 8.8
+        );
+        camJake.lookAt(0, 5.8, -11.6);
+      }
+
+      if (playerPlushie2) {
+        camJune.position.set(
+          playerPlushie2.position.x,
+          playerPlushie2.position.y + 4.4,
+          playerPlushie2.position.z - 8.8
+        );
+        camJune.lookAt(0, 5.8, -11.6);
+      }
+    }
+
     let prevTime = performance.now();
     function animate() {
       requestAnimationFrame(animate);
@@ -1169,7 +1202,14 @@
       }
 
       prevTime = time;
+
+      // 1. Audience / Host Primary View
       renderer.render(scene, camera);
+
+      // 2. Individual Contestant Offscreen Feeds
+      syncContestantCameras();
+      if (showJake) rendererJake.render(scene, camJake);
+      if (showJune) rendererJune.render(scene, camJune);
     }
     animate();
   </script>
