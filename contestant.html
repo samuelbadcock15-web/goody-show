@@ -172,6 +172,7 @@
     let questionTimer = null;
     let currentQuestionData = null;
     let selectedOptionIndex = null;
+    let contestantStudioPower = false;
 
     const setupCard = document.getElementById('setup-card');
     const liveStagePortal = document.getElementById('live-stage-portal');
@@ -191,13 +192,12 @@
       document.getElementById('opt-3')
     ];
 
-    // THREE.JS CONTESTANT STAGE SCENE (Independent 3D Camera)
+    // THREE.JS CONTESTANT STAGE SCENE
     const viewportCanvas = document.getElementById('contestant3d');
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x05020a);
 
     const camera = new THREE.PerspectiveCamera(65, 16 / 9, 0.1, 100);
-    // Center stage, eye-level facing host Goody
     let camPos = new THREE.Vector3(0, 1.4, 0.8);
     let camYaw = 0;
     let camPitch = 0;
@@ -214,7 +214,16 @@
     }
     window.addEventListener('resize', resizeContestantViewport);
 
-    // Build the Studio Stage in Contestant's Viewport
+    // Stage Lighting
+    const ambientLight = new THREE.AmbientLight(0x181026, 0.2); scene.add(ambientLight);
+    const stageSpot = new THREE.PointLight(0xffea00, 0, 15); stageSpot.position.set(0, 4, -1); scene.add(stageSpot);
+
+    function updateContestantLighting(power) {
+      ambientLight.intensity = power ? 0.9 : 0.2;
+      stageSpot.intensity = power ? 2.5 : 0;
+    }
+
+    // Build Stage
     const carpet = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 0.1, 48), new THREE.MeshStandardMaterial({ color: 0x271147 }));
     scene.add(carpet);
 
@@ -222,7 +231,7 @@
     stageWall.position.y = 2.2;
     scene.add(stageWall);
 
-    // Goody Robot Podium at Z = -2.6
+    // Host Robot Goody
     const hostGroup = new THREE.Group(); hostGroup.position.set(0, 0, -2.6);
     const podium = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 0.6, 20), new THREE.MeshStandardMaterial({ color: 0x2b154a }));
     podium.position.y = 0.3; hostGroup.add(podium);
@@ -232,27 +241,12 @@
     hostHead.position.y = 1.35; hostGroup.add(hostHead);
     scene.add(hostGroup);
 
-    // Backstage Contestant Screens Mesh
+    // Backstage Screens
     const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshStandardMaterial({ color: 0x11111a }));
     screenMesh.position.set(0, 2.2, -4.5);
     scene.add(screenMesh);
 
-    // Stage Lighting
-    scene.add(new THREE.AmbientLight(0xffffff, 0.9));
-    const spot = new THREE.PointLight(0xffea00, 2.0, 15); spot.position.set(0, 4, -1); scene.add(spot);
-
-    // 14 Counters on Stage Floor
-    for (let i = 0; i < 32; i++) {
-      const angle = i * 0.48;
-      const radius = 0.7 + (i * 0.135);
-      const x = Math.cos(angle) * radius;
-      const z = 1.8 + (Math.sin(angle) * (radius * 0.88));
-      const tile = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.3, 0.06, 16), new THREE.MeshStandardMaterial({ color: (i % 2 === 0 ? 0xff7675 : 0x00f0ff) }));
-      tile.position.set(x, 0.05, z);
-      scene.add(tile);
-    }
-
-    // Touch-Drag Looking on Screen
+    // Touch-Drag Looking
     let isDragging = false;
     let lastX = 0, lastY = 0;
 
@@ -276,7 +270,7 @@
 
     viewportCanvas.addEventListener('touchend', () => { isDragging = false; });
 
-    // D-Pad Arrow Walking Movement
+    // D-Pad Walking Movement
     const moveSpeed = 0.18;
     function movePlayer(dir) {
       const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), camYaw);
@@ -287,7 +281,6 @@
       if (dir === 'LEFT') camPos.addScaledVector(side, -moveSpeed);
       if (dir === 'RIGHT') camPos.addScaledVector(side, moveSpeed);
 
-      // Keep within the studio floor
       camPos.y = 1.4;
       if (Math.hypot(camPos.x, camPos.z) > 5.5) {
         camPos.clampLength(0, 5.5);
@@ -327,8 +320,12 @@
         peer = new Peer(contestantId);
 
         peer.on('open', () => {
-          peer.call("goody-main-studio", localStream, {
+          const call = peer.call("goody-main-studio", localStream, {
             metadata: { contestant: contestantId, name: contestantName }
+          });
+
+          call.on('stream', (studioStream) => {
+            // Display live studio stream on backstage screen mesh texture if desired
           });
 
           dataConn = peer.connect("goody-main-studio", {
@@ -336,11 +333,16 @@
           });
 
           dataConn.on('open', () => {
-            statusPill.textContent = "Live on stage in center! Standby for host...";
+            statusPill.textContent = "Live on stage! Standby for host...";
           });
 
           dataConn.on('data', (data) => {
-            if (data.type === "START_DICE_COUNTDOWN") {
+            if (data.type === "STUDIO_POWER") {
+              if (data.power) {
+                contestantStudioPower = true;
+                updateContestantLighting(true);
+              }
+            } else if (data.type === "START_DICE_COUNTDOWN") {
               startTenSecondRoll();
             } else if (data.type === "ENABLE_TURN_ROLL") {
               if (data.activeContestant === contestantId) {
@@ -364,7 +366,6 @@
       }
     }
 
-    // Dice & Trivia Handlers
     function startTenSecondRoll() {
       hasRolled = false;
       btnRollDice.disabled = false;
