@@ -12,7 +12,6 @@
       min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 10px;
       overflow-x: hidden;
     }
-
     #setup-card {
       width: 100%; max-width: 440px; background: #1b0933; border: 2px solid #ff79b0;
       border-radius: 16px; padding: 20px; text-align: center; margin-top: 15px;
@@ -27,68 +26,71 @@
     #live-stage-portal {
       width: 100%; max-width: 440px; display: none; flex-direction: column; gap: 8px;
     }
-
     .screens-container {
       position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000;
       border: 2px solid #ffda66; border-radius: 12px; overflow: hidden;
       box-shadow: 0 4px 20px rgba(255, 218, 102, 0.25);
     }
-    #studio-stream-video {
-      width: 100%; height: 100%; object-fit: cover;
-    }
+    #studio-stream-video { width: 100%; height: 100%; object-fit: cover; }
     #local-selfie-pip {
       position: absolute; bottom: 8px; right: 8px; width: 28%; aspect-ratio: 4 / 3;
       border: 2px solid #39ff14; border-radius: 8px; object-fit: cover;
       transform: scaleX(-1); background: #111; z-index: 5;
     }
-
     .badge-bar {
       display: flex; justify-content: space-between; align-items: center;
       background: #18092d; padding: 6px 12px; border-radius: 8px; font-family: monospace; font-size: 0.8rem;
     }
 
-    .action-panel {
-      display: flex; flex-direction: column; gap: 8px; width: 100%;
-    }
-
+    /* Dice Panel */
     #btn-roll-dice {
-      width: 100%; padding: 16px; background: #444;
-      border: 3px solid #777; border-radius: 14px; font-size: 1.2rem; font-weight: 900;
-      color: #888; text-transform: uppercase; letter-spacing: 1px; cursor: not-allowed;
-      transition: all 0.2s ease;
+      width: 100%; padding: 14px; background: #444; border: 3px solid #777;
+      border-radius: 12px; font-size: 1.1rem; font-weight: 900; color: #888;
+      text-transform: uppercase; letter-spacing: 1px; cursor: not-allowed; transition: all 0.2s;
     }
     #btn-roll-dice.active-roll {
       background: linear-gradient(180deg, #fdcb6e, #e17055);
       border-color: #ffeaa7; color: #2d3436; cursor: pointer;
       box-shadow: 0 4px 0 #b3392b, 0 0 15px #fdcb6e;
     }
-    #btn-roll-dice.active-roll:active {
-      transform: translateY(3px); box-shadow: 0 1px 0 #b3392b;
+
+    #status-pill {
+      text-align: center; font-family: monospace; font-size: 0.92rem; color: #39ff14; min-height: 22px;
     }
 
-    #timer-display {
-      text-align: center; font-family: monospace; font-size: 1.15rem; font-weight: bold;
-      color: #ff7675; min-height: 24px;
+    /* Trivia Panel */
+    #trivia-card {
+      background: #190930; border: 2px solid #00f0ff; border-radius: 14px; padding: 12px;
+      display: none; flex-direction: column; gap: 8px;
     }
-    #dice-result-pill {
-      text-align: center; font-family: monospace; font-size: 0.95rem; color: #39ff14; min-height: 22px;
+    #q-country-tag {
+      font-size: 0.8rem; font-weight: bold; color: #ffda66; text-transform: uppercase;
     }
+    #q-text { font-size: 0.95rem; font-weight: 600; line-height: 1.35; color: #fff; }
+    #q-timer { font-family: monospace; font-weight: bold; color: #ff7675; text-align: right; }
 
+    .options-grid {
+      display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 4px;
+    }
+    .btn-opt {
+      padding: 12px 14px; background: #2f1454; border: 2px solid #9c4dd6; border-radius: 10px;
+      color: #fff; font-size: 0.9rem; font-weight: bold; text-align: left; cursor: not-allowed; opacity: 0.6;
+    }
+    .btn-opt.unlocked { cursor: pointer; opacity: 1; border-color: #00f0ff; }
+    .btn-opt.selected { background: #6c5ce7; border-color: #a29bfe; }
+    .btn-opt.flash-green { background: #00b894 !important; border-color: #55efc4 !important; }
+    .btn-opt.flash-red { background: #d63031 !important; border-color: #ff7675 !important; }
+
+    /* D-Pad */
     .dpad-section {
-      background: #140728; border: 2px solid #a29bfe; border-radius: 14px; padding: 10px;
-      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      background: #140728; border: 2px solid #a29bfe; border-radius: 12px; padding: 8px;
+      display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 4px;
     }
-    .dpad-label {
-      font-size: 0.76rem; font-family: monospace; color: #ff9ff3; text-transform: uppercase; letter-spacing: 0.5px;
-    }
-    .dpad-grid {
-      display: grid; grid-template-columns: 55px 55px 55px; grid-template-rows: 45px 45px; gap: 6px;
-    }
+    .dpad-grid { display: grid; grid-template-columns: 46px 46px 46px; grid-template-rows: 38px 38px; gap: 4px; }
     .dpad-btn {
-      background: #2b1154; border: 2px solid #ff79b0; border-radius: 8px; color: #fff;
-      font-size: 1.2rem; font-weight: bold; display: flex; justify-content: center; align-items: center;
+      background: #2b1154; border: 2px solid #ff79b0; border-radius: 6px; color: #fff;
+      font-size: 1.1rem; font-weight: bold; display: flex; justify-content: center; align-items: center;
     }
-    .dpad-btn:active { background: #ff79b0; color: #000; }
   </style>
 </head>
 <body>
@@ -111,22 +113,34 @@
       <video id="local-selfie-pip" autoplay playsinline muted></video>
     </div>
 
-    <div id="timer-display"></div>
+    <div id="status-pill">Waiting for host...</div>
 
-    <div class="action-panel">
-      <button id="btn-roll-dice" disabled>🎲 ROLL DICE (LOCKED)</button>
-      <div id="dice-result-pill">Waiting for host instructions...</div>
+    <button id="btn-roll-dice" disabled>🎲 ROLL DICE (LOCKED)</button>
 
-      <div class="dpad-section">
-        <div class="dpad-label">🧸 Audience Plushie D-PAD</div>
-        <div class="dpad-grid">
-          <div></div>
-          <button class="dpad-btn" id="dpad-fwd">▲</button>
-          <div></div>
-          <button class="dpad-btn" id="dpad-left">◀</button>
-          <button class="dpad-btn" id="dpad-back">▼</button>
-          <button class="dpad-btn" id="dpad-right">▶</button>
-        </div>
+    <!-- Interactive Country Trivia Screen -->
+    <div id="trivia-card">
+      <div style="display: flex; justify-content: space-between;">
+        <span id="q-country-tag">COUNTRY</span>
+        <span id="q-timer">⏱️ 30s</span>
+      </div>
+      <div id="q-text">Listening to Goody ask the question...</div>
+      <div class="options-grid">
+        <button class="btn-opt" id="opt-0" disabled>A) ...</button>
+        <button class="btn-opt" id="opt-1" disabled>B) ...</button>
+        <button class="btn-opt" id="opt-2" disabled>C) ...</button>
+        <button class="btn-opt" id="opt-3" disabled>D) ...</button>
+      </div>
+    </div>
+
+    <div class="dpad-section">
+      <div style="font-size: 0.72rem; color: #ff9ff3; font-family: monospace;">🧸 AUDIENCE PLUSHIE D-PAD</div>
+      <div class="dpad-grid">
+        <div></div>
+        <button class="dpad-btn" id="dpad-fwd">▲</button>
+        <div></div>
+        <button class="dpad-btn" id="dpad-left">◀</button>
+        <button class="dpad-btn" id="dpad-back">▼</button>
+        <button class="dpad-btn" id="dpad-right">▶</button>
       </div>
     </div>
   </main>
@@ -139,16 +153,29 @@
     let contestantId = "";
     let contestantName = "";
     let hasRolled = false;
-    let countdownInterval = null;
+    let rollTimer = null;
+    let questionTimer = null;
+    let currentQuestionData = null;
+    let selectedOptionIndex = null;
 
     const setupCard = document.getElementById('setup-card');
     const liveStagePortal = document.getElementById('live-stage-portal');
     const localSelfiePip = document.getElementById('local-selfie-pip');
     const studioStreamVideo = document.getElementById('studio-stream-video');
     const roleTag = document.getElementById('role-tag');
-    const dicePill = document.getElementById('dice-result-pill');
-    const timerDisplay = document.getElementById('timer-display');
+    const statusPill = document.getElementById('status-pill');
     const btnRollDice = document.getElementById('btn-roll-dice');
+
+    const triviaCard = document.getElementById('trivia-card');
+    const qCountryTag = document.getElementById('q-country-tag');
+    const qText = document.getElementById('q-text');
+    const qTimer = document.getElementById('q-timer');
+    const optButtons = [
+      document.getElementById('opt-0'),
+      document.getElementById('opt-1'),
+      document.getElementById('opt-2'),
+      document.getElementById('opt-3')
+    ];
 
     document.getElementById('btn-jake').addEventListener('click', () => joinGame("goody-contestant-1", "Jake"));
     document.getElementById('btn-june').addEventListener('click', () => joinGame("goody-contestant-2", "June"));
@@ -184,15 +211,26 @@
           });
 
           dataConn.on('open', () => {
-            dicePill.textContent = "Connected! Standby for show start...";
+            statusPill.textContent = "Connected! Standby for host...";
           });
 
           dataConn.on('data', (data) => {
             if (data.type === "START_DICE_COUNTDOWN") {
               startTenSecondRoll();
-            } else if (data.type === "ROUND_WINNER") {
-              timerDisplay.textContent = "";
-              dicePill.textContent = `${data.winnerName.toUpperCase()} GOES FIRST! (${data.p1Roll} vs ${data.p2Roll})`;
+            } else if (data.type === "ENABLE_TURN_ROLL") {
+              if (data.activeContestant === contestantId) {
+                startTurnRoll();
+              } else {
+                statusPill.textContent = "Waiting for other contestant to roll...";
+              }
+            } else if (data.type === "SHOW_QUESTION_LOCKED") {
+              showQuestionLocked(data.question, data.forContestant === contestantId);
+            } else if (data.type === "UNLOCK_QUESTION_INPUT") {
+              if (data.forContestant === contestantId) {
+                unlockQuestionInput();
+              }
+            } else if (data.type === "EVALUATION_RESULT") {
+              handleEvaluationResult(data);
             }
           });
         });
@@ -202,6 +240,7 @@
       }
     }
 
+    // 10-Second Duel Roll
     function startTenSecondRoll() {
       hasRolled = false;
       btnRollDice.disabled = false;
@@ -209,21 +248,27 @@
       btnRollDice.textContent = "🎲 ROLL DICE NOW!";
 
       let timeLeft = 10;
-      timerDisplay.textContent = `⏱️ TIME TO ROLL: ${timeLeft}s`;
+      statusPill.textContent = `⏱️ ROLL TIMER: ${timeLeft}s`;
 
-      if (countdownInterval) clearInterval(countdownInterval);
-      countdownInterval = setInterval(() => {
+      if (rollTimer) clearInterval(rollTimer);
+      rollTimer = setInterval(() => {
         timeLeft--;
         if (timeLeft > 0) {
-          timerDisplay.textContent = `⏱️ TIME TO ROLL: ${timeLeft}s`;
+          statusPill.textContent = `⏱️ ROLL TIMER: ${timeLeft}s`;
         } else {
-          clearInterval(countdownInterval);
-          timerDisplay.textContent = "TIME EXPIRED!";
-          if (!hasRolled) {
-            executeRoll(true);
-          }
+          clearInterval(rollTimer);
+          if (!hasRolled) executeRoll(true);
         }
       }, 1000);
+    }
+
+    // Individual Turn Roll
+    function startTurnRoll() {
+      hasRolled = false;
+      btnRollDice.disabled = false;
+      btnRollDice.classList.add('active-roll');
+      btnRollDice.textContent = "🎲 YOUR TURN: ROLL DICE!";
+      statusPill.textContent = "Tap roll to advance!";
     }
 
     function executeRoll(isAuto = false) {
@@ -234,7 +279,7 @@
       btnRollDice.textContent = "DICE ROLLED!";
 
       const rollValue = Math.floor(Math.random() * 6) + 1;
-      dicePill.textContent = isAuto ? `⏱️ Time's up! Auto-rolled: ${rollValue}` : `🎲 You rolled: ${rollValue}!`;
+      statusPill.textContent = isAuto ? `⏱️ Auto-rolled: ${rollValue}` : `🎲 You rolled: ${rollValue}!`;
 
       if (dataConn && dataConn.open) {
         dataConn.send({
@@ -245,25 +290,102 @@
         });
       }
     }
-
     btnRollDice.addEventListener('click', () => executeRoll(false));
 
-    function sendPlushieMove(direction) {
-      if (dataConn && dataConn.open) {
-        dataConn.send({
-          type: "PLUSHIE_MOVE",
-          contestant: contestantId,
-          direction: direction
-        });
-      }
+    // Question Handling
+    function showQuestionLocked(qData, isMyTurn) {
+      currentQuestionData = qData;
+      selectedOptionIndex = null;
+      triviaCard.style.display = 'flex';
+      qCountryTag.textContent = `${qData.country} (${isMyTurn ? "YOUR QUESTION" : "OPPONENT'S QUESTION"})`;
+      qText.textContent = qData.question;
+      qTimer.textContent = "🔒 LISTENING TO GOODY...";
+
+      qData.options.forEach((opt, idx) => {
+        optButtons[idx].textContent = `${["A", "B", "C", "D"][idx]}) ${opt}`;
+        optButtons[idx].className = "btn-opt";
+        optButtons[idx].disabled = true;
+      });
     }
 
+    function unlockQuestionInput() {
+      qTimer.textContent = "⏱️ 30s";
+      optButtons.forEach(btn => {
+        btn.disabled = false;
+        btn.classList.add('unlocked');
+      });
+
+      let timeLeft = 30;
+      if (questionTimer) clearInterval(questionTimer);
+      questionTimer = setInterval(() => {
+        timeLeft--;
+        if (timeLeft > 0) {
+          qTimer.textContent = `⏱️ ${timeLeft}s`;
+        } else {
+          clearInterval(questionTimer);
+          qTimer.textContent = "TIME OUT!";
+          optButtons.forEach(b => b.disabled = true);
+          if (dataConn && dataConn.open) {
+            dataConn.send({ type: "PLAYER_TIMEOUT", contestant: contestantId });
+          }
+        }
+      }, 1000);
+    }
+
+    optButtons.forEach((btn, idx) => {
+      btn.addEventListener('click', () => {
+        if (selectedOptionIndex !== null) return;
+        selectedOptionIndex = idx;
+        if (questionTimer) clearInterval(questionTimer);
+
+        optButtons.forEach(b => {
+          b.disabled = true;
+          b.classList.remove('unlocked');
+        });
+        btn.classList.add('selected');
+        statusPill.textContent = "Answer locked in! Checking with Goody...";
+
+        if (dataConn && dataConn.open) {
+          dataConn.send({
+            type: "PLAYER_ANSWERED",
+            contestant: contestantId,
+            chosenAnswer: currentQuestionData.options[idx]
+          });
+        }
+      });
+    });
+
+    function handleEvaluationResult(data) {
+      if (questionTimer) clearInterval(questionTimer);
+      const isMe = data.forContestant === contestantId;
+
+      if (isMe && selectedOptionIndex !== null) {
+        if (data.isCorrect) {
+          optButtons[selectedOptionIndex].classList.add('flash-green');
+          statusPill.textContent = "🎉 CORRECT! Tile secured.";
+        } else {
+          optButtons[selectedOptionIndex].classList.add('flash-red');
+          statusPill.textContent = "❌ INCORRECT! Returning to start.";
+        }
+      }
+
+      setTimeout(() => {
+        triviaCard.style.display = 'none';
+        optButtons.forEach(b => b.className = "btn-opt");
+      }, 7000);
+    }
+
+    // Plushie Movement
+    function sendPlushieMove(direction) {
+      if (dataConn && dataConn.open) {
+        dataConn.send({ type: "PLUSHIE_MOVE", contestant: contestantId, direction: direction });
+      }
+    }
     const bindDpad = (btnId, dir) => {
       const el = document.getElementById(btnId);
       el.addEventListener('touchstart', (e) => { e.preventDefault(); sendPlushieMove(dir); });
       el.addEventListener('mousedown', () => sendPlushieMove(dir));
     };
-
     bindDpad('dpad-fwd', 'FORWARD');
     bindDpad('dpad-back', 'BACK');
     bindDpad('dpad-left', 'LEFT');
