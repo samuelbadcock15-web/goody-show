@@ -40,12 +40,7 @@
     #drag-hint {
       position: absolute; top: 6px; left: 8px; font-size: 0.7rem;
       background: rgba(0,0,0,0.65); padding: 2px 6px; border-radius: 4px;
-      color: #ffda66; font-family: monospace; pointer-events: none;
-    }
-    #local-selfie-pip {
-      position: absolute; bottom: 6px; right: 6px; width: 26%; aspect-ratio: 4 / 3;
-      border: 2px solid #39ff14; border-radius: 6px; object-fit: cover;
-      transform: scaleX(-1); background: #111; z-index: 10; pointer-events: none;
+      color: #ffda66; font-family: monospace; pointer-events: none; z-index: 5;
     }
 
     #btn-roll-dice {
@@ -115,7 +110,6 @@
     <div class="viewport-box">
       <canvas id="contestant3d"></canvas>
       <div id="drag-hint">👆 Drag to look • D-Pad to walk</div>
-      <video id="local-selfie-pip" autoplay playsinline muted></video>
     </div>
 
     <div id="status-pill">Waiting for host...</div>
@@ -167,9 +161,13 @@
     let selectedOptionIndex = null;
     let contestantStudioPower = false;
 
+    const videoJake = document.createElement('video');
+    videoJake.autoplay = true; videoJake.playsInline = true; videoJake.muted = true;
+    const videoJune = document.createElement('video');
+    videoJune.autoplay = true; videoJune.playsInline = true; videoJune.muted = true;
+
     const setupCard = document.getElementById('setup-card');
     const liveStagePortal = document.getElementById('live-stage-portal');
-    const localSelfiePip = document.getElementById('local-selfie-pip');
     const roleTag = document.getElementById('role-tag');
     const statusPill = document.getElementById('status-pill');
     const btnRollDice = document.getElementById('btn-roll-dice');
@@ -225,7 +223,7 @@
     stageWall.position.y = 2.2;
     scene.add(stageWall);
 
-    // Host Robot Goody (Fully Rigged with Face & Antenna)
+    // Host Robot Goody
     const hostGroup = new THREE.Group(); hostGroup.position.set(0, 0, -2.6);
     const podium = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 0.6, 20), new THREE.MeshStandardMaterial({ color: 0x2b154a }));
     podium.position.y = 0.3; hostGroup.add(podium);
@@ -259,7 +257,7 @@
     }
     updateGoodyFace(false);
 
-    // Backstage Contestant Screens Canvas Texture
+    // Backstage Live Feeds Canvas Texture
     const studioScreenCanvas = document.createElement('canvas'); studioScreenCanvas.width = 512; studioScreenCanvas.height = 256;
     const sScreenCtx = studioScreenCanvas.getContext('2d');
     const studioScreenTex = new THREE.CanvasTexture(studioScreenCanvas);
@@ -267,15 +265,21 @@
     function renderBackstageScreens() {
       sScreenCtx.fillStyle = '#060210'; sScreenCtx.fillRect(0, 0, 512, 256);
       if (contestantStudioPower) {
-        sScreenCtx.strokeStyle = '#ffb300'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(15, 20, 225, 215);
-        sScreenCtx.fillStyle = '#ffda66'; sScreenCtx.font = 'bold 22px sans-serif'; sScreenCtx.textAlign = 'center';
-        sScreenCtx.fillText("CONTESTANT 1", 127, 120);
-        sScreenCtx.fillStyle = '#39ff14'; sScreenCtx.font = '14px monospace'; sScreenCtx.fillText("LIVE FEED", 127, 150);
+        // Jake Feed
+        if (videoJake.readyState >= 2) {
+          sScreenCtx.drawImage(videoJake, 15, 20, 225, 215);
+        } else {
+          sScreenCtx.fillStyle = '#1b2a47'; sScreenCtx.fillRect(15, 20, 225, 215);
+        }
+        sScreenCtx.strokeStyle = '#39ff14'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(15, 20, 225, 215);
 
-        sScreenCtx.strokeStyle = '#ffb300'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(272, 20, 225, 215);
-        sScreenCtx.fillStyle = '#ffda66'; sScreenCtx.font = 'bold 22px sans-serif'; sScreenCtx.textAlign = 'center';
-        sScreenCtx.fillText("CONTESTANT 2", 384, 120);
-        sScreenCtx.fillStyle = '#39ff14'; sScreenCtx.font = '14px monospace'; sScreenCtx.fillText("LIVE FEED", 384, 150);
+        // June Feed
+        if (videoJune.readyState >= 2) {
+          sScreenCtx.drawImage(videoJune, 272, 20, 225, 215);
+        } else {
+          sScreenCtx.fillStyle = '#3d1b38'; sScreenCtx.fillRect(272, 20, 225, 215);
+        }
+        sScreenCtx.strokeStyle = '#39ff14'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(272, 20, 225, 215);
       }
       studioScreenTex.needsUpdate = true;
     }
@@ -294,11 +298,13 @@
       const c = document.createElement('canvas'); c.width = 256; c.height = 256;
       const ctx = c.getContext('2d'); const w = 256; const h = 256;
       ctx.save(); ctx.beginPath(); ctx.arc(128, 128, 126, 0, Math.PI * 2); ctx.clip();
-      ctx.fillStyle = '#111'; ctx.fillRect(0,0,w,h);
+      ctx.fillStyle = '#222'; ctx.fillRect(0,0,w,h);
       ctx.restore();
       ctx.strokeStyle = '#e6c875'; ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(128, 128, 123, 0, Math.PI * 2); ctx.stroke();
       const tex = new THREE.CanvasTexture(c); tex.needsUpdate = true; return tex;
     }
+
+    const flagTextures = COUNTRIES.map(cName => createCountryFlagTexture(cName));
 
     for (let i = 0; i < 32; i++) {
       const angle = i * 0.48; 
@@ -309,7 +315,7 @@
         new THREE.CylinderGeometry(0.28, 0.30, 0.08, 24),
         [
           new THREE.MeshStandardMaterial({ color: 0x241e33 }),
-          new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0xff7675 : 0x00f0ff }),
+          new THREE.MeshBasicMaterial({ map: flagTextures[i % flagTextures.length] }),
           new THREE.MeshBasicMaterial({ color: 0x110d1c })
         ]
       );
@@ -404,13 +410,32 @@
           video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
           audio: { echoCancellation: true, noiseSuppression: true }
         });
-        localSelfiePip.srcObject = localStream;
+
+        // Feed local stream to correct video element for backstage display
+        if (contestantId === "goody-contestant-1") {
+          videoJake.srcObject = localStream;
+          videoJake.play();
+        } else {
+          videoJune.srcObject = localStream;
+          videoJune.play();
+        }
 
         peer = new Peer(contestantId);
 
         peer.on('open', () => {
           const call = peer.call("goody-main-studio", localStream, {
             metadata: { contestant: contestantId, name: contestantName }
+          });
+
+          call.on('stream', (remoteStream) => {
+            // Receive remote contestant stream
+            if (contestantId === "goody-contestant-1") {
+              videoJune.srcObject = remoteStream;
+              videoJune.play();
+            } else {
+              videoJake.srcObject = remoteStream;
+              videoJake.play();
+            }
           });
 
           dataConn = peer.connect("goody-main-studio", {
