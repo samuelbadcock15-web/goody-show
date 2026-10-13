@@ -54,7 +54,7 @@
   <div id="blocker">
     <div id="instructions-card">
       <h1>The Goody Tonight Show</h1>
-      <p>Synchronized tiles & real-time stage question highlight board active!</p>
+      <p>Synchronized game states & turn management loaded!</p>
       <p><strong>Click Anywhere to Enter</strong></p>
       <p>
         <span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> &nbsp;Walk around<br>
@@ -85,7 +85,8 @@
     let hasLiveJakeStream = false;
     let hasLiveJuneStream = false;
 
-    // GAME STATE
+    // GAME STATE MANAGEMENT
+    let gameState = "IDLE"; // "IDLE" | "OPENING_DUEL" | "IN_PLAY"
     let diceCountdown = 0;
     let diceInterval = null;
     let p1RollVal = null;
@@ -98,7 +99,7 @@
     let questionTimer = 0;
     let questionInterval = null;
     let stageSelectedOption = null;
-    let stageOptionStatus = null; // 'selected' | 'correct' | 'wrong'
+    let stageOptionStatus = null;
 
     const INTRO_SPEECH = 
       "Hello, good evening, and welcome to The Goody Tonight Show! " +
@@ -112,7 +113,6 @@
 
     let currentSubtitle = "STUDIO STANDBY - POWER OFF";
 
-    // 14 COUNTRIES QUESTIONS
     const COUNTRY_QUESTIONS = {
       "UK": [
         { q: "In the UK, before the 2019 stake reduction, what was the maximum stake per spin on a Fixed-Odds-Betting-Terminal?", options: ["£2", "£50", "£100", "£500"], ans: "£100", recap: "In April 2019, the UK reduced the maximum FOBT stake per spin from £100 down to £2 to combat severe harms." },
@@ -234,7 +234,6 @@
             if (data.type === "PLAYER_ROLLED_DICE") {
               handlePlayerRoll(data.contestant, data.name, data.roll);
             } else if (data.type === "PLAYER_ANSWERED") {
-              // Immediately update stage board with contestant's chosen option!
               stageSelectedOption = data.chosenAnswer;
               stageOptionStatus = 'selected';
               renderStageQuestionBoard();
@@ -301,6 +300,7 @@
       window.speechSynthesis.cancel();
       currentSubtitle = "STUDIO STANDBY - POWER OFF";
       showJake = false; showJune = false;
+      gameState = "IDLE";
       if (diceInterval) clearInterval(diceInterval);
       if (questionInterval) clearInterval(questionInterval);
       diceCountdown = 0;
@@ -308,6 +308,7 @@
 
     // OPENING 10-SECOND DUEL
     function beginTenSecondDiceDuel() {
+      gameState = "OPENING_DUEL";
       diceCountdown = 10;
       p1RollVal = null;
       p2RollVal = null;
@@ -331,17 +332,35 @@
     }
 
     function handlePlayerRoll(contestant, name, roll) {
-      if (diceCountdown > 0) {
-        if (contestant === "goody-contestant-2") { p2RollVal = roll; isDiceRollingP2 = false; }
-        else { p1RollVal = roll; isDiceRollingP1 = false; }
+      if (gameState === "OPENING_DUEL") {
+        if (contestant === "goody-contestant-2") { 
+          p2RollVal = roll; 
+          isDiceRollingP2 = false; 
+        } else { 
+          p1RollVal = roll; 
+          isDiceRollingP1 = false; 
+        }
         playTone(587, 'sine', 0.15, 0.08);
 
         if (p1RollVal !== null && p2RollVal !== null) {
           clearInterval(diceInterval);
           finalizeDiceDuel();
         }
-      } else {
-        advanceTurnPlayer(contestant, roll);
+      } else if (gameState === "IN_PLAY") {
+        if (contestant !== activePlayer) return;
+        
+        if (contestant === "goody-contestant-2") {
+          p2RollVal = roll;
+          isDiceRollingP2 = false;
+        } else {
+          p1RollVal = roll;
+          isDiceRollingP1 = false;
+        }
+        playTone(587, 'sine', 0.15, 0.08);
+
+        speakGoody(`${name} rolled a ${roll}! Moving ${roll} spaces.`, () => {
+          advanceTurnPlayer(contestant, roll);
+        });
       }
     }
 
@@ -357,6 +376,8 @@
       activePlayer = winnerNum === 1 ? "goody-contestant-1" : "goody-contestant-2";
       const winRoll = winnerNum === 1 ? p1RollVal : p2RollVal;
 
+      gameState = "IN_PLAY";
+
       speakGoody(`Contestant number ${winnerNum} goes first! Moving ${winRoll} spaces.`, () => {
         advanceTurnPlayer(activePlayer, winRoll);
       });
@@ -366,7 +387,6 @@
     function advanceTurnPlayer(playerSlot, roll) {
       const isP1 = playerSlot === "goody-contestant-1";
       if (isP1) {
-        // Add roll forward accurately (starting tile 0 + roll)
         p1Index = Math.min(boardTileCoords.length - 1, p1Index + roll);
         pawn1.position.set(boardTileCoords[p1Index].x - 0.08, 0.52, boardTileCoords[p1Index].z);
       } else {
@@ -477,6 +497,8 @@
       activeQuestion = null;
       stageSelectedOption = null;
       stageOptionStatus = null;
+      p1RollVal = null;
+      p2RollVal = null;
       renderStageQuestionBoard();
 
       speakGoody(`It is now ${pName}'s turn! Please roll your dice!`, () => {
@@ -561,7 +583,6 @@
     const miniWall = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 4.5, 32, 1, true, -Math.PI / 2, Math.PI), new THREE.MeshStandardMaterial({ color: 0x15092a, side: THREE.BackSide }));
     miniWall.position.y = 2.65; miniDiorama.add(miniWall);
 
-    // EXACT 14 COUNTRIES ORDER MAPPED ACCURATELY ACROSS TILES
     const COUNTRIES = [
       "France", "Netherlands", "Canada", "Sweden", "Italy", "Denmark",
       "Brazil", "Australia", "Spain", "Germany", "UK", "Nigeria",
@@ -580,8 +601,8 @@
           ctx.fillStyle = '#ED2939'; ctx.fillRect((w / 3) * 2, 0, w / 3, h);
           break;
         case "Netherlands":
-          ctx.fillStyle = '#AE1C28'; ctx.fillRect(0, 0, w, h / 3);
-          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, h / 3, w, h / 3);
+          ctx.fillStyle = '#AE1C28'; ctx.fillRect(0, 0, w / 3, h);
+          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, h / 3, w / 3, h);
           ctx.fillStyle = '#21468B'; ctx.fillRect(0, (h / 3) * 2, w, h / 3);
           break;
         case "Canada":
@@ -591,7 +612,8 @@
           break;
         case "Brazil":
           ctx.fillStyle = '#009739'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FEDD00';
-          ctx.beginPath(); ctx.moveTo(128, 24); ctx.lineTo(236, 128); ctx.lineTo(128, 232); ctx.lineTo(20, 128); ctx.closePath(); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(128, 24); ctx.lineTo(236, 128); ctx.lineTo(128, 232); ctx.lineTo(20, 128);
+          ctx.closePath(); ctx.fill();
           ctx.fillStyle = '#012169'; ctx.beginPath(); ctx.arc(128, 128, 52, 0, Math.PI * 2); ctx.fill();
           ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(128, 134, 46, 3.4, 6.0); ctx.stroke();
           break;
@@ -609,27 +631,35 @@
           ctx.fillRect(85, 0, 36, h); ctx.fillRect(0, 110, w, 36);
           break;
         case "Australia":
-          ctx.fillStyle = '#00008B'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FFFFFF';
-          ctx.fillStyle = '#CC0000'; ctx.fillRect(48, 0, 24, 120); ctx.fillRect(0, 48, 120, 24); ctx.fillStyle = '#FFFFFF';
+          ctx.fillStyle = '#00008B'; ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, 120, 120);
+          ctx.fillStyle = '#CC0000'; ctx.fillRect(48, 0, 24, 120); ctx.fillRect(0, 48, 120, 24);
+          ctx.fillStyle = '#FFFFFF';
           [[60, 180], [180, 70], [210, 120], [180, 190], [150, 130]].forEach(([sx, sy]) => {
             ctx.beginPath(); ctx.arc(sx, sy, 10, 0, Math.PI * 2); ctx.fill();
           });
           break;
         case "Spain":
-          ctx.fillStyle = '#AA151B'; ctx.fillRect(0, 0, w, h * 0.25); ctx.fillStyle = '#F1BF00'; ctx.fillRect(0, h * 0.25, w, h * 0.5);
-          ctx.fillStyle = '#AA151B'; ctx.fillRect(0, h * 0.75, w, h * 0.25); ctx.beginPath(); ctx.arc(80, 128, 22, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#AA151B'; ctx.fillRect(0, 0, w, h * 0.25);
+          ctx.fillStyle = '#F1BF00'; ctx.fillRect(0, h * 0.25, w, h * 0.5);
+          ctx.fillStyle = '#AA151B'; ctx.fillRect(0, h * 0.75, w, h * 0.25);
+          ctx.beginPath(); ctx.arc(80, 128, 22, 0, Math.PI * 2); ctx.fill();
           break;
         case "Germany":
-          ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w, h / 3); ctx.fillStyle = '#DD0000'; ctx.fillRect(0, h / 3, w, h / 3);
+          ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w, h / 3);
+          ctx.fillStyle = '#DD0000'; ctx.fillRect(0, h / 3, w, h / 3);
           ctx.fillStyle = '#FFCE00'; ctx.fillRect(0, (h / 3) * 2, w, h / 3);
           break;
         case "UK":
-          ctx.fillStyle = '#012169'; ctx.fillRect(0, 0, w, h); ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 32; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke();
+          ctx.fillStyle = '#012169'; ctx.fillRect(0, 0, w, h);
+          ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 32; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke();
           ctx.strokeStyle = '#C8102E'; ctx.lineWidth = 14; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke();
-          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(104, 0, 48, h); ctx.fillRect(0, 104, w, 48); ctx.fillStyle = '#C8102E'; ctx.fillRect(114, 0, 28, h); ctx.fillRect(0, 114, w, 28);
+          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(104, 0, 48, h); ctx.fillRect(0, 104, w, 48);
+          ctx.fillStyle = '#C8102E'; ctx.fillRect(114, 0, 28, h); ctx.fillRect(0, 114, w, 28);
           break;
         case "Nigeria":
-          ctx.fillStyle = '#008751'; ctx.fillRect(0, 0, w / 3, h); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h);
+          ctx.fillStyle = '#008751'; ctx.fillRect(0, 0, w / 3, h);
+          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h);
           ctx.fillStyle = '#008751'; ctx.fillRect((w / 3) * 2, 0, w / 3, h);
           break;
         case "United States":
@@ -638,7 +668,8 @@
           for (let r = 18; r < 125; r += 26) { for (let col = 16; col < 115; col += 24) { ctx.beginPath(); ctx.arc(col, r, 4, 0, Math.PI * 2); ctx.fill(); } }
           break;
         case "Belgium":
-          ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w / 3, h); ctx.fillStyle = '#FDDA24'; ctx.fillRect(w / 3, 0, w / 3, h);
+          ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w / 3, h);
+          ctx.fillStyle = '#FDDA24'; ctx.fillRect(w / 3, 0, w / 3, h);
           ctx.fillStyle = '#EF3340'; ctx.fillRect((w / 3) * 2, 0, w / 3, h);
           break;
       }
@@ -675,7 +706,6 @@
       miniDiorama.add(tile);
     }
 
-    // 3D CONTESTANT PAWNS ON STARTING TILE
     function createPlayerPawn(colorHex, badgeNum) {
       const pawn = new THREE.Group();
       const baseMat = new THREE.MeshStandardMaterial({ color: colorHex, metalness: 0.6, roughness: 0.25 });
@@ -767,7 +797,6 @@
           const optY = 210 + (idx * 40);
           const isSelected = stageSelectedOption === opt;
 
-          // Background box styles reflecting contestant choice in real-time
           if (isSelected) {
             if (stageOptionStatus === 'correct') {
               qBoardCtx.fillStyle = '#00b894';
@@ -776,7 +805,7 @@
               qBoardCtx.fillStyle = '#d63031';
               qBoardCtx.strokeStyle = '#ff7675';
             } else {
-              qBoardCtx.fillStyle = '#6c5ce7'; // Locked selection state
+              qBoardCtx.fillStyle = '#6c5ce7';
               qBoardCtx.strokeStyle = '#fdcb6e';
             }
           } else {
@@ -885,7 +914,7 @@
       targetPlushie.lookAt(0, 1.8, -2.6);
     }
 
-    // BACKSTAGE CONTESTANT SCREENS CANVAS
+    // BACKSTAGE CONTESTANT SCREENS
     const studioScreenCanvas = document.createElement('canvas'); studioScreenCanvas.width = 512; studioScreenCanvas.height = 256;
     const sScreenCtx = studioScreenCanvas.getContext('2d');
     const studioScreenTex = new THREE.CanvasTexture(studioScreenCanvas);
@@ -962,7 +991,7 @@
     const studioBackScreenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshBasicMaterial({ map: studioScreenTex }));
     studioBackScreenMesh.position.set(0, 3.4, -4.5); miniDiorama.add(studioBackScreenMesh);
 
-    // HOST ROBOT (GOODY AT Z = -2.6)
+    // HOST ROBOT
     const miniGoody = new THREE.Group();
     const gPodium = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 0.6, 20), new THREE.MeshStandardMaterial({ color: 0x2b154a }));
     gPodium.position.y = 0.74; miniGoody.add(gPodium);
@@ -1002,19 +1031,14 @@
       const darkMat = new THREE.MeshStandardMaterial({ color: 0x1f1f26 });
       const basePlate = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.42, 0.08, 16), darkMat); basePlate.position.y = 0.04; camRig.add(basePlate);
       const outerCol = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.13, 0.55, 16), darkMat); outerCol.position.y = 0.35; camRig.add(outerCol);
-
       const headPivot = new THREE.Group(); headPivot.position.y = 1.0;
       const cameraBox = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.24, 0.42), darkMat); headPivot.add(cameraBox);
-
       const lensBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.095, 0.26, 16), new THREE.MeshStandardMaterial({ color: 0x0a0a0a }));
       lensBarrel.rotation.x = Math.PI / 2; lensBarrel.position.set(0, 0, -0.24); headPivot.add(lensBarrel);
-
       const frontGlass = new THREE.Mesh(new THREE.CircleGeometry(0.08, 16), new THREE.MeshBasicMaterial({ color: 0x00f0ff }));
       frontGlass.position.set(0, 0, -0.431); headPivot.add(frontGlass);
-
       const tallyLamp = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), new THREE.MeshBasicMaterial({ color: 0x111111 }));
       tallyLamp.position.set(0, 0.15, -0.28); headPivot.add(tallyLamp);
-
       camRig.add(headPivot); miniDiorama.add(camRig);
       return { headPivot, tallyLamp, frontGlass };
     }
@@ -1025,19 +1049,15 @@
       const hostHeadPos = new THREE.Vector3(0, 5.77, -11.6);
       if (studioPower) {
         autoCam1.headPivot.lookAt(hostHeadPos); autoCam2.headPivot.lookAt(hostHeadPos);
-        autoCam1.headPivot.rotation.y += Math.PI;
-        autoCam2.headPivot.rotation.y += Math.PI;
-        autoCam1.tallyLamp.material.color.setHex(0xff0000);
-        autoCam2.tallyLamp.material.color.setHex(0xff0000);
+        autoCam1.headPivot.rotation.y += Math.PI; autoCam2.headPivot.rotation.y += Math.PI;
+        autoCam1.tallyLamp.material.color.setHex(0xff0000); autoCam2.tallyLamp.material.color.setHex(0xff0000);
       } else {
         autoCam1.headPivot.rotation.set(0.6, 0.2, 0); autoCam2.headPivot.rotation.set(0.6, -0.2, 0);
         autoCam1.tallyLamp.material.color.setHex(0x111111); autoCam2.tallyLamp.material.color.setHex(0x111111);
       }
     }
-
     scene.add(miniDiorama);
 
-    // BUTTON HANDLERS
     function triggerPhysicalPowerButton() {
       studioPower = !studioPower;
       btnPowerCap.material.color.setHex(studioPower ? 0x00b894 : 0xd63031);
@@ -1048,7 +1068,6 @@
       else stopGoodySpeech();
     }
 
-    // RAYCASTING
     const raycaster = new THREE.Raycaster();
     const centerPoint = new THREE.Vector2(0, 0);
 
@@ -1075,7 +1094,6 @@
       else if (hit.name === "MINIATURE_CLICK_PORTAL") enterMiniatureMode();
     });
 
-    // MODE SWITCHING
     function enterMiniatureMode() {
       currentMode = 'MINIATURE';
       camera.position.set(0, 5.15, -3.5);
