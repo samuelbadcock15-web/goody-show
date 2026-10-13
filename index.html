@@ -371,6 +371,7 @@
       updateStudioLighting(true);
       updateGoodyFaceExpression();
       updateCameraAlignment();
+      renderStageQuestionBoard();
       startGoodyMonologue();
     }
 
@@ -755,7 +756,6 @@
       new THREE.PlaneGeometry(2.4, 1.2),
       new THREE.MeshBasicMaterial({ map: wallClockTex })
     );
-    // Positioned up at Y = 6.2 so it stays clear above the contestant screens
     wallClockMesh.position.set(0, 6.2, -4.4);
     miniDiorama.add(wallClockMesh);
 
@@ -856,7 +856,7 @@
 
     const flagTextures = COUNTRIES.map(cName => createCountryFlagTexture(cName));
 
-    // GAME SHOW BOARD TILES (32 TILES RACE)
+    // GAME SHOW BOARD TILES
     const boardTileCoords = [];
     const spiralCenterZ = 1.8;
     const totalTiles = 32;
@@ -915,7 +915,7 @@
     pawn2.position.set(boardTileCoords[0].x + 0.08, 0.52, boardTileCoords[0].z);
     miniDiorama.add(pawn2);
 
-    // STAGE QUESTION BOARD
+    // STAGE QUESTION & RULES BOARD
     const qBoardCanvas = document.createElement('canvas');
     qBoardCanvas.width = 512; qBoardCanvas.height = 384;
     const qBoardCtx = qBoardCanvas.getContext('2d');
@@ -929,12 +929,13 @@
       qBoardCtx.strokeRect(3, 3, 506, 378);
 
       if (!activeQuestion) {
-        qBoardCtx.fillStyle = '#ffda66';
-        qBoardCtx.font = 'bold 26px sans-serif';
-        qBoardCtx.textAlign = 'center';
-        qBoardCtx.fillText("THE GOODY TONIGHT SHOW", 256, 120);
-
         if (!studioPower && autoStartSeconds > 0) {
+          // Pre-show countdown
+          qBoardCtx.fillStyle = '#ffda66';
+          qBoardCtx.font = 'bold 26px sans-serif';
+          qBoardCtx.textAlign = 'center';
+          qBoardCtx.fillText("THE GOODY TONIGHT SHOW", 256, 120);
+
           qBoardCtx.fillStyle = '#ffffff';
           qBoardCtx.font = 'bold 18px monospace';
           qBoardCtx.fillText("NEXT SHOW IS IN...", 256, 180);
@@ -945,11 +946,38 @@
           const secs = (autoStartSeconds % 60).toString().padStart(2, '0');
           qBoardCtx.fillText(`${mins}:${secs}`, 256, 250);
         } else {
+          // Official Game Show Rules Screen
+          qBoardCtx.fillStyle = '#ffda66';
+          qBoardCtx.font = 'bold 24px sans-serif';
+          qBoardCtx.textAlign = 'center';
+          qBoardCtx.fillText("⭐ OFFICIAL GAME RULES ⭐", 256, 44);
+
+          qBoardCtx.fillStyle = '#00f0ff';
+          qBoardCtx.fillRect(36, 56, 440, 2);
+
+          const rules = [
+            "🎲 1. Roll to advance across international country tiles.",
+            "🌍 2. Land on a tile to trigger that country's trivia.",
+            "⏱️ 3. You have 30 seconds to lock in your final answer.",
+            "✅ 4. Correct answer secures your position on the tile.",
+            "❌ 5. Incorrect answer or timeout sends you to START!",
+            "🏆 6. Reach tile 32 or be furthest ahead at 20:00 to WIN!"
+          ];
+
+          qBoardCtx.font = '14px monospace';
+          qBoardCtx.textAlign = 'left';
+          rules.forEach((rule, idx) => {
+            qBoardCtx.fillStyle = idx % 2 === 0 ? '#ffffff' : '#ebdcf9';
+            qBoardCtx.fillText(rule, 26, 96 + (idx * 34));
+          });
+
           qBoardCtx.fillStyle = '#39ff14';
-          qBoardCtx.font = '18px monospace';
-          qBoardCtx.fillText("STANDBY FOR NEXT QUESTION...", 256, 215);
+          qBoardCtx.font = 'bold 15px monospace';
+          qBoardCtx.textAlign = 'center';
+          qBoardCtx.fillText("🔴 LIVE BROADCAST IN PROGRESS", 256, 342);
         }
       } else {
+        // Active Question Screen
         const pName = activePlayer === "goody-contestant-1" ? "JAKE" : "JUNE";
         qBoardCtx.fillStyle = '#ffda66';
         qBoardCtx.font = 'bold 18px monospace';
