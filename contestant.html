@@ -94,6 +94,7 @@
     .dpad-btn {
       background: #2b1154; border: 2px solid #ff79b0; border-radius: 6px; color: #fff;
       font-size: 1.1rem; font-weight: bold; display: flex; justify-content: center; align-items: center;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -380,17 +381,39 @@
       }, 7000);
     }
 
-    // Plushie Movement
+    // Plushie Movement & Continuous Controls
+    let dpadInterval = null;
+
     function sendPlushieMove(direction) {
       if (dataConn && dataConn.open) {
         dataConn.send({ type: "PLUSHIE_MOVE", contestant: contestantId, direction: direction });
       }
     }
+
+    function startPlushieMove(direction) {
+      sendPlushieMove(direction);
+      if (dpadInterval) clearInterval(dpadInterval);
+      dpadInterval = setInterval(() => {
+        sendPlushieMove(direction);
+      }, 100);
+    }
+
+    function stopPlushieMove() {
+      if (dpadInterval) {
+        clearInterval(dpadInterval);
+        dpadInterval = null;
+      }
+    }
+
     const bindDpad = (btnId, dir) => {
       const el = document.getElementById(btnId);
-      el.addEventListener('touchstart', (e) => { e.preventDefault(); sendPlushieMove(dir); });
-      el.addEventListener('mousedown', () => sendPlushieMove(dir));
+      el.addEventListener('touchstart', (e) => { e.preventDefault(); startPlushieMove(dir); });
+      el.addEventListener('touchend', (e) => { e.preventDefault(); stopPlushieMove(); });
+      el.addEventListener('mousedown', () => startPlushieMove(dir));
+      el.addEventListener('mouseup', () => stopPlushieMove());
+      el.addEventListener('mouseleave', () => stopPlushieMove());
     };
+
     bindDpad('dpad-fwd', 'FORWARD');
     bindDpad('dpad-back', 'BACK');
     bindDpad('dpad-left', 'LEFT');
