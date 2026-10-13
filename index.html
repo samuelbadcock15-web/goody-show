@@ -104,6 +104,12 @@
     const countdownPill = document.getElementById('countdown-pill');
     const timerValEl = document.getElementById('timer-val');
 
+    // Contestant camera rotations (controlled via mobile swipe)
+    const contestantRotations = {
+      "goody-contestant-1": { yaw: 0, pitch: -0.15 },
+      "goody-contestant-2": { yaw: 0, pitch: -0.15 }
+    };
+
     // AUTO-START COUNTDOWN TIMER
     let autoStartSeconds = 10;
     let autoStartInterval = setInterval(() => {
@@ -132,7 +138,6 @@
 
     let currentSubtitle = "STUDIO STANDBY - POWER OFF";
 
-    // 14 COUNTRIES QUESTIONS
     const COUNTRY_QUESTIONS = {
       "UK": [
         { q: "In the UK, before the 2019 stake reduction, what was the maximum stake per spin on a Fixed-Odds-Betting-Terminal?", options: ["£2", "£50", "£100", "£500"], ans: "£100", recap: "In April 2019, the UK reduced the maximum FOBT stake per spin from £100 down to £2 to combat severe harms." },
@@ -216,8 +221,8 @@
     canvasJune.width = 640; canvasJune.height = 360;
     const rendererJune = new THREE.WebGLRenderer({ canvas: canvasJune, antialias: true });
 
-    const camJake = new THREE.PerspectiveCamera(60, 16 / 9, 0.1, 100);
-    const camJune = new THREE.PerspectiveCamera(60, 16 / 9, 0.1, 100);
+    const camJake = new THREE.PerspectiveCamera(65, 16 / 9, 0.1, 100);
+    const camJune = new THREE.PerspectiveCamera(65, 16 / 9, 0.1, 100);
 
     const streamJake = canvasJake.captureStream(30);
     const streamJune = canvasJune.captureStream(30);
@@ -229,7 +234,6 @@
     controls.addEventListener('lock', () => { blocker.style.display = 'none'; });
     controls.addEventListener('unlock', () => { blocker.style.display = 'flex'; });
 
-    // PEERJS WEBRTC
     let studioPeer = null;
     let connectedDataConns = [];
     const connectedAudiencePeers = new Set();
@@ -285,6 +289,14 @@
               handleQuestionTimeout(data.contestant);
             } else if (data.type === "PLUSHIE_MOVE") {
               handlePlushieMovement(data.contestant, data.direction);
+            } else if (data.type === "PLUSHIE_LOOK") {
+              if (contestantRotations[data.contestant]) {
+                contestantRotations[data.contestant].yaw += data.deltaX * 0.005;
+                contestantRotations[data.contestant].pitch = Math.max(
+                  -0.8,
+                  Math.min(0.4, contestantRotations[data.contestant].pitch + data.deltaY * 0.005)
+                );
+              }
             }
           });
 
@@ -321,7 +333,6 @@
       });
     }
 
-    // AUDIO ENGINE
     let audioCtx = null;
     let goodyUtterance = null;
     function initAudio() {
@@ -634,7 +645,6 @@
     const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(36, 16), wallMat); leftWall.position.set(-18, 8, 0); leftWall.rotation.y = Math.PI / 2; bedroomGroup.add(leftWall);
     const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(36, 16), wallMat); rightWall.position.set(18, 8, 0); rightWall.rotation.y = -Math.PI / 2; bedroomGroup.add(rightWall);
 
-    // Workbench Desk
     const deskTop = new THREE.Mesh(new THREE.BoxGeometry(22, 1.0, 16), new THREE.MeshStandardMaterial({ color: 0x331c0e }));
     deskTop.position.set(0, 3.4, -9); bedroomGroup.add(deskTop);
     scene.add(bedroomGroup);
@@ -977,30 +987,35 @@
       const targetPlushie = contestant === "goody-contestant-2" ? playerPlushie2 : playerPlushie1;
       if (!targetPlushie) return;
 
-      const step = 0.25;
+      const rot = contestantRotations[contestant] ? contestantRotations[contestant].yaw : 0;
+      const step = 0.35;
+
+      const fwdX = -Math.sin(rot);
+      const fwdZ = -Math.cos(rot);
+      const rightX = Math.cos(rot);
+      const rightZ = -Math.sin(rot);
 
       if (direction === 'FORWARD') {
-        targetPlushie.position.z -= step;
+        targetPlushie.position.x += fwdX * step;
+        targetPlushie.position.z += fwdZ * step;
       }
       if (direction === 'BACK') {
-        targetPlushie.position.z += step;
+        targetPlushie.position.x -= fwdX * step;
+        targetPlushie.position.z -= fwdZ * step;
       }
       if (direction === 'LEFT') {
-        targetPlushie.position.x -= step;
+        targetPlushie.position.x -= rightX * step;
+        targetPlushie.position.z -= rightZ * step;
       }
       if (direction === 'RIGHT') {
-        targetPlushie.position.x += step;
+        targetPlushie.position.x += rightX * step;
+        targetPlushie.position.z += rightZ * step;
       }
 
       targetPlushie.position.x = Math.max(-6.8, Math.min(6.8, targetPlushie.position.x));
-      targetPlushie.position.z = Math.max(-6.5, Math.min(6.8, targetPlushie.position.z));
+      targetPlushie.position.z = Math.max(-6.8, Math.min(6.8, targetPlushie.position.z));
       targetPlushie.position.y = 0.46;
     }
-
-    // BACKSTAGE CONTESTANT SCREENS
-    const studioScreenCanvas = document.createElement('canvas'); studioScreenCanvas.width = 512; studioScreenCanvas.height = 256;
-    const sScreenCtx = studioScreenCanvas.getContext('2d');
-    const studioScreenTex = new THREE.CanvasTexture(studioScreenCanvas);
 
     function drawDiceFace(ctx, x, y, size, value) {
       ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#222222'; ctx.lineWidth = 3;
@@ -1014,6 +1029,10 @@
       if (value > 3) { dot(0.75, 0.25); dot(0.25, 0.75); }
       if (value === 6) { dot(0.25, 0.5); dot(0.75, 0.5); }
     }
+
+    const studioScreenCanvas = document.createElement('canvas'); studioScreenCanvas.width = 512; studioScreenCanvas.height = 256;
+    const sScreenCtx = studioScreenCanvas.getContext('2d');
+    const studioScreenTex = new THREE.CanvasTexture(studioScreenCanvas);
 
     function drawScreenFeed(ctx, x, y, width, height, name, city, isLive, videoElem, isGuy, currentRoll, isRolling) {
       ctx.fillStyle = '#05020a'; ctx.fillRect(x, y, width, height);
@@ -1157,23 +1176,53 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
+    // THIRD PERSON CHASE CAMERAS (Clear View Over Avatar)
     function syncContestantCameras() {
+      const dist = 1.8; // Distance behind plushie
+      const height = 1.2; // Elevation above plushie
+
       if (playerPlushie1) {
+        const rot = contestantRotations["goody-contestant-1"];
+        playerPlushie1.rotation.y = rot.yaw;
+
+        const worldX = playerPlushie1.position.x;
+        const worldY = playerPlushie1.position.y + 3.95;
+        const worldZ = playerPlushie1.position.z - 9.0;
+
         camJake.position.set(
-          playerPlushie1.position.x,
-          playerPlushie1.position.y + 4.5,
-          playerPlushie1.position.z - 8.8
+          worldX + Math.sin(rot.yaw) * dist,
+          worldY + height,
+          worldZ + Math.cos(rot.yaw) * dist
         );
-        camJake.lookAt(playerPlushie1.position.x * 0.4, 5.0, -11.6);
+
+        const lookTarget = new THREE.Vector3(
+          worldX - Math.sin(rot.yaw) * 4.0,
+          worldY + 0.5 + rot.pitch * 3.0,
+          worldZ - Math.cos(rot.yaw) * 4.0
+        );
+        camJake.lookAt(lookTarget);
       }
 
       if (playerPlushie2) {
+        const rot = contestantRotations["goody-contestant-2"];
+        playerPlushie2.rotation.y = rot.yaw;
+
+        const worldX = playerPlushie2.position.x;
+        const worldY = playerPlushie2.position.y + 3.95;
+        const worldZ = playerPlushie2.position.z - 9.0;
+
         camJune.position.set(
-          playerPlushie2.position.x,
-          playerPlushie2.position.y + 4.5,
-          playerPlushie2.position.z - 8.8
+          worldX + Math.sin(rot.yaw) * dist,
+          worldY + height,
+          worldZ + Math.cos(rot.yaw) * dist
         );
-        camJune.lookAt(playerPlushie2.position.x * 0.4, 5.0, -11.6);
+
+        const lookTarget = new THREE.Vector3(
+          worldX - Math.sin(rot.yaw) * 4.0,
+          worldY + 0.5 + rot.pitch * 3.0,
+          worldZ - Math.cos(rot.yaw) * 4.0
+        );
+        camJune.lookAt(lookTarget);
       }
     }
 
