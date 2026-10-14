@@ -89,11 +89,15 @@
 
     let matchTimerSeconds = 20 * 60;
     let matchTimerInterval = null;
+    let isTimeExpired = false;
     let gameClockValEl = document.getElementById('game-clock-val');
 
     let activePlayer = "goody-contestant-1";
     let activeQuestion = null;
     let activeRecap = null;
+    let isTieBreakerActive = false;
+    let tieBreakerAnswered = false;
+
     let questionTimer = 0;
     let questionInterval = null;
     let stageSelectedOption = null;
@@ -271,6 +275,10 @@
             if (data.type === "PLAYER_ROLLED_DICE") {
               handlePlayerRoll(data.contestant, data.name, data.roll);
             } else if (data.type === "PLAYER_ANSWERED") {
+              if (isTieBreakerActive) {
+                handleTieBreakerAnswer(data.contestant, data.chosenAnswer);
+                return;
+              }
               stageSelectedOption = data.chosenAnswer;
               stageOptionStatus = 'selected';
               renderStageQuestionBoard();
@@ -289,6 +297,7 @@
                 evaluateAnswer(data.contestant, data.chosenAnswer);
               }, 1200);
             } else if (data.type === "PLAYER_TIMEOUT") {
+              if (isTieBreakerActive) return;
               handleQuestionTimeout(data.contestant);
             } else if (data.type === "PLUSHIE_MOVE") {
               handlePlushieMovement(data.contestant, data.direction);
@@ -356,6 +365,11 @@
     }
 
     function speakGoody(text, onComplete) {
+      // Broadcast Goody's speech to all mobile devices so contestants hear it
+      connectedDataConns.forEach(c => {
+        if (c.open) c.send({ type: "HOST_SPEAK", text: text });
+      });
+
       if (!('speechSynthesis' in window)) { if (onComplete) onComplete(); return; }
       window.speechSynthesis.cancel();
       goodyUtterance = new SpeechSynthesisUtterance(text);
@@ -465,8 +479,8 @@
         if (gameState !== "IN_PLAY") return;
         matchTimerSeconds--;
 
-        const mins = Math.floor(matchTimerSeconds / 60).toString().padStart(2, '0');
-        const secs = (matchTimerSeconds % 60).toString().padStart(2, '0');
+        const mins = Math.max(0, Math.floor(matchTimerSeconds / 60)).toString().padStart(2, '0');
+        const secs = Math.max(0, (matchTimerSeconds % 60)).toString().padStart(2, '0');
         const timeStr = `${mins}:${secs}`;
         
         gameClockValEl.textContent = timeStr;
@@ -478,7 +492,10 @@
 
         if (matchTimerSeconds <= 0) {
           clearInterval(matchTimerInterval);
-          triggerTimeOutVictory();
+          isTimeExpired = true;
+          if (!activeQuestion && !activeRecap && !isTieBreakerActive) {
+            evaluateFinalShowdown();
+          }
         }
       }, 1000);
     }
@@ -514,7 +531,7 @@
       }
 
       if (p1Index >= boardTileCoords.length - 1 || p2Index >= boardTileCoords.length - 1) {
-        triggerFinishLineVictory(isP1 ? "Jake" : "June");
+        triggerFinishLineVictory(isP1 ? "Jake" : "June", isP1 ? "June" : "Jake");
         return;
       }
 
@@ -643,6 +660,11 @@
       activeQuestion = null;
       renderStageQuestionBoard();
 
+      if (isTimeExpired) {
+        setTimeout(() => evaluateFinalShowdown(), 2000);
+        return;
+      }
+
       setTimeout(() => {
         nextTurn();
       }, 3000);
@@ -684,31 +706,107 @@
       });
     }
 
-    function triggerFinishLineVictory(winnerName) {
+    function evaluateFinalShowdown() {
+      if (diceInterval) clearInterval(diceInterval);
+      if (questionInterval) clearInterval(questionInterval);
+
+      if (p1Index === 0 && p2Index === 0) {
+        gameState = "GAME_OVER";
+        const speech = "The 20-minute show timer has run out, and both contestants are still on the starting square! Nobody wins tonight, so the prize rolls over to our next game! Thank you for watching The Goody Tonight Show. Shows are at 9 PM most days. Goodnight everyone!";
+        speakGoody(speech);
+        broadcastGameOver("NOBODY", "ROLLOVER_START_SQUARE");
+        return;
+      }
+
+      if (p1Index === p2Index) {
+        triggerTieBreakerDuel();
+        return;
+      }
+
+      gameState = "GAME_OVER";
+      const winner = p1Index > p2Index ? "Jake" : "June";
+      const loser = p1Index > p2Index ? "June" : "Jake";
+
+      const speech = `The 20-minute timer is over! Well done to our winner ${winner}, and commiserations to ${loser}! Thanks for watching, come again next show, shows are at 9 PM most days! Goodnight!`;
+      speakGoody(speech);
+      broadcastGameOver(winner, "TIME_EXPIRED_LEADER");
+    }
+
+    function triggerTieBreakerDuel() {
+      isTieBreakerActive = true;
+      tieBreakerAnswered = false;
+
+      const tiePool = COUNTRY_QUESTIONS["UK"];
+      const rawQ = tiePool[Math.floor(Math.random() * tiePool.length)];
+      activeQuestion = {
+        country: "TIE-BREAKER",
+        text: rawQ.q,
+        q: rawQ.q,
+        options: rawQ.options,
+        ans: rawQ.ans,
+        recap: rawQ.recap
+      };
+
+      stageSelectedOption = null;
+      stageOptionStatus = null;
+      renderStageQuestionBoard();
+
+      speakGoody("We have a dead heat draw! Both contestants finished on the exact same tile! We are going to a sudden death tie-breaker question! First contestant to answer correctly wins the game! But beware, if you get it wrong, your opponent wins automatically! Here is the tie-breaker!", () => {
+        connectedDataConns.forEach(c => {
+          if (c.open) c.send({
+            type: "START_TIE_BREAKER",
+            question: activeQuestion
+          });
+        });
+      });
+    }
+
+    function handleTieBreakerAnswer(contestant, chosen) {
+      if (tieBreakerAnswered) return;
+      tieBreakerAnswered = true;
+      isTieBreakerActive = false;
+
+      const isJake = contestant === "goody-contestant-1";
+      const answeringName = isJake ? "Jake" : "June";
+      const opponentName = isJake ? "June" : "Jake";
+      const isCorrect = chosen === activeQuestion.ans;
+
+      stageSelectedOption = chosen;
+      stageOptionStatus = isCorrect ? 'correct' : 'wrong';
+      renderStageQuestionBoard();
+
+      gameState = "GAME_OVER";
+      const winner = isCorrect ? answeringName : opponentName;
+      const loser = isCorrect ? opponentName : answeringName;
+
+      connectedDataConns.forEach(c => {
+        if (c.open) c.send({
+          type: "TIE_BREAKER_RESULT",
+          winner: winner,
+          loser: loser,
+          isCorrect: isCorrect,
+          chosenAnswer: chosen,
+          ans: activeQuestion.ans
+        });
+      });
+
+      const speech = isCorrect 
+        ? `That is correct! Well done to our winner ${winner}, and commiserations to ${loser}! Thanks for watching, come again next show, shows are at 9 PM most days! Goodnight!`
+        : `That is incorrect! By default, well done to our winner ${winner}, and commiserations to ${loser}! Thanks for watching, come again next show, shows are at 9 PM most days! Goodnight!`;
+
+      speakGoody(speech);
+      broadcastGameOver(winner, "TIE_BREAKER_DECISION");
+    }
+
+    function triggerFinishLineVictory(winnerName, loserName) {
       gameState = "GAME_OVER";
       if (matchTimerInterval) clearInterval(matchTimerInterval);
       if (questionInterval) clearInterval(questionInterval);
       if (diceInterval) clearInterval(diceInterval);
 
-      speakGoody(`Unbelievable! ${winnerName} has crossed the final tile and conquered the game floor! ${winnerName} is tonight's grand champion!`);
+      const speech = `Unbelievable! ${winnerName} has reached the final square and completed the floor! Well done to our winner ${winnerName}, and commiserations to ${loserName}! Thanks for watching, come again next show, shows are at 9 PM most days! Goodnight!`;
+      speakGoody(speech);
       broadcastGameOver(winnerName, "REACHED_THE_END");
-    }
-
-    function triggerTimeOutVictory() {
-      gameState = "GAME_OVER";
-      if (questionInterval) clearInterval(questionInterval);
-      if (diceInterval) clearInterval(diceInterval);
-
-      let winner = "It's a draw";
-      if (p1Index > p2Index) winner = "Jake";
-      else if (p2Index > p1Index) winner = "June";
-
-      if (winner === "It's a draw") {
-        speakGoody("The 20-minute show timer has reached zero! Both contestants are neck and neck at the exact same tile! It's an honorable draw!");
-      } else {
-        speakGoody(`The 20-minute show timer has expired! With ${winner} furthest along the course, ${winner} takes home the victory tonight!`);
-      }
-      broadcastGameOver(winner, "TIME_EXPIRED");
     }
 
     function broadcastGameOver(winnerName, reason) {
@@ -894,7 +992,7 @@
           ctx.fillStyle = '#C8102E'; ctx.fillRect(114, 0, 28, h); ctx.fillRect(0, 114, w, 28);
           break;
         case "Nigeria":
-          ctx.fillStyle = '#008751'; ctx.fillRect(0, 0, w / 3, h);
+          ctx.fillStyle = '#008751'; ctx.fillRect(0, 0, w, h / 3);
           ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h);
           ctx.fillStyle = '#008751'; ctx.fillRect((w / 3) * 2, 0, w / 3, h);
           break;
@@ -1023,13 +1121,13 @@
         qBoardCtx.font = '14px monospace';
         qBoardCtx.fillText("RETURNING TO RULES BEFORE NEXT ROLL...", 256, 342);
       } else if (activeQuestion) {
-        const pName = activePlayer === "goody-contestant-1" ? "JAKE" : "JUNE";
+        const pName = isTieBreakerActive ? "SUDDEN DEATH TIE-BREAKER" : (activePlayer === "goody-contestant-1" ? "JAKE'S TURN" : "JUNE'S TURN");
         qBoardCtx.fillStyle = '#ffda66';
         qBoardCtx.font = 'bold 18px monospace';
         qBoardCtx.textAlign = 'left';
-        qBoardCtx.fillText(`🌍 ${activeQuestion.country.toUpperCase()} [${pName}'S TURN]`, 20, 36);
+        qBoardCtx.fillText(`⚡ ${activeQuestion.country.toUpperCase()} [${pName}]`, 20, 36);
 
-        if (questionTimer > 0) {
+        if (questionTimer > 0 && !isTieBreakerActive) {
           qBoardCtx.fillStyle = '#ff7675';
           qBoardCtx.font = 'bold 20px monospace';
           qBoardCtx.textAlign = 'right';
