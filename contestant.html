@@ -6,7 +6,7 @@
   <title>Goody Tonight Show - Contestant Companion</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
-    
+   
     html, body {
       width: 100%;
       height: 100%;
@@ -122,8 +122,8 @@
       font-size: 0.75rem; font-weight: bold; color: #ffda66; text-transform: uppercase;
     }
     #q-timer { font-family: monospace; font-weight: bold; color: #ff7675; font-size: 0.8rem; text-align: right; }
-    
-    #q-text { 
+   
+    #q-text {
       font-size: 0.82rem; font-weight: 600; line-height: 1.3; color: #ffffff;
       background: rgba(0,0,0,0.35); padding: 6px; border-radius: 6px; border-left: 3px solid #00f0ff;
     }
@@ -153,11 +153,11 @@
       padding: 4px; display: flex; flex-direction: column; align-items: center;
       gap: 2px; flex-shrink: 0; margin-bottom: 2px;
     }
-    .dpad-grid { 
-      display: grid; 
-      grid-template-columns: 46px 46px 46px; 
-      grid-template-rows: 32px 32px; 
-      gap: 4px; 
+    .dpad-grid {
+      display: grid;
+      grid-template-columns: 46px 46px 46px;
+      grid-template-rows: 32px 32px;
+      gap: 4px;
     }
     .dpad-btn {
       background: #2b1154; border: 2px solid #ff79b0; border-radius: 6px; color: #fff;
@@ -241,42 +241,6 @@
     let isTieBreaker = false;
     let mobileAudioUnlocked = false;
 
-    // Speech Recognition for live banter
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let contestantListener = null;
-
-    if (SR) {
-      contestantListener = new SR();
-      contestantListener.continuous = true;
-      contestantListener.interimResults = false;
-      contestantListener.lang = 'en-US';
-
-      contestantListener.onresult = (event) => {
-        const transcript = event.results[event.results.length - 1][0].transcript.trim();
-        if (transcript.length > 0 && dataConn && dataConn.open) {
-          statusPill.textContent = `🎙️ You: "${transcript}"`;
-          dataConn.send({
-            type: "CONTESTANT_SPOKE",
-            contestant: contestantId,
-            name: contestantName,
-            text: transcript
-          });
-        }
-      };
-
-      contestantListener.onerror = (err) => {
-        console.warn("Speech recognition notice:", err);
-      };
-    }
-
-    function setContestantMicListening(active) {
-      if (!contestantListener) return;
-      try {
-        if (active) contestantListener.start();
-        else contestantListener.stop();
-      } catch(e) {}
-    }
-
     const setupCard = document.getElementById('setup-card');
     const liveStagePortal = document.getElementById('live-stage-portal');
     const localSelfiePip = document.getElementById('local-selfie-pip');
@@ -307,8 +271,10 @@
       if (mobileAudioUnlocked) return;
       mobileAudioUnlocked = true;
 
+      // Unmute incoming stream video element
       studioStreamVideo.muted = false;
 
+      // Prime SpeechSynthesis so mobile iOS/Android does not block speech
       if ('speechSynthesis' in window) {
         const primeUtterance = new SpeechSynthesisUtterance('');
         primeUtterance.volume = 0;
@@ -372,14 +338,6 @@
           dataConn.on('data', (data) => {
             if (data.type === "HOST_SPEAK") {
               playHostSpeechLocally(data.text);
-            } else if (data.type === "ENABLE_CONTESTANT_MIC") {
-              if (data.target === contestantId) {
-                statusPill.textContent = "🎙️ Goody is listening! Say hello!";
-                setContestantMicListening(true);
-              }
-            } else if (data.type === "DISABLE_CONTESTANT_MIC") {
-              statusPill.textContent = "Goody is talking...";
-              setContestantMicListening(false);
             } else if (data.type === "START_DICE_COUNTDOWN") {
               startTenSecondRoll();
             } else if (data.type === "SYNC_MATCH_TIMER") {
@@ -530,7 +488,7 @@
       btnRollDice.style.display = 'none';
       recapCard.style.display = 'none';
       triviaCard.style.display = 'flex';
-      
+     
       qCountryTag.textContent = `🌍 ${qData.country} (${isMyTurn ? "YOUR QUESTION" : activeName.toUpperCase() + "'S QUESTION"})`;
       qText.textContent = qData.text || qData.q || "Listen to host:";
       qTimer.textContent = "🔒 LISTENING...";
@@ -609,8 +567,8 @@
       if (questionTimer) clearInterval(questionTimer);
       const isMe = data.forContestant === contestantId;
 
-      const targetIdx = selectedOptionIndex !== null 
-        ? selectedOptionIndex 
+      const targetIdx = selectedOptionIndex !== null
+        ? selectedOptionIndex
         : (currentQuestionData ? currentQuestionData.options.indexOf(data.chosenAnswer) : -1);
 
       if (targetIdx !== -1 && optButtons[targetIdx]) {
@@ -696,3 +654,4 @@
   </script>
 </body>
 </html>
+
