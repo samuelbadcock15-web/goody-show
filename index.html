@@ -53,7 +53,7 @@
     <div id="instructions-card">
       <h1>The Goody Tonight Show</h1>
       <p>Synchronized tiles & 20-minute race to the finish active!</p>
-      <p><strong>Click Anywhere to Enter & Start Sound</strong></p>
+      <p><strong>Click Anywhere to Enter</strong></p>
       <p><span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> &nbsp;Walk around freely</p>
     </div>
   </div>
@@ -65,8 +65,6 @@
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
   <script>
-    const GOODY_BRAIN_URL = 'https://goodybotlive.pythonanywhere.com/api/chat';
-
     let currentMode = 'BEDROOM';
     let studioPower = false;
 
@@ -110,38 +108,6 @@
     const countdownPill = document.getElementById('countdown-pill');
     const timerValEl = document.getElementById('timer-val');
 
-    // Goody Head & Torso swivel target
-    let goodyTargetRotationY = 0.0;
-    function setGoodyFacing(target) {
-      if (target === "CONTESTANT_1" || target === "JAKE") {
-        goodyTargetRotationY = 0.45; // Turn to Jake (Screen Left)
-      } else if (target === "CONTESTANT_2" || target === "JUNE") {
-        goodyTargetRotationY = -0.45; // Turn to June (Screen Right)
-      } else {
-        goodyTargetRotationY = 0.0; // Straight ahead to camera/audience
-      }
-    }
-
-    // Call Goody's Gemini brain on PythonAnywhere
-    async function askGoodyBrain(promptText) {
-      try {
-        const res = await fetch(GOODY_BRAIN_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: promptText })
-        });
-        const data = await res.json();
-        return data.reply;
-      } catch (err) {
-        console.error("Brain connection lag:", err);
-        return null;
-      }
-    }
-
-    // Interactive Banter Handshake States
-    let waitingForContestantChat = null; // null, 'JAKE', or 'JUNE'
-    let chatResponseTimeout = null;
-
     const contestantRotations = {
       "goody-contestant-1": { yaw: 0, pitch: -0.15 },
       "goody-contestant-2": { yaw: 0, pitch: -0.15 }
@@ -159,6 +125,16 @@
       }
       renderStageQuestionBoard();
     }, 1000);
+
+    const INTRO_SPEECH =
+      "Hello, good evening, and welcome to The Goody Tonight Show! " +
+      "I'm your host, Goody! " +
+      "You are now part of the world's first and only televised self-exclusion game show! " +
+      "Now, let's meet tonight's contestants! " +
+      "Contestant number 1! This is Jake from London! " +
+      "And let's meet contestant number 2! This is June from Nottingham! " +
+      "Now we need to determine who moves first! " +
+      "Contestants, you both have 10 seconds to roll your dice!";
 
     let currentSubtitle = "STUDIO STANDBY - POWER OFF";
 
@@ -298,11 +274,6 @@
           conn.on('data', (data) => {
             if (data.type === "PLAYER_ROLLED_DICE") {
               handlePlayerRoll(data.contestant, data.name, data.roll);
-            } else if (data.type === "CONTESTANT_SPOKE") {
-              // Trigger live interactive banter if Goody is waiting for this player
-              if (waitingForContestantChat === data.name.toUpperCase()) {
-                handleContestantLiveReply(data.name, data.text);
-              }
             } else if (data.type === "PLAYER_ANSWERED") {
               if (isTieBreakerActive) {
                 handleTieBreakerAnswer(data.contestant, data.chosenAnswer);
@@ -394,6 +365,7 @@
     }
 
     function speakGoody(text, onComplete) {
+      // Broadcast Goody's speech to all mobile devices so contestants hear it
       connectedDataConns.forEach(c => {
         if (c.open) c.send({ type: "HOST_SPEAK", text: text });
       });
@@ -412,80 +384,8 @@
       window.speechSynthesis.speak(goodyUtterance);
     }
 
-    // Interactive Introductions with Real-Time Banter
     function startGoodyMonologue() {
-      setGoodyFacing("AUDIENCE");
-      speakGoody("Hello, good evening, and welcome to The Goody Tonight Show! I'm your host, Goody! You are part of the world's first televised self-exclusion game show!", () => {
-        introduceJake();
-      });
-    }
-
-    function introduceJake() {
-      setGoodyFacing("JAKE");
-      speakGoody("Let's meet contestant number 1! This is Jake from London! How are you doing tonight, Jake?", () => {
-        waitingForContestantChat = "JAKE";
-        connectedDataConns.forEach(c => {
-          if (c.open) c.send({ type: "ENABLE_CONTESTANT_MIC", target: "goody-contestant-1" });
-        });
-
-        // 8-second safety fallback if Jake remains silent
-        chatResponseTimeout = setTimeout(() => {
-          if (waitingForContestantChat === "JAKE") {
-            waitingForContestantChat = null;
-            speakGoody("A quiet contender from London! I love the focus. Let's move on!", () => {
-              introduceJune();
-            });
-          }
-        }, 8000);
-      });
-    }
-
-    function introduceJune() {
-      setGoodyFacing("JUNE");
-      speakGoody("And let's meet contestant number 2! This is June from Nottingham! June, are you ready to conquer the floor tonight?", () => {
-        waitingForContestantChat = "JUNE";
-        connectedDataConns.forEach(c => {
-          if (c.open) c.send({ type: "ENABLE_CONTESTANT_MIC", target: "goody-contestant-2" });
-        });
-
-        // 8-second safety fallback if June remains silent
-        chatResponseTimeout = setTimeout(() => {
-          if (waitingForContestantChat === "JUNE") {
-            waitingForContestantChat = null;
-            speakGoody("Pure determination from Nottingham! Now, let's play the game!", () => {
-              finishIntroduction();
-            });
-          }
-        }, 8000);
-      });
-    }
-
-    async function handleContestantLiveReply(contestantName, spokenText) {
-      if (chatResponseTimeout) clearTimeout(chatResponseTimeout);
-      const currentSlot = waitingForContestantChat;
-      waitingForContestantChat = null;
-
-      connectedDataConns.forEach(c => {
-        if (c.open) c.send({ type: "DISABLE_CONTESTANT_MIC" });
-      });
-
-      // Quick Gemini call to generate spontaneous banter
-      const prompt = `You are Goody, energetic robot game show host. You just introduced contestant ${contestantName}, and they said to you: "${spokenText}". Give a rapid, witty, 1-sentence host response to banter back with them (under 14 words).`;
-      const aiReply = await askGoodyBrain(prompt);
-      const speechText = aiReply || `Great to have you with us tonight, ${contestantName}! Let's roll!`;
-
-      speakGoody(speechText, () => {
-        if (currentSlot === "JAKE") {
-          introduceJune();
-        } else if (currentSlot === "JUNE") {
-          finishIntroduction();
-        }
-      });
-    }
-
-    function finishIntroduction() {
-      setGoodyFacing("AUDIENCE");
-      speakGoody("Contestants, you both have 10 seconds to roll your dice!", () => {
+      speakGoody(INTRO_SPEECH, () => {
         beginTenSecondDiceDuel();
       });
     }
@@ -541,12 +441,12 @@
       }, 1000);
     }
 
-    async function handlePlayerRoll(contestant, name, roll) {
+    function handlePlayerRoll(contestant, name, roll) {
       if (gameState === "OPENING_DUEL") {
-        if (contestant === "goody-contestant-2") { 
-          p2RollVal = roll; isDiceRollingP2 = false; 
-        } else { 
-          p1RollVal = roll; isDiceRollingP1 = false; 
+        if (contestant === "goody-contestant-2") {
+          p2RollVal = roll; isDiceRollingP2 = false;
+        } else {
+          p1RollVal = roll; isDiceRollingP1 = false;
         }
         playTone(587, 'sine', 0.15, 0.08);
 
@@ -556,7 +456,7 @@
         }
       } else if (gameState === "IN_PLAY") {
         if (contestant !== activePlayer) return;
-        
+       
         if (diceInterval) clearInterval(diceInterval);
         diceCountdown = 0;
 
@@ -567,13 +467,7 @@
         }
         playTone(587, 'sine', 0.15, 0.08);
 
-        setGoodyFacing(contestant === "goody-contestant-1" ? "JAKE" : "JUNE");
-
-        // Ask Goody's brain for a dynamic quip on the roll
-        const aiQuip = await askGoodyBrain(`As Goody, give a snappy 10-word reaction to ${name} who rolled a ${roll}.`);
-        const speechLine = aiQuip || `${name} rolled a ${roll}! Moving ${roll} spaces.`;
-
-        speakGoody(speechLine, () => {
+        speakGoody(`${name} rolled a ${roll}! Moving ${roll} spaces.`, () => {
           advanceTurnPlayer(contestant, roll);
         });
       }
@@ -588,7 +482,7 @@
         const mins = Math.max(0, Math.floor(matchTimerSeconds / 60)).toString().padStart(2, '0');
         const secs = Math.max(0, (matchTimerSeconds % 60)).toString().padStart(2, '0');
         const timeStr = `${mins}:${secs}`;
-        
+       
         gameClockValEl.textContent = timeStr;
         renderWallClockTexture(timeStr);
 
@@ -618,7 +512,6 @@
       activePlayer = winnerNum === 1 ? "goody-contestant-1" : "goody-contestant-2";
       const winRoll = winnerNum === 1 ? p1RollVal : p2RollVal;
 
-      setGoodyFacing(winnerNum === 1 ? "JAKE" : "JUNE");
       gameState = "IN_PLAY";
       startTwentyMinuteMatchTimer();
 
@@ -646,7 +539,7 @@
       const landedCountry = boardTileCoords[currentTileIdx].country;
       const qPool = COUNTRY_QUESTIONS[landedCountry] || COUNTRY_QUESTIONS["UK"];
       const rawQ = qPool[Math.floor(Math.random() * qPool.length)];
-      
+     
       activeQuestion = {
         country: landedCountry,
         text: rawQ.q,
@@ -661,7 +554,6 @@
       stageOptionStatus = null;
 
       const activeName = activePlayer === "goody-contestant-1" ? "Jake" : "June";
-      setGoodyFacing(activePlayer === "goody-contestant-1" ? "JAKE" : "JUNE");
 
       connectedDataConns.forEach(c => {
         if (c.open) c.send({
@@ -676,10 +568,10 @@
       const speech = `${activeName} landed on ${landedCountry}! Here is your question: ${activeQuestion.q}... You have 30 seconds to lock in!`;
       speakGoody(speech, () => {
         connectedDataConns.forEach(c => {
-          if (c.open) c.send({ 
-            type: "UNLOCK_QUESTION_INPUT", 
+          if (c.open) c.send({
+            type: "UNLOCK_QUESTION_INPUT",
             activeContestantId: activePlayer,
-            activeContestantName: activeName 
+            activeContestantName: activeName
           });
         });
         startQuestionCountdown();
@@ -699,7 +591,7 @@
       }, 1000);
     }
 
-    async function evaluateAnswer(contestant, chosen) {
+    function evaluateAnswer(contestant, chosen) {
       if (questionInterval) clearInterval(questionInterval);
       const isCorrect = chosen === activeQuestion.ans;
 
@@ -723,17 +615,13 @@
         renderStageQuestionBoard();
       }, 1400);
 
-      setGoodyFacing(contestant === "goody-contestant-1" ? "JAKE" : "JUNE");
-
       if (isCorrect) {
         speakGoody(`Well done, that's correct! Here is what we learned: ${activeQuestion.recap}`, () => {
-          setGoodyFacing("AUDIENCE");
           transitionToRulesAndNextTurn();
         });
       } else {
         speakGoody(`Unlucky, that's incorrect. You must go back to the start! Here is what we learned: ${activeQuestion.recap}`, () => {
           resetPlayerToStart(contestant);
-          setGoodyFacing("AUDIENCE");
           transitionToRulesAndNextTurn();
         });
       }
@@ -761,11 +649,8 @@
         renderStageQuestionBoard();
       }, 1400);
 
-      setGoodyFacing(contestant === "goody-contestant-1" ? "JAKE" : "JUNE");
-
       speakGoody(`I'm sorry, you ran out of time! You must go back to the start! Here is what we learned: ${activeQuestion.recap}`, () => {
         resetPlayerToStart(contestant);
-        setGoodyFacing("AUDIENCE");
         transitionToRulesAndNextTurn();
       });
     }
@@ -809,13 +694,11 @@
       p2RollVal = null;
       renderStageQuestionBoard();
 
-      setGoodyFacing(activePlayer === "goody-contestant-1" ? "JAKE" : "JUNE");
-
       speakGoody(`It is now ${pName}'s turn! You have 10 seconds to roll your dice!`, () => {
         startTurnDiceCountdown(activePlayer, pName);
         connectedDataConns.forEach(c => {
-          if (c.open) c.send({ 
-            type: "ENABLE_TURN_ROLL", 
+          if (c.open) c.send({
+            type: "ENABLE_TURN_ROLL",
             activeContestantId: activePlayer,
             activeContestantName: pName
           });
@@ -826,8 +709,6 @@
     function evaluateFinalShowdown() {
       if (diceInterval) clearInterval(diceInterval);
       if (questionInterval) clearInterval(questionInterval);
-
-      setGoodyFacing("AUDIENCE");
 
       if (p1Index === 0 && p2Index === 0) {
         gameState = "GAME_OVER";
@@ -854,7 +735,6 @@
     function triggerTieBreakerDuel() {
       isTieBreakerActive = true;
       tieBreakerAnswered = false;
-      setGoodyFacing("AUDIENCE");
 
       const tiePool = COUNTRY_QUESTIONS["UK"];
       const rawQ = tiePool[Math.floor(Math.random() * tiePool.length)];
@@ -899,8 +779,6 @@
       const winner = isCorrect ? answeringName : opponentName;
       const loser = isCorrect ? opponentName : answeringName;
 
-      setGoodyFacing(winner === "Jake" ? "JAKE" : "JUNE");
-
       connectedDataConns.forEach(c => {
         if (c.open) c.send({
           type: "TIE_BREAKER_RESULT",
@@ -912,7 +790,7 @@
         });
       });
 
-      const speech = isCorrect 
+      const speech = isCorrect
         ? `That is correct! Well done to our winner ${winner}, and commiserations to ${loser}! Thanks for watching, come again next show, shows are at 9 PM most days! Goodnight!`
         : `That is incorrect! By default, well done to our winner ${winner}, and commiserations to ${loser}! Thanks for watching, come again next show, shows are at 9 PM most days! Goodnight!`;
 
@@ -925,8 +803,6 @@
       if (matchTimerInterval) clearInterval(matchTimerInterval);
       if (questionInterval) clearInterval(questionInterval);
       if (diceInterval) clearInterval(diceInterval);
-
-      setGoodyFacing(winnerName === "Jake" ? "JAKE" : "JUNE");
 
       const speech = `Unbelievable! ${winnerName} has reached the final square and completed the floor! Well done to our winner ${winnerName}, and commiserations to ${loserName}! Thanks for watching, come again next show, shows are at 9 PM most days! Goodnight!`;
       speakGoody(speech);
@@ -1004,7 +880,7 @@
 
     const miniDiorama = new THREE.Group(); miniDiorama.position.set(0, 3.95, -9);
     const feltCarpet = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 0.08, 48), new THREE.MeshStandardMaterial({ color: 0x271147 }));
-    feltCarpet.position.y = 0.44; 
+    feltCarpet.position.y = 0.44;
     miniDiorama.add(feltCarpet);
 
     const miniWall = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 4.5, 32, 1, true, -Math.PI / 2, Math.PI), new THREE.MeshStandardMaterial({ color: 0x15092a, side: THREE.BackSide }));
@@ -1143,8 +1019,8 @@
     const totalTiles = 32;
 
     for (let i = 0; i < totalTiles; i++) {
-      const angle = i * 0.48; 
-      const radius = 0.7 + (i * 0.135); 
+      const angle = i * 0.48;
+      const radius = 0.7 + (i * 0.135);
       const x = Math.cos(angle) * radius;
       const z = spiralCenterZ + (Math.sin(angle) * (radius * 0.88));
       const countryName = COUNTRIES[i % COUNTRIES.length];
@@ -1410,8 +1286,8 @@
         const pz = Math.cos(theta) * (radius * 0.95) + 0.8;
         pGroup.position.set(px, 0.46 + rowIdx * 0.25, pz);
         pGroup.lookAt(0, 1.8, -2.6);
-        pGroup.userData = { 
-          initialY: pGroup.position.y, 
+        pGroup.userData = {
+          initialY: pGroup.position.y,
           phase: Math.random() * Math.PI * 2,
           theta: theta,
           radius: radius
@@ -1562,7 +1438,7 @@
     const gFace = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 0.25), new THREE.MeshBasicMaterial({ map: faceTex }));
     gFace.position.set(0, 1.82, 0.19); miniGoody.add(gFace);
 
-    miniGoody.position.set(0, 0, -2.6); 
+    miniGoody.position.set(0, 0, -2.6);
     miniDiorama.add(miniGoody);
 
     function updateGoodyFaceExpression() {
@@ -1682,11 +1558,6 @@
 
       renderBackstageScreens();
 
-      // Smooth Head/Torso Swivel
-      if (miniGoody) {
-        miniGoody.rotation.y += (goodyTargetRotationY - miniGoody.rotation.y) * 4.0 * delta;
-      }
-
       if (studioPower) {
         updateCameraAlignment();
         fixtureCyan.target.position.x = -1.2 + Math.sin(time * 0.003) * 1.5;
@@ -1731,3 +1602,4 @@
   </script>
 </body>
 </html>
+
