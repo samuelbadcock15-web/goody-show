@@ -241,6 +241,42 @@
     let isTieBreaker = false;
     let mobileAudioUnlocked = false;
 
+    // Speech Recognition for live banter
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let contestantListener = null;
+
+    if (SR) {
+      contestantListener = new SR();
+      contestantListener.continuous = true;
+      contestantListener.interimResults = false;
+      contestantListener.lang = 'en-US';
+
+      contestantListener.onresult = (event) => {
+        const transcript = event.results[event.results.length - 1][0].transcript.trim();
+        if (transcript.length > 0 && dataConn && dataConn.open) {
+          statusPill.textContent = `🎙️ You: "${transcript}"`;
+          dataConn.send({
+            type: "CONTESTANT_SPOKE",
+            contestant: contestantId,
+            name: contestantName,
+            text: transcript
+          });
+        }
+      };
+
+      contestantListener.onerror = (err) => {
+        console.warn("Speech recognition notice:", err);
+      };
+    }
+
+    function setContestantMicListening(active) {
+      if (!contestantListener) return;
+      try {
+        if (active) contestantListener.start();
+        else contestantListener.stop();
+      } catch(e) {}
+    }
+
     const setupCard = document.getElementById('setup-card');
     const liveStagePortal = document.getElementById('live-stage-portal');
     const localSelfiePip = document.getElementById('local-selfie-pip');
@@ -336,6 +372,14 @@
           dataConn.on('data', (data) => {
             if (data.type === "HOST_SPEAK") {
               playHostSpeechLocally(data.text);
+            } else if (data.type === "ENABLE_CONTESTANT_MIC") {
+              if (data.target === contestantId) {
+                statusPill.textContent = "🎙️ Goody is listening! Say hello!";
+                setContestantMicListening(true);
+              }
+            } else if (data.type === "DISABLE_CONTESTANT_MIC") {
+              statusPill.textContent = "Goody is talking...";
+              setContestantMicListening(false);
             } else if (data.type === "START_DICE_COUNTDOWN") {
               startTenSecondRoll();
             } else if (data.type === "SYNC_MATCH_TIMER") {
