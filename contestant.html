@@ -271,10 +271,8 @@
       if (mobileAudioUnlocked) return;
       mobileAudioUnlocked = true;
 
-      // Unmute incoming stream video element
       studioStreamVideo.muted = false;
 
-      // Prime SpeechSynthesis so mobile iOS/Android does not block speech
       if ('speechSynthesis' in window) {
         const primeUtterance = new SpeechSynthesisUtterance('');
         primeUtterance.volume = 0;
