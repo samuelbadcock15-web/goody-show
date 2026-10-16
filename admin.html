@@ -3,471 +3,225 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The Goody Tonight Show - Producer Control Desk</title>
+  <title>Goody Tonight Show - Producer Admin Panel</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: #06020f;
-      color: #ebdcf9;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      padding: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #0c0414; color: #fff; padding: 14px; min-height: 100vh; }
+    
+    .dashboard { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 768px) { .dashboard { grid-template-columns: 1fr; } }
 
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #140728;
-      border: 2px solid #ff79b0;
-      border-radius: 14px;
-      padding: 14px 20px;
-      box-shadow: 0 0 20px rgba(255, 121, 176, 0.25);
-    }
-    h1 {
-      color: #ffda66;
-      font-size: 1.4rem;
-      letter-spacing: 1px;
-    }
-    .badge {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      font-family: monospace;
-      font-weight: bold;
-    }
-    .badge-live { background: rgba(57, 255, 20, 0.2); color: #39ff14; border: 1px solid #39ff14; }
-    .badge-conn { background: rgba(0, 240, 255, 0.2); color: #00f0ff; border: 1px solid #00f0ff; }
+    .card { background: #18092d; border: 2px solid #5d2e8c; border-radius: 12px; padding: 14px; }
+    .card-full { grid-column: 1 / -1; }
+    h2 { font-size: 1.1rem; color: #ffda66; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
 
-    /* Telemetry Bar */
-    .telemetry-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 12px;
+    /* Passcode Box */
+    .pin-display {
+      font-family: monospace; font-size: 2.2rem; font-weight: 900; letter-spacing: 6px;
+      color: #39ff14; background: #08020e; padding: 10px; border-radius: 8px;
+      text-align: center; border: 1.5px solid #2ecc71; margin: 8px 0;
     }
-    .telemetry-card {
-      background: #190930;
-      border: 1.5px solid #9c4dd6;
-      border-radius: 12px;
-      padding: 12px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+    .btn-pin {
+      width: 100%; padding: 10px; background: #6c5ce7; border: none; border-radius: 8px;
+      color: #fff; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 0.85rem;
     }
-    .telemetry-label {
-      font-size: 0.72rem;
-      color: #a29bfe;
-      font-family: monospace;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .telemetry-value {
-      font-size: 1.5rem;
-      font-weight: 900;
-      font-family: monospace;
-      color: #ffda66;
-    }
-    .telemetry-sub {
-      font-size: 0.78rem;
-      color: #888;
-    }
+    .btn-pin:hover { background: #5641e5; }
 
-    /* Main Console Grid */
-    .console-layout {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 16px;
-    }
-    @media (max-width: 850px) {
-      .console-layout { grid-template-columns: 1fr; }
-    }
+    /* Status Grid */
+    .status-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #2d164d; font-size: 0.85rem; }
+    .badge { font-weight: bold; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; }
+    .online { background: #00b894; color: #fff; }
+    .offline { background: #d63031; color: #fff; }
 
-    .panel {
-      background: #140728;
-      border: 1.5px solid #4a1d75;
-      border-radius: 14px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+    /* Controls */
+    .control-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+    .btn-action {
+      padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;
+      color: #fff; font-size: 0.85rem; text-transform: uppercase;
     }
-    .panel-title {
-      font-size: 0.95rem;
-      font-weight: bold;
-      color: #ffda66;
-      border-bottom: 1px solid #321254;
-      padding-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .btn-dice { background: #e17055; }
+    .btn-question { background: #0984e3; }
+    .btn-eval-true { background: #00b894; }
+    .btn-eval-false { background: #d63031; }
+    .btn-tie { background: #fdcb6e; color: #2d3436; }
+    .btn-reset { background: #636e72; }
+
+    #log-console {
+      background: #08020e; border: 1.5px solid #331557; border-radius: 8px;
+      padding: 10px; height: 160px; overflow-y: auto; font-family: monospace;
+      font-size: 0.78rem; color: #00f0ff;
     }
-
-    /* Buttons */
-    .btn-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 10px;
-    }
-    .btn {
-      padding: 12px 16px;
-      border-radius: 10px;
-      border: none;
-      font-weight: bold;
-      font-size: 0.85rem;
-      cursor: pointer;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      transition: all 0.15s ease;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
-    .btn:active { transform: scale(0.97); }
-
-    .btn-green { background: #00b894; border: 1.5px solid #55efc4; }
-    .btn-green:hover { background: #00a383; }
-
-    .btn-blue { background: #0984e3; border: 1.5px solid #74b9ff; }
-    .btn-blue:hover { background: #076fc0; }
-
-    .btn-amber { background: #d35400; border: 1.5px solid #e67e22; }
-    .btn-amber:hover { background: #b84300; }
-
-    .btn-red { background: #d63031; border: 1.5px solid #ff7675; }
-    .btn-red:hover { background: #b52223; }
-
-    .btn-purple { background: #6c5ce7; border: 1.5px solid #a29bfe; }
-    .btn-purple:hover { background: #5644d6; }
-
-    /* Custom Speech Prompt */
-    .speech-box {
-      display: flex;
-      gap: 8px;
-    }
-    .speech-input {
-      flex: 1;
-      padding: 10px 14px;
-      background: #0a0314;
-      border: 1.5px solid #9c4dd6;
-      border-radius: 8px;
-      color: #fff;
-      font-size: 0.88rem;
-    }
-    .speech-input:focus { outline: none; border-color: #00f0ff; }
-
-    /* Audit Log */
-    #log-terminal {
-      background: #05020a;
-      border: 1px solid #2a1147;
-      border-radius: 10px;
-      height: 280px;
-      overflow-y: auto;
-      padding: 12px;
-      font-family: monospace;
-      font-size: 0.78rem;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .log-line { line-height: 1.4; color: #a29bfe; }
-    .log-time { color: #888; margin-right: 6px; }
-    .log-sys { color: #00f0ff; }
-    .log-game { color: #ffda66; }
-    .log-warn { color: #ff7675; }
   </style>
 </head>
 <body>
 
-  <header>
-    <div>
-      <h1>THE GOODY TONIGHT SHOW</h1>
-      <div style="font-size: 0.78rem; color: #a29bfe; margin-top: 2px;">
-        SAM'S PRODUCER & DIRECTOR CONSOLE • 10-MIN PILOT CONTROL
+  <div class="dashboard">
+    <!-- Active Show Passcode -->
+    <div class="card card-full" style="border-color: #fdcb6e; background: #1c0a32;">
+      <h2>
+        <span>🔐 ACTIVE SHOW PASSCODE (CONTESTANT GATE)</span>
+        <span id="admin-peer-status" class="badge offline">Connecting Admin Peer...</span>
+      </h2>
+      <p style="font-size: 0.8rem; color: #b2bec3;">Share this 4-digit PIN with today's contestants. They cannot open camera or mic without it.</p>
+      <div id="display-admin-pin" class="pin-display">----</div>
+      <button id="btn-generate-pin" class="btn-pin">🎲 GENERATE NEW PIN (INVALIDATES PREVIOUS)</button>
+    </div>
+
+    <!-- Live Connections Status -->
+    <div class="card">
+      <h2>📡 STUDIO CONNECTIONS</h2>
+      <div class="status-row">
+        <span>Studio Stage (index.html):</span>
+        <span id="status-studio" class="badge offline">OFFLINE</span>
       </div>
-    </div>
-    <div style="display: flex; gap: 8px;">
-      <span class="badge badge-conn" id="webrtc-badge">CONNECTING TO STAGE...</span>
-      <span class="badge badge-live" id="stream-badge">STUDIO STANDBY</span>
-    </div>
-  </header>
-
-  <!-- Live Telemetry Row -->
-  <section class="telemetry-grid">
-    <div class="telemetry-card">
-      <span class="telemetry-label">⏱️ Show Clock</span>
-      <span class="telemetry-value" id="hud-clock" style="color: #00f0ff;">10:00</span>
-      <span class="telemetry-sub" id="hud-state">Standby / Auto-Start</span>
-    </div>
-
-    <div class="telemetry-card">
-      <span class="telemetry-label">👉 Active Turn</span>
-      <span class="telemetry-value" id="hud-active" style="color: #ffda66;">JAKE (P1)</span>
-      <span class="telemetry-sub" id="hud-turn-action">Awaiting Roll</span>
-    </div>
-
-    <div class="telemetry-card">
-      <span class="telemetry-label">📍 Board Positions</span>
-      <div style="font-family: monospace; font-size: 1.15rem; font-weight: bold; margin-top: 4px;">
-        <span style="color: #0984e3;">P1 (Jake): <b id="hud-p1-tile">Tile 0</b></span><br>
-        <span style="color: #ff7675;">P2 (June): <b id="hud-p2-tile">Tile 0</b></span>
+      <div class="status-row">
+        <span>Contestant 1 (Jake):</span>
+        <span id="status-c1" class="badge offline">DISCONNECTED</span>
+      </div>
+      <div class="status-row">
+        <span>Contestant 2 (June):</span>
+        <span id="status-c2" class="badge offline">DISCONNECTED</span>
+      </div>
+      <div class="status-row">
+        <span>Active Turn:</span>
+        <span id="status-active-turn" style="color: #ffda66; font-weight: bold;">NONE</span>
       </div>
     </div>
 
-    <div class="telemetry-card">
-      <span class="telemetry-label">👥 Studio Presence</span>
-      <span class="telemetry-value" id="hud-audience" style="color: #39ff14;">1</span>
-      <span class="telemetry-sub">Live Viewers & Stalls</span>
-    </div>
-  </section>
-
-  <!-- Main Control Room Panels -->
-  <section class="console-layout">
-    
-    <!-- Left Column: Master Show Controls -->
-    <div class="panel">
-      <div class="panel-title">
-        <span>🎬 STAGE DIRECTOR OVERRIDES</span>
-        <span style="font-size: 0.75rem; color: #00f0ff;">REAL-TIME COMMANDS</span>
-      </div>
-
-      <div class="btn-grid">
-        <button class="btn btn-green" id="btn-force-start">🟢 BOOT STUDIO / GO LIVE</button>
-        <button class="btn btn-blue" id="btn-skip-turn">⏭️ FORCE NEXT TURN</button>
-        <button class="btn btn-purple" id="btn-force-roll">🎲 TRIGGER AUTO-ROLL</button>
-        <button class="btn btn-amber" id="btn-tie-breaker">⚡ FORCE TIE-BREAKER</button>
-      </div>
-
-      <div class="panel-title" style="margin-top: 10px;">
-        <span>🏆 EMERGENCY SHOWDOWN (PODCAST WRAP-UP)</span>
-      </div>
-      <p style="font-size: 0.8rem; color: #a29bfe;">
-        If you need to end the pilot instantly for the podcast edit:
-      </p>
-      <div class="btn-grid">
-        <button class="btn btn-blue" id="btn-crown-p1">🏆 DECLARE JAKE (P1) WINNER</button>
-        <button class="btn btn-red" id="btn-crown-p2">🏆 DECLARE JUNE (P2) WINNER</button>
-      </div>
-
-      <div class="panel-title" style="margin-top: 10px;">
-        <span>📢 GOODY PRODUCER PROMPT (TTS SPEECH)</span>
-      </div>
-      <div class="speech-box">
-        <input type="text" id="custom-speech-input" class="speech-input" placeholder="Type words for Goody to announce on live air...">
-        <button class="btn btn-purple" id="btn-speak-now" style="width: 140px;">🗣️ SPEAK</button>
-      </div>
-      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-        <button class="btn btn-purple" style="font-size: 0.72rem; padding: 6px 10px;" onclick="sendPresetSpeech('Quick reminder to everyone watching: The Goody Tonight Show is an all-ages family broadcast!')">📣 Family Reminder</button>
-        <button class="btn btn-purple" style="font-size: 0.72rem; padding: 6px 10px;" onclick="sendPresetSpeech('Just two minutes remaining on the show clock! Pick up the pace, contenders!')">⏱️ 2 Mins Left</button>
-        <button class="btn btn-purple" style="font-size: 0.72rem; padding: 6px 10px;" onclick="sendPresetSpeech('What a match! Remember to check out the campaign and PIN-protected slots!')">🎗️ Campaign Plug</button>
+    <!-- Producer Live Overrides -->
+    <div class="card">
+      <h2>🎮 GAME RUNNER CONTROLS</h2>
+      <div class="control-grid">
+        <button class="btn-action btn-dice" id="cmd-turn-p1">👉 JAKE TURN (P1)</button>
+        <button class="btn-action btn-dice" id="cmd-turn-p2">👉 JUNE TURN (P2)</button>
+        <button class="btn-action btn-question" id="cmd-show-q">📖 PUSH QUESTION</button>
+        <button class="btn-action btn-tie" id="cmd-tie-breaker">⚡ TIE-BREAKER</button>
+        <button class="btn-action btn-eval-true" id="cmd-mark-correct">✔️ MARK CORRECT</button>
+        <button class="btn-action btn-eval-false" id="cmd-mark-wrong">❌ MARK WRONG</button>
       </div>
     </div>
 
-    <!-- Right Column: Safety Dump Switch & Audit Terminal -->
-    <div style="display: flex; flex-direction: column; gap: 16px;">
-      
-      <!-- Safeguarding Dump Switches -->
-      <div class="panel" style="border-color: #ff7675;">
-        <div class="panel-title" style="color: #ff7675;">
-          <span>🚨 CONTESTANT DUMP SWITCHES</span>
-        </div>
-        <p style="font-size: 0.75rem; color: #888;">
-          Instant audio cut / safety blank in case of inappropriate language:
-        </p>
-        <button class="btn btn-red" id="btn-eject-p1" style="font-size: 0.78rem;">🔇 MUTE / CUT JAKE (P1)</button>
-        <button class="btn btn-red" id="btn-eject-p2" style="font-size: 0.78rem;">🔇 MUTE / CUT JUNE (P2)</button>
-      </div>
-
-      <!-- Real-Time Audit Log -->
-      <div class="panel" style="flex: 1;">
-        <div class="panel-title">
-          <span>📋 LIVE AUDIT FEED</span>
-          <button style="background: none; border: none; color: #ffda66; font-size: 0.75rem; cursor: pointer;" onclick="clearLogs()">CLEAR</button>
-        </div>
-        <div id="log-terminal">
-          <div class="log-line"><span class="log-time">[BOOT]</span> <span class="log-sys">Producer Console Initialized.</span></div>
-        </div>
-      </div>
-
+    <!-- Live Producer Log -->
+    <div class="card card-full">
+      <h2>📋 REAL-TIME AUDIT LOG</h2>
+      <div id="log-console">Waiting for system start...</div>
     </div>
-
-  </section>
+  </div>
 
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script>
-    const webrtcBadge = document.getElementById('webrtc-badge');
-    const streamBadge = document.getElementById('stream-badge');
-    const hudClock = document.getElementById('hud-clock');
-    const hudState = document.getElementById('hud-state');
-    const hudActive = document.getElementById('hud-active');
-    const hudTurnAction = document.getElementById('hud-turn-action');
-    const hudP1Tile = document.getElementById('hud-p1-tile');
-    const hudP2Tile = document.getElementById('hud-p2-tile');
-    const hudAudience = document.getElementById('hud-audience');
-    const logTerminal = document.getElementById('log-terminal');
+    const adminPeerId = "goody-admin-panel";
+    let currentShowPin = Math.floor(1000 + Math.random() * 9000).toString();
 
-    function logEvent(msg, category = 'sys') {
-      const line = document.createElement('div');
-      line.className = 'log-line';
-      const now = new Date().toTimeString().split(' ')[0];
-      line.innerHTML = `<span class="log-time">[${now}]</span> <span class="log-${category}">${msg}</span>`;
-      logTerminal.appendChild(line);
-      logTerminal.scrollTop = logTerminal.scrollHeight;
-    }
-    function clearLogs() { logTerminal.innerHTML = ''; }
+    const displayPin = document.getElementById('display-admin-pin');
+    const btnGenPin = document.getElementById('btn-generate-pin');
+    const logConsole = document.getElementById('log-console');
+    const adminPeerStatus = document.getElementById('admin-peer-status');
 
-    let adminPeer = null;
-    let dataConn = null;
+    const statusStudio = document.getElementById('status-studio');
+    const statusC1 = document.getElementById('status-c1');
+    const statusC2 = document.getElementById('status-c2');
+    const statusActiveTurn = document.getElementById('status-active-turn');
 
-    function initAdminPeer() {
-      const randomAdminId = "goody-admin-" + Math.floor(Math.random() * 10000);
-      adminPeer = new Peer(randomAdminId);
-
-      adminPeer.on('open', (id) => {
-        logEvent(`Connected to WebRTC Signaling as ${id}`, 'sys');
-        connectToMasterStudio();
-      });
-
-      adminPeer.on('error', (err) => {
-        logEvent(`WebRTC Error: ${err.type || err.message}`, 'warn');
-        webrtcBadge.textContent = "SIGNALING ERROR";
-        webrtcBadge.style.color = "#ff7675";
-      });
+    function log(msg) {
+      const time = new Date().toLocaleTimeString();
+      const div = document.createElement('div');
+      div.textContent = `[${time}] ${msg}`;
+      logConsole.appendChild(div);
+      logConsole.scrollTop = logConsole.scrollHeight;
     }
 
-    function connectToMasterStudio() {
-      logEvent("Attempting handshake with goody-main-studio...", 'sys');
-      dataConn = adminPeer.connect("goody-main-studio", {
-        metadata: { role: "ADMIN_PRODUCER" }
-      });
-
-      dataConn.on('open', () => {
-        webrtcBadge.textContent = "LINKED TO STUDIO";
-        webrtcBadge.style.color = "#39ff14";
-        streamBadge.textContent = "ON AIR";
-        streamBadge.className = "badge badge-live";
-        logEvent("Handshake successful! Linked as Master Producer.", 'sys');
-      });
-
-      dataConn.on('data', (data) => {
-        handleIncomingStudioData(data);
-      });
-
-      dataConn.on('close', () => {
-        webrtcBadge.textContent = "STUDIO DISCONNECTED";
-        webrtcBadge.style.color = "#ff7675";
-        streamBadge.textContent = "OFFLINE";
-        logEvent("Studio connection closed. Retrying in 4s...", 'warn');
-        setTimeout(connectToMasterStudio, 4000);
-      });
+    function updatePinDisplay() {
+      displayPin.textContent = currentShowPin;
+      log(`New Show PIN active: ${currentShowPin}`);
     }
 
-    function handleIncomingStudioData(data) {
-      if (data.type === "SYNC_MATCH_TIMER") {
-        hudClock.textContent = data.timeStr;
-      } else if (data.type === "AUDIENCE_COUNT") {
-        hudAudience.textContent = data.count;
-      } else if (data.type === "ENABLE_TURN_ROLL") {
-        hudActive.textContent = `${data.activeContestantName.toUpperCase()} (${data.activeContestantId === 'goody-contestant-1' ? 'P1' : 'P2'})`;
-        hudTurnAction.textContent = "10s Rolling Window Active";
-        logEvent(`Turn transferred to ${data.activeContestantName}`, 'game');
-      } else if (data.type === "PLAYER_ROLLED_DICE") {
-        logEvent(`🎲 ${data.name} rolled a ${data.roll}!`, 'game');
-      } else if (data.type === "SHOW_QUESTION_LOCKED") {
-        hudTurnAction.textContent = `Answering: ${data.question.country}`;
-        logEvent(`Question active for ${data.activeContestantName}: ${data.question.q}`, 'game');
-      } else if (data.type === "EVALUATION_RESULT") {
-        const res = data.isCorrect ? "CORRECT" : "WRONG / BACK TO START";
-        logEvent(`Result for ${data.forContestant}: ${res}`, data.isCorrect ? 'game' : 'warn');
-      } else if (data.type === "GAME_OVER") {
-        hudState.textContent = "FINISHED";
-        hudTurnAction.textContent = `Winner: ${data.winner}`;
-        logEvent(`🏆 GAME OVER! Winner declared: ${data.winner}`, 'sys');
-      }
-    }
-
-    function sendCommand(cmdObj) {
-      if (dataConn && dataConn.open) {
-        dataConn.send(cmdObj);
-        logEvent(`Sent command: ${cmdObj.type}`, 'sys');
-      } else {
-        logEvent(`Command failed: Studio not connected!`, 'warn');
-      }
-    }
-
-    // Producer Action Bindings
-    document.getElementById('btn-force-start').addEventListener('click', () => {
-      sendCommand({ type: "ADMIN_FORCE_START" });
+    btnGenPin.addEventListener('click', () => {
+      currentShowPin = Math.floor(1000 + Math.random() * 9000).toString();
+      updatePinDisplay();
     });
 
-    document.getElementById('btn-skip-turn').addEventListener('click', () => {
-      sendCommand({ type: "ADMIN_SKIP_TURN" });
+    updatePinDisplay();
+
+    // Start Admin Peer
+    const peer = new Peer(adminPeerId);
+    let studioConn = null;
+
+    peer.on('open', (id) => {
+      adminPeerStatus.textContent = "ADMIN ONLINE";
+      adminPeerStatus.className = "badge online";
+      log(`Admin panel online on ID: ${id}`);
+      connectToStudio();
     });
 
-    document.getElementById('btn-force-roll').addEventListener('click', () => {
-      const autoRoll = Math.floor(Math.random() * 6) + 1;
-      sendCommand({ type: "ADMIN_FORCE_ROLL", roll: autoRoll });
+    peer.on('error', (err) => {
+      log(`Peer error: ${err.type}`);
     });
 
-    document.getElementById('btn-tie-breaker').addEventListener('click', () => {
-      sendCommand({ type: "ADMIN_FORCE_TIE_BREAKER" });
-    });
-
-    document.getElementById('btn-crown-p1').addEventListener('click', () => {
-      if (confirm("End the game and declare Jake (Contestant 1) the winner?")) {
-        sendCommand({ type: "ADMIN_FORCE_WINNER", winner: "Jake" });
-      }
-    });
-
-    document.getElementById('btn-crown-p2').addEventListener('click', () => {
-      if (confirm("End the game and declare June (Contestant 2) the winner?")) {
-        sendCommand({ type: "ADMIN_FORCE_WINNER", winner: "June" });
-      }
-    });
-
-    // Custom Speech Dispatch
-    const speechInput = document.getElementById('custom-speech-input');
-    document.getElementById('btn-speak-now').addEventListener('click', () => {
-      const text = speechInput.value.trim();
-      if (text) {
-        sendCommand({ type: "ADMIN_TTS_ANNOUNCE", text: text });
-        speechInput.value = '';
-      }
-    });
-    speechInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        const text = speechInput.value.trim();
-        if (text) {
-          sendCommand({ type: "ADMIN_TTS_ANNOUNCE", text: text });
-          speechInput.value = '';
+    // Handle Authentication Knocks from Contestants & Status Reports
+    peer.on('connection', (conn) => {
+      conn.on('data', (data) => {
+        if (data.type === 'VERIFY_PASSCODE') {
+          log(`Auth attempt from ${data.contestant} with PIN: ${data.code}`);
+          if (data.code === currentShowPin) {
+            conn.send({ type: 'AUTH_SUCCESS' });
+            log(`✅ APPROVED ${data.contestant}. Joining stage.`);
+          } else {
+            conn.send({ type: 'AUTH_FAIL' });
+            log(`❌ REJECTED ${data.contestant}. Invalid PIN.`);
+          }
+        } else if (data.type === 'CONTESTANT_STATUS') {
+          if (data.contestant === 'goody-contestant-1') {
+            statusC1.textContent = data.online ? "ONLINE" : "DISCONNECTED";
+            statusC1.className = data.online ? "badge online" : "badge offline";
+          } else if (data.contestant === 'goody-contestant-2') {
+            statusC2.textContent = data.online ? "ONLINE" : "DISCONNECTED";
+            statusC2.className = data.online ? "badge online" : "badge offline";
+          }
         }
-      }
+      });
     });
 
-    function sendPresetSpeech(phrase) {
-      sendCommand({ type: "ADMIN_TTS_ANNOUNCE", text: phrase });
+    function connectToStudio() {
+      studioConn = peer.connect('goody-main-studio');
+      studioConn.on('open', () => {
+        statusStudio.textContent = "ONLINE";
+        statusStudio.className = "badge online";
+        log("Connected to Main Studio.");
+      });
+      studioConn.on('data', (data) => {
+        if (data.type === 'STUDIO_STATE') {
+          statusActiveTurn.textContent = data.activeContestantName || "NONE";
+          log(`Studio state updated. Turn: ${data.activeContestantName}`);
+        }
+      });
+      studioConn.on('close', () => {
+        statusStudio.textContent = "OFFLINE";
+        statusStudio.className = "badge offline";
+        setTimeout(connectToStudio, 4000);
+      });
     }
 
-    // Safeguard Ejections
-    document.getElementById('btn-eject-p1').addEventListener('click', () => {
-      if (confirm("MUTE & CUT Contestant 1 (Jake) from the studio feed?")) {
-        sendCommand({ type: "ADMIN_MUTE_CONTESTANT", target: "goody-contestant-1" });
+    // Producer Action Triggers forwarded to Main Studio
+    function sendStudioCommand(cmd, payload = {}) {
+      if (studioConn && studioConn.open) {
+        studioConn.send({ type: cmd, ...payload });
+        log(`Sent cmd: ${cmd}`);
+      } else {
+        log(`Failed: Studio not connected.`);
       }
-    });
+    }
 
-    document.getElementById('btn-eject-p2').addEventListener('click', () => {
-      if (confirm("MUTE & CUT Contestant 2 (June) from the studio feed?")) {
-        sendCommand({ type: "ADMIN_MUTE_CONTESTANT", target: "goody-contestant-2" });
-      }
+    document.getElementById('cmd-turn-p1').addEventListener('click', () => {
+      sendStudioCommand('FORCE_TURN', { contestantId: 'goody-contestant-1', name: 'Jake' });
     });
-
-    initAdminPeer();
+    document.getElementById('cmd-turn-p2').addEventListener('click', () => {
+      sendStudioCommand('FORCE_TURN', { contestantId: 'goody-contestant-2', name: 'June' });
+    });
+    document.getElementById('cmd-show-q').addEventListener('click', () => sendStudioCommand('ADMIN_TRIGGER_QUESTION'));
+    document.getElementById('cmd-tie-breaker').addEventListener('click', () => sendStudioCommand('ADMIN_START_TIE_BREAKER'));
+    document.getElementById('cmd-mark-correct').addEventListener('click', () => sendStudioCommand('ADMIN_MANUAL_EVAL', { correct: true }));
+    document.getElementById('cmd-mark-wrong').addEventListener('click', () => sendStudioCommand('ADMIN_MANUAL_EVAL', { correct: false }));
   </script>
 </body>
 </html>
