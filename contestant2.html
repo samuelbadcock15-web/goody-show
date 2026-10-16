@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Goody Tonight Show - Contestant 2</title>
+  <title>Goody Tonight Show - Contestant 2 (June)</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
     
@@ -24,17 +24,51 @@
       padding: 6px;
     }
 
+    /* Passcode & Entry Card */
     #tap-to-enter-card {
-      width: 100%; max-width: 420px; background: #1b0933; border: 2px solid #d63031;
-      border-radius: 16px; padding: 24px; text-align: center; margin-top: 30px;
+      width: 100%;
+      max-width: 400px;
+      background: #190833;
+      border: 2px solid #d63031;
+      border-radius: 16px;
+      padding: 24px 20px;
+      text-align: center;
+      margin-top: 30px;
+      box-shadow: 0 0 25px rgba(214, 48, 49, 0.3);
+    }
+    .passcode-box {
+      width: 100%;
+      padding: 12px;
+      margin: 14px 0 8px 0;
+      border-radius: 8px;
+      border: 2px solid #d63031;
+      background: #0a0314;
+      color: #ffda66;
+      font-size: 1.15rem;
+      font-weight: bold;
+      text-align: center;
+      letter-spacing: 2px;
+    }
+    .passcode-box:focus {
+      outline: none;
+      border-color: #ff7675;
     }
     .btn-enter {
-      width: 100%; padding: 16px; margin: 12px 0; border-radius: 12px; border: none;
-      font-size: 1.05rem; font-weight: bold; text-transform: uppercase; cursor: pointer; color: #fff;
+      width: 100%;
+      padding: 15px;
+      margin-top: 8px;
+      border-radius: 12px;
+      border: none;
+      font-size: 1rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+      color: #fff;
       background: linear-gradient(180deg, #d63031, #8e1717);
       box-shadow: 0 0 15px rgba(214, 48, 49, 0.4);
     }
 
+    /* Live Studio Workspace */
     #live-stage-portal {
       width: 100%;
       max-width: 440px;
@@ -46,9 +80,31 @@
     }
 
     .badge-bar {
-      display: flex; justify-content: space-between; align-items: center;
-      background: #18092d; padding: 4px 8px; border-radius: 6px;
-      font-family: monospace; font-size: 0.72rem; flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #18092d;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.72rem;
+      flex-shrink: 0;
+    }
+
+    .volume-container {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(0,0,0,0.35);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid #331557;
+    }
+    .volume-slider {
+      width: 65px;
+      height: 12px;
+      accent-color: #39ff14;
+      cursor: pointer;
     }
 
     .screens-container {
@@ -168,16 +224,27 @@
 </head>
 <body>
 
+  <!-- Entry Passcode Gate -->
   <div id="tap-to-enter-card">
-    <h2 style="color: #ffda66; margin-bottom: 6px; font-size: 1.3rem;">Contestant 2 (June)</h2>
-    <p style="color: #ff7675; font-weight: bold; font-size: 0.85rem; margin-bottom: 6px;">RIGHT SCREEN • NOTTINGHAM</p>
-    <p style="color: #ebdcf9; font-size: 0.8rem; margin-bottom: 14px;">Tap below to connect camera & controller:</p>
+    <h2 style="color: #ffda66; margin-bottom: 4px; font-size: 1.25rem;">Contestant 2 (June)</h2>
+    <p style="color: #ff7675; font-weight: bold; font-size: 0.82rem;">RIGHT SCREEN • NOTTINGHAM (18+ ONLY)</p>
+    
+    <input type="password" id="passcode-input" class="passcode-box" placeholder="ENTER SHOW PASSCODE" autocomplete="off">
+    <div id="passcode-error" style="color: #ff7675; font-size: 0.78rem; font-weight: bold; min-height: 18px; margin-bottom: 4px;"></div>
+
     <button class="btn-enter" id="btn-enter-june">ENTER LIVE STAGE</button>
   </div>
 
+  <!-- Live Contestant Workspace -->
   <main id="live-stage-portal">
     <div class="badge-bar">
-      <span id="role-tag" style="color: #ff7675;">JUNE (CONTESTANT 2)</span>
+      <span id="role-tag" style="color: #ff7675;">JUNE (P2)</span>
+      
+      <div class="volume-container">
+        <span style="font-size: 0.72rem;">🔊</span>
+        <input type="range" id="vol-slider" class="volume-slider" min="0" max="1" step="0.05" value="1" title="Volume Slider">
+      </div>
+
       <span id="match-timer-badge" style="color: #ffda66;">⏱️ 10:00</span>
       <span style="color: #39ff14;">🔴 LIVE</span>
     </div>
@@ -228,6 +295,11 @@
 
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script>
+    // ==========================================
+    // 🔐 UPDATE THIS SHOW PASSCODE FOR EACH EPISODE
+    // ==========================================
+    const CURRENT_SHOW_PASSWORD = "PILOT";
+
     const contestantId = "goody-contestant-2";
     const contestantName = "June";
 
@@ -242,6 +314,13 @@
     let isTieBreaker = false;
     let mobileAudioUnlocked = false;
 
+    // Web Audio Routing
+    let audioContext = null;
+    let gainNode = null;
+    let currentMasterVolume = 1.0;
+
+    const passcodeInput = document.getElementById('passcode-input');
+    const passcodeError = document.getElementById('passcode-error');
     const tapCard = document.getElementById('tap-to-enter-card');
     const liveStagePortal = document.getElementById('live-stage-portal');
     const localSelfiePip = document.getElementById('local-selfie-pip');
@@ -251,6 +330,7 @@
     const statusPill = document.getElementById('status-pill');
     const btnRollDice = document.getElementById('btn-roll-dice');
     const interactiveViewport = document.getElementById('interactive-viewport');
+    const volSlider = document.getElementById('vol-slider');
 
     const triviaCard = document.getElementById('trivia-card');
     const qCountryTag = document.getElementById('q-country-tag');
@@ -270,7 +350,16 @@
     function unlockMobileAudio() {
       if (mobileAudioUnlocked) return;
       mobileAudioUnlocked = true;
+
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+
       studioStreamVideo.muted = false;
+      studioStreamVideo.volume = currentMasterVolume;
 
       if ('speechSynthesis' in window) {
         const primeUtterance = new SpeechSynthesisUtterance('');
@@ -279,18 +368,64 @@
       }
     }
 
+    function setupAudioPipeline(stream) {
+      try {
+        if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioContext.state === 'suspended') {
+          audioContext.resume();
+        }
+
+        const source = audioContext.createMediaStreamSource(stream);
+        gainNode = audioContext.createGain();
+        gainNode.gain.setValueAtTime(currentMasterVolume, audioContext.currentTime);
+
+        source.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+      } catch (err) {
+        console.warn("Direct WebAudio node notice:", err);
+      }
+    }
+
+    volSlider.addEventListener('input', (e) => {
+      currentMasterVolume = parseFloat(e.target.value);
+
+      if (studioStreamVideo) {
+        studioStreamVideo.volume = currentMasterVolume;
+      }
+      if (gainNode && audioContext) {
+        gainNode.gain.setValueAtTime(currentMasterVolume, audioContext.currentTime);
+      }
+    });
+
     function playHostSpeechLocally(text) {
       if (!('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
       const utt = new SpeechSynthesisUtterance(text);
       utt.rate = 0.95;
       utt.pitch = 1.25;
+      utt.volume = currentMasterVolume;
       window.speechSynthesis.speak(utt);
     }
 
-    document.getElementById('btn-enter-june').addEventListener('click', () => {
+    // Password Check Gate
+    function verifyPasscodeAndEnter() {
+      const entered = passcodeInput.value.trim();
+      if (entered.toUpperCase() !== CURRENT_SHOW_PASSWORD.toUpperCase()) {
+        passcodeError.textContent = "❌ INCORRECT PASSCODE";
+        passcodeInput.value = '';
+        passcodeInput.focus();
+        return;
+      }
+      passcodeError.textContent = '';
       unlockMobileAudio();
       connectAsContestant2();
+    }
+
+    document.getElementById('btn-enter-june').addEventListener('click', verifyPasscodeAndEnter);
+    passcodeInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') verifyPasscodeAndEnter();
     });
 
     async function connectAsContestant2() {
@@ -314,7 +449,10 @@
           call.on('stream', (returnStudioStream) => {
             studioStreamVideo.srcObject = returnStudioStream;
             studioStreamVideo.muted = false;
+            studioStreamVideo.volume = currentMasterVolume;
             studioStreamVideo.play().catch(console.error);
+
+            setupAudioPipeline(returnStudioStream);
           });
 
           dataConn = peer.connect("goody-main-studio", {
@@ -613,6 +751,7 @@
       btnRollDice.classList.remove('active-roll');
     }
 
+    // Plushie Navigation
     let dpadInterval = null;
     function sendPlushieMove(direction) {
       if (dataConn && dataConn.open) {
