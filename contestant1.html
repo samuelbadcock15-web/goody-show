@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Goody Tonight Show - Contestant Companion</title>
+  <title>Goody Tonight Show - Contestant 1</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
-   
+    
     html, body {
       width: 100%;
       height: 100%;
@@ -24,16 +24,16 @@
       padding: 6px;
     }
 
-    #setup-card {
-      width: 100%; max-width: 420px; background: #1b0933; border: 2px solid #ff79b0;
-      border-radius: 16px; padding: 20px; text-align: center; margin-top: 20px;
+    #tap-to-enter-card {
+      width: 100%; max-width: 420px; background: #1b0933; border: 2px solid #0984e3;
+      border-radius: 16px; padding: 24px; text-align: center; margin-top: 30px;
     }
-    .btn-select {
-      width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: none;
-      font-size: 0.95rem; font-weight: bold; text-transform: uppercase; cursor: pointer; color: #fff;
+    .btn-enter {
+      width: 100%; padding: 16px; margin: 12px 0; border-radius: 12px; border: none;
+      font-size: 1.05rem; font-weight: bold; text-transform: uppercase; cursor: pointer; color: #fff;
+      background: linear-gradient(180deg, #0984e3, #06528d);
+      box-shadow: 0 0 15px rgba(9, 132, 227, 0.4);
     }
-    .btn-jake { background: #0984e3; }
-    .btn-june { background: #d63031; }
 
     #live-stage-portal {
       width: 100%;
@@ -57,7 +57,7 @@
       aspect-ratio: 16 / 9;
       max-height: 25vh;
       background: #000;
-      border: 2px solid #ffda66;
+      border: 2px solid #0984e3;
       border-radius: 10px;
       overflow: hidden;
       touch-action: none;
@@ -122,8 +122,8 @@
       font-size: 0.75rem; font-weight: bold; color: #ffda66; text-transform: uppercase;
     }
     #q-timer { font-family: monospace; font-weight: bold; color: #ff7675; font-size: 0.8rem; text-align: right; }
-   
-    #q-text {
+    
+    #q-text { 
       font-size: 0.82rem; font-weight: 600; line-height: 1.3; color: #ffffff;
       background: rgba(0,0,0,0.35); padding: 6px; border-radius: 6px; border-left: 3px solid #00f0ff;
     }
@@ -153,11 +153,11 @@
       padding: 4px; display: flex; flex-direction: column; align-items: center;
       gap: 2px; flex-shrink: 0; margin-bottom: 2px;
     }
-    .dpad-grid {
-      display: grid;
-      grid-template-columns: 46px 46px 46px;
-      grid-template-rows: 32px 32px;
-      gap: 4px;
+    .dpad-grid { 
+      display: grid; 
+      grid-template-columns: 46px 46px 46px; 
+      grid-template-rows: 32px 32px; 
+      gap: 4px; 
     }
     .dpad-btn {
       background: #2b1154; border: 2px solid #ff79b0; border-radius: 6px; color: #fff;
@@ -168,17 +168,17 @@
 </head>
 <body>
 
-  <div id="setup-card">
-    <h2 style="color: #ffda66; margin-bottom: 8px; font-size: 1.3rem;">The Goody Tonight Show</h2>
-    <p style="color: #ebdcf9; font-size: 0.85rem; margin-bottom: 12px;">Select profile to activate controls:</p>
-    <button class="btn-select btn-jake" id="btn-jake">I am Contestant 1 (Jake)</button>
-    <button class="btn-select btn-june" id="btn-june">I am Contestant 2 (June)</button>
+  <div id="tap-to-enter-card">
+    <h2 style="color: #ffda66; margin-bottom: 6px; font-size: 1.3rem;">Contestant 1 (Jake)</h2>
+    <p style="color: #00f0ff; font-weight: bold; font-size: 0.85rem; margin-bottom: 6px;">LEFT SCREEN • LONDON</p>
+    <p style="color: #ebdcf9; font-size: 0.8rem; margin-bottom: 14px;">Tap below to connect camera & controller:</p>
+    <button class="btn-enter" id="btn-enter-jake">ENTER LIVE STAGE</button>
   </div>
 
   <main id="live-stage-portal">
     <div class="badge-bar">
-      <span id="role-tag" style="color: #00f0ff;">CONNECTING...</span>
-      <span id="match-timer-badge" style="color: #ffda66;">⏱️ 20:00</span>
+      <span id="role-tag" style="color: #00f0ff;">JAKE (CONTESTANT 1)</span>
+      <span id="match-timer-badge" style="color: #ffda66;">⏱️ 10:00</span>
       <span style="color: #39ff14;">🔴 LIVE</span>
     </div>
 
@@ -228,11 +228,12 @@
 
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script>
+    const contestantId = "goody-contestant-1";
+    const contestantName = "Jake";
+
     let localStream = null;
     let peer = null;
     let dataConn = null;
-    let contestantId = "";
-    let contestantName = "";
     let hasRolled = false;
     let rollTimer = null;
     let questionTimer = null;
@@ -241,11 +242,10 @@
     let isTieBreaker = false;
     let mobileAudioUnlocked = false;
 
-    const setupCard = document.getElementById('setup-card');
+    const tapCard = document.getElementById('tap-to-enter-card');
     const liveStagePortal = document.getElementById('live-stage-portal');
     const localSelfiePip = document.getElementById('local-selfie-pip');
     const studioStreamVideo = document.getElementById('studio-stream-video');
-    const roleTag = document.getElementById('role-tag');
     const matchTimerBadge = document.getElementById('match-timer-badge');
     const turnBanner = document.getElementById('turn-banner');
     const statusPill = document.getElementById('status-pill');
@@ -270,11 +270,8 @@
     function unlockMobileAudio() {
       if (mobileAudioUnlocked) return;
       mobileAudioUnlocked = true;
-
-      // Unmute incoming stream video element
       studioStreamVideo.muted = false;
 
-      // Prime SpeechSynthesis so mobile iOS/Android does not block speech
       if ('speechSynthesis' in window) {
         const primeUtterance = new SpeechSynthesisUtterance('');
         primeUtterance.volume = 0;
@@ -291,21 +288,14 @@
       window.speechSynthesis.speak(utt);
     }
 
-    document.getElementById('btn-jake').addEventListener('click', () => {
+    document.getElementById('btn-enter-jake').addEventListener('click', () => {
       unlockMobileAudio();
-      joinGame("goody-contestant-1", "Jake");
-    });
-    document.getElementById('btn-june').addEventListener('click', () => {
-      unlockMobileAudio();
-      joinGame("goody-contestant-2", "June");
+      connectAsContestant1();
     });
 
-    async function joinGame(id, name) {
-      contestantId = id;
-      contestantName = name;
-      setupCard.style.display = 'none';
+    async function connectAsContestant1() {
+      tapCard.style.display = 'none';
       liveStagePortal.style.display = 'flex';
-      roleTag.textContent = `${name.toUpperCase()} (CONTESTANT)`;
 
       try {
         localStream = await navigator.mediaDevices.getUserMedia({
@@ -332,7 +322,7 @@
           });
 
           dataConn.on('open', () => {
-            statusPill.textContent = "Connected! Standby for host...";
+            statusPill.textContent = "Connected! Left stage monitor online.";
           });
 
           dataConn.on('data', (data) => {
@@ -488,7 +478,7 @@
       btnRollDice.style.display = 'none';
       recapCard.style.display = 'none';
       triviaCard.style.display = 'flex';
-     
+      
       qCountryTag.textContent = `🌍 ${qData.country} (${isMyTurn ? "YOUR QUESTION" : activeName.toUpperCase() + "'S QUESTION"})`;
       qText.textContent = qData.text || qData.q || "Listen to host:";
       qTimer.textContent = "🔒 LISTENING...";
@@ -567,8 +557,8 @@
       if (questionTimer) clearInterval(questionTimer);
       const isMe = data.forContestant === contestantId;
 
-      const targetIdx = selectedOptionIndex !== null
-        ? selectedOptionIndex
+      const targetIdx = selectedOptionIndex !== null 
+        ? selectedOptionIndex 
         : (currentQuestionData ? currentQuestionData.options.indexOf(data.chosenAnswer) : -1);
 
       if (targetIdx !== -1 && optButtons[targetIdx]) {
@@ -654,4 +644,3 @@
   </script>
 </body>
 </html>
-
