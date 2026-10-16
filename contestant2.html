@@ -6,119 +6,46 @@
   <title>Goody Tonight Show - Contestant 2 (June)</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
-    
     html, body {
-      width: 100%;
-      height: 100%;
-      height: 100dvh;
-      overflow: hidden;
-      background: #090314;
-      color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      width: 100%; height: 100%; height: 100dvh; overflow: hidden;
+      background: #090314; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
+    body { display: flex; flex-direction: column; align-items: center; padding: 6px; }
 
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 6px;
-    }
-
-    /* Passcode & Entry Card */
     #tap-to-enter-card {
-      width: 100%;
-      max-width: 400px;
-      background: #190833;
-      border: 2px solid #d63031;
-      border-radius: 16px;
-      padding: 24px 20px;
-      text-align: center;
-      margin-top: 30px;
+      width: 100%; max-width: 400px; background: #190833; border: 2px solid #d63031;
+      border-radius: 16px; padding: 24px 20px; text-align: center; margin-top: 30px;
       box-shadow: 0 0 25px rgba(214, 48, 49, 0.3);
     }
     .passcode-box {
-      width: 100%;
-      padding: 12px;
-      margin: 14px 0 8px 0;
-      border-radius: 8px;
-      border: 2px solid #d63031;
-      background: #0a0314;
-      color: #ffda66;
-      font-size: 1.15rem;
-      font-weight: bold;
-      text-align: center;
-      letter-spacing: 2px;
+      width: 100%; padding: 12px; margin: 14px 0 8px 0; border-radius: 8px;
+      border: 2px solid #d63031; background: #0a0314; color: #ffda66;
+      font-size: 1.25rem; font-weight: bold; text-align: center; letter-spacing: 4px;
     }
-    .passcode-box:focus {
-      outline: none;
-      border-color: #ff7675;
-    }
+    .passcode-box:focus { outline: none; border-color: #ff7675; }
     .btn-enter {
-      width: 100%;
-      padding: 15px;
-      margin-top: 8px;
-      border-radius: 12px;
-      border: none;
-      font-size: 1rem;
-      font-weight: 900;
-      text-transform: uppercase;
-      cursor: pointer;
-      color: #fff;
-      background: linear-gradient(180deg, #d63031, #8e1717);
+      width: 100%; padding: 15px; margin-top: 8px; border-radius: 12px; border: none;
+      font-size: 1rem; font-weight: 900; text-transform: uppercase; cursor: pointer;
+      color: #fff; background: linear-gradient(180deg, #d63031, #8e1717);
       box-shadow: 0 0 15px rgba(214, 48, 49, 0.4);
     }
 
-    /* Live Studio Workspace */
     #live-stage-portal {
-      width: 100%;
-      max-width: 440px;
-      height: 100%;
-      display: none;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 4px;
+      width: 100%; max-width: 440px; height: 100%; display: none;
+      flex-direction: column; justify-content: space-between; gap: 4px;
     }
-
     .badge-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #18092d;
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-family: monospace;
-      font-size: 0.72rem;
-      flex-shrink: 0;
+      display: flex; justify-content: space-between; align-items: center;
+      background: #18092d; padding: 4px 8px; border-radius: 6px;
+      font-family: monospace; font-size: 0.72rem; flex-shrink: 0;
     }
-
-    .volume-container {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      background: rgba(0,0,0,0.35);
-      padding: 2px 6px;
-      border-radius: 4px;
-      border: 1px solid #331557;
-    }
-    .volume-slider {
-      width: 65px;
-      height: 12px;
-      accent-color: #39ff14;
-      cursor: pointer;
-    }
+    .volume-container { display: flex; align-items: center; gap: 4px; }
+    .volume-slider { width: 65px; height: 12px; accent-color: #39ff14; cursor: pointer; }
 
     .screens-container {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      max-height: 25vh;
-      background: #000;
-      border: 2px solid #d63031;
-      border-radius: 10px;
-      overflow: hidden;
-      touch-action: none;
-      flex-shrink: 0;
-      margin: 0 auto;
+      position: relative; width: 100%; aspect-ratio: 16 / 9; max-height: 25vh;
+      background: #000; border: 2px solid #d63031; border-radius: 10px; overflow: hidden;
+      touch-action: none; flex-shrink: 0; margin: 0 auto;
     }
     #studio-stream-video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
     #local-selfie-pip {
@@ -126,99 +53,23 @@
       border: 2px solid #39ff14; border-radius: 6px; object-fit: cover;
       transform: scaleX(-1); background: #111; z-index: 5; pointer-events: none;
     }
-    .swipe-hint {
-      position: absolute; top: 4px; left: 6px; font-size: 0.62rem;
-      background: rgba(0,0,0,0.65); padding: 2px 4px; border-radius: 4px;
-      color: #00f0ff; font-family: monospace; pointer-events: none; z-index: 6;
-    }
 
     #turn-banner {
       width: 100%; padding: 5px 8px; border-radius: 6px; text-align: center;
       font-weight: 900; font-size: 0.75rem; font-family: monospace; text-transform: uppercase;
-      letter-spacing: 0.5px; display: none; flex-shrink: 0;
+      display: none; flex-shrink: 0;
     }
-    .turn-mine {
-      background: #00b894; color: #fff; border: 1.5px solid #55efc4;
-      animation: pulseGlow 1.2s infinite alternate;
-    }
-    .turn-theirs {
-      background: #2d1847; color: #dfe6e9; border: 1.5px solid #636e72;
-    }
-    .turn-tie {
-      background: #e17055; color: #fff; border: 1.5px solid #fdcb6e;
-      animation: pulseGlow 0.8s infinite alternate;
-    }
-    @keyframes pulseGlow {
-      from { box-shadow: 0 0 4px #00b894; }
-      to { box-shadow: 0 0 10px #55efc4; }
-    }
+    .turn-mine { background: #00b894; color: #fff; border: 1.5px solid #55efc4; }
+    .turn-theirs { background: #2d1847; color: #dfe6e9; border: 1.5px solid #636e72; }
 
-    #status-pill {
-      text-align: center; font-family: monospace; font-size: 0.78rem;
-      color: #39ff14; min-height: 18px; line-height: 18px; flex-shrink: 0;
-    }
+    #status-pill { text-align: center; font-family: monospace; font-size: 0.78rem; color: #39ff14; min-height: 18px; }
 
     #btn-roll-dice {
-      width: 100%; padding: 10px; background: #444; border: 2px solid #777;
-      border-radius: 10px; font-size: 0.95rem; font-weight: 900; color: #888;
-      text-transform: uppercase; letter-spacing: 0.5px; cursor: not-allowed; transition: all 0.2s;
-      flex-shrink: 0;
+      width: 100%; padding: 10px; background: #444; border: 2px solid #777; border-radius: 10px;
+      font-size: 0.95rem; font-weight: 900; color: #888; text-transform: uppercase; cursor: not-allowed;
     }
     #btn-roll-dice.active-roll {
-      background: linear-gradient(180deg, #fdcb6e, #e17055);
-      border-color: #ffeaa7; color: #2d3436; cursor: pointer;
-      box-shadow: 0 2px 0 #b3392b, 0 0 10px #fdcb6e;
-    }
-
-    #trivia-card {
-      background: #190930; border: 2px solid #00f0ff; border-radius: 10px;
-      padding: 8px; display: none; flex-direction: column; gap: 6px; flex-shrink: 1;
-    }
-    #q-country-tag {
-      font-size: 0.75rem; font-weight: bold; color: #ffda66; text-transform: uppercase;
-    }
-    #q-timer { font-family: monospace; font-weight: bold; color: #ff7675; font-size: 0.8rem; text-align: right; }
-    
-    #q-text { 
-      font-size: 0.82rem; font-weight: 600; line-height: 1.3; color: #ffffff;
-      background: rgba(0,0,0,0.35); padding: 6px; border-radius: 6px; border-left: 3px solid #00f0ff;
-    }
-
-    .options-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
-    }
-    .btn-opt {
-      padding: 8px 6px; background: #2f1454; border: 1.5px solid #9c4dd6; border-radius: 8px;
-      color: #fff; font-size: 0.75rem; font-weight: bold; text-align: left; cursor: not-allowed;
-      opacity: 0.6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .btn-opt.unlocked { cursor: pointer; opacity: 1; border-color: #00f0ff; }
-    .btn-opt.selected { background: #6c5ce7; border-color: #a29bfe; }
-    .btn-opt.flash-green { background: #00b894 !important; border-color: #55efc4 !important; }
-    .btn-opt.flash-red { background: #d63031 !important; border-color: #ff7675 !important; }
-
-    #recap-card {
-      background: #1c0a32; border: 2px solid #fdcb6e; border-radius: 10px;
-      padding: 8px 10px; display: none; flex-direction: column; gap: 4px; flex-shrink: 1;
-    }
-    #recap-header { font-size: 0.76rem; font-weight: bold; color: #fdcb6e; text-transform: uppercase; }
-    #recap-body { font-size: 0.82rem; line-height: 1.3; color: #ffffff; }
-
-    .dpad-section {
-      background: #140728; border: 1.5px solid #a29bfe; border-radius: 10px;
-      padding: 4px; display: flex; flex-direction: column; align-items: center;
-      gap: 2px; flex-shrink: 0; margin-bottom: 2px;
-    }
-    .dpad-grid { 
-      display: grid; 
-      grid-template-columns: 46px 46px 46px; 
-      grid-template-rows: 32px 32px; 
-      gap: 4px; 
-    }
-    .dpad-btn {
-      background: #2b1154; border: 2px solid #ff79b0; border-radius: 6px; color: #fff;
-      font-size: 1rem; font-weight: bold; display: flex; justify-content: center; align-items: center;
-      cursor: pointer;
+      background: linear-gradient(180deg, #fdcb6e, #e17055); border-color: #ffeaa7; color: #2d3436; cursor: pointer;
     }
   </style>
 </head>
@@ -229,7 +80,7 @@
     <h2 style="color: #ffda66; margin-bottom: 4px; font-size: 1.25rem;">Contestant 2 (June)</h2>
     <p style="color: #ff7675; font-weight: bold; font-size: 0.82rem;">RIGHT SCREEN • NOTTINGHAM (18+ ONLY)</p>
     
-    <input type="password" id="passcode-input" class="passcode-box" placeholder="ENTER SHOW PASSCODE" autocomplete="off">
+    <input type="password" id="passcode-input" class="passcode-box" placeholder="ENTER 4-DIGIT PIN" maxlength="6" autocomplete="off">
     <div id="passcode-error" style="color: #ff7675; font-size: 0.78rem; font-weight: bold; min-height: 18px; margin-bottom: 4px;"></div>
 
     <button class="btn-enter" id="btn-enter-june">ENTER LIVE STAGE</button>
@@ -238,83 +89,33 @@
   <!-- Live Contestant Workspace -->
   <main id="live-stage-portal">
     <div class="badge-bar">
-      <span id="role-tag" style="color: #ff7675;">JUNE (P2)</span>
-      
+      <span style="color: #ff7675;">JUNE (P2)</span>
       <div class="volume-container">
-        <span style="font-size: 0.72rem;">🔊</span>
-        <input type="range" id="vol-slider" class="volume-slider" min="0" max="1" step="0.05" value="1" title="Volume Slider">
+        <span>🔊</span>
+        <input type="range" id="vol-slider" class="volume-slider" min="0" max="1" step="0.05" value="1">
       </div>
-
-      <span id="match-timer-badge" style="color: #ffda66;">⏱️ 10:00</span>
       <span style="color: #39ff14;">🔴 LIVE</span>
     </div>
 
-    <div class="screens-container" id="interactive-viewport">
-      <div class="swipe-hint">👆 Drag to look</div>
+    <div class="screens-container">
       <video id="studio-stream-video" autoplay playsinline></video>
       <video id="local-selfie-pip" autoplay playsinline muted></video>
     </div>
 
     <div id="turn-banner"></div>
-
     <div id="status-pill">Waiting for host...</div>
 
     <button id="btn-roll-dice" disabled>🎲 ROLL DICE (LOCKED)</button>
-
-    <div id="trivia-card">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span id="q-country-tag">COUNTRY</span>
-        <span id="q-timer">⏱️ 30s</span>
-      </div>
-      <div id="q-text">Loading question...</div>
-      <div class="options-grid">
-        <button class="btn-opt" id="opt-0" disabled>A) ...</button>
-        <button class="btn-opt" id="opt-1" disabled>B) ...</button>
-        <button class="btn-opt" id="opt-2" disabled>C) ...</button>
-        <button class="btn-opt" id="opt-3" disabled>D) ...</button>
-      </div>
-    </div>
-
-    <div id="recap-card">
-      <div id="recap-header">💡 RECAP: WHAT WE LEARNED</div>
-      <div id="recap-body">Recap loading...</div>
-    </div>
-
-    <div class="dpad-section">
-      <div style="font-size: 0.65rem; color: #ff9ff3; font-family: monospace;">🧸 STUDIO NAVIGATION D-PAD</div>
-      <div class="dpad-grid">
-        <div></div>
-        <button class="dpad-btn" id="dpad-fwd">▲</button>
-        <div></div>
-        <button class="dpad-btn" id="dpad-left">◀</button>
-        <button class="dpad-btn" id="dpad-back">▼</button>
-        <button class="dpad-btn" id="dpad-right">▶</button>
-      </div>
-    </div>
   </main>
 
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script>
-    // ==========================================
-    // 🔐 UPDATE THIS SHOW PASSCODE FOR EACH EPISODE
-    // ==========================================
-    const CURRENT_SHOW_PASSWORD = "PILOT";
-
     const contestantId = "goody-contestant-2";
     const contestantName = "June";
 
     let localStream = null;
     let peer = null;
     let dataConn = null;
-    let hasRolled = false;
-    let rollTimer = null;
-    let questionTimer = null;
-    let currentQuestionData = null;
-    let selectedOptionIndex = null;
-    let isTieBreaker = false;
-    let mobileAudioUnlocked = false;
-
-    // Web Audio Routing
     let audioContext = null;
     let gainNode = null;
     let currentMasterVolume = 1.0;
@@ -325,110 +126,70 @@
     const liveStagePortal = document.getElementById('live-stage-portal');
     const localSelfiePip = document.getElementById('local-selfie-pip');
     const studioStreamVideo = document.getElementById('studio-stream-video');
-    const matchTimerBadge = document.getElementById('match-timer-badge');
     const turnBanner = document.getElementById('turn-banner');
     const statusPill = document.getElementById('status-pill');
     const btnRollDice = document.getElementById('btn-roll-dice');
-    const interactiveViewport = document.getElementById('interactive-viewport');
     const volSlider = document.getElementById('vol-slider');
 
-    const triviaCard = document.getElementById('trivia-card');
-    const qCountryTag = document.getElementById('q-country-tag');
-    const qText = document.getElementById('q-text');
-    const qTimer = document.getElementById('q-timer');
-    const optButtons = [
-      document.getElementById('opt-0'),
-      document.getElementById('opt-1'),
-      document.getElementById('opt-2'),
-      document.getElementById('opt-3')
-    ];
-
-    const recapCard = document.getElementById('recap-card');
-    const recapHeader = document.getElementById('recap-header');
-    const recapBody = document.getElementById('recap-body');
-
-    function unlockMobileAudio() {
-      if (mobileAudioUnlocked) return;
-      mobileAudioUnlocked = true;
-
-      if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (audioContext.state === 'suspended') {
-        audioContext.resume();
+    // Dynamic Verification Handshake against goody-admin-panel
+    function verifyPasscodeWithAdmin() {
+      const entered = passcodeInput.value.trim();
+      if (!entered) {
+        passcodeError.textContent = "PLEASE ENTER 4-DIGIT PIN";
+        return;
       }
 
-      studioStreamVideo.muted = false;
-      studioStreamVideo.volume = currentMasterVolume;
+      passcodeError.style.color = "#00f0ff";
+      passcodeError.textContent = "Verifying with Admin...";
 
-      if ('speechSynthesis' in window) {
-        const primeUtterance = new SpeechSynthesisUtterance('');
-        primeUtterance.volume = 0;
-        window.speechSynthesis.speak(primeUtterance);
-      }
+      const tempPeer = new Peer();
+      tempPeer.on('open', () => {
+        const adminConn = tempPeer.connect('goody-admin-panel');
+
+        adminConn.on('open', () => {
+          adminConn.send({ type: 'VERIFY_PASSCODE', code: entered, contestant: contestantId });
+        });
+
+        adminConn.on('data', (res) => {
+          if (res.type === 'AUTH_SUCCESS') {
+            passcodeError.textContent = '';
+            tempPeer.destroy();
+            unlockAudio();
+            startLiveContestantPipeline();
+          } else {
+            passcodeError.style.color = "#ff7675";
+            passcodeError.textContent = "❌ INCORRECT PASSCODE";
+            passcodeInput.value = '';
+            passcodeInput.focus();
+            tempPeer.destroy();
+          }
+        });
+
+        setTimeout(() => {
+          if (passcodeError.textContent === "Verifying with Admin...") {
+            passcodeError.style.color = "#ff7675";
+            passcodeError.textContent = "⚠️ Admin offline. Producer must open admin.html";
+            tempPeer.destroy();
+          }
+        }, 4000);
+      });
     }
 
-    function setupAudioPipeline(stream) {
-      try {
-        if (!audioContext) {
-          audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (audioContext.state === 'suspended') {
-          audioContext.resume();
-        }
+    document.getElementById('btn-enter-june').addEventListener('click', verifyPasscodeWithAdmin);
+    passcodeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') verifyPasscodeWithAdmin(); });
 
-        const source = audioContext.createMediaStreamSource(stream);
-        gainNode = audioContext.createGain();
-        gainNode.gain.setValueAtTime(currentMasterVolume, audioContext.currentTime);
-
-        source.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-      } catch (err) {
-        console.warn("Direct WebAudio node notice:", err);
-      }
+    function unlockAudio() {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioContext.state === 'suspended') audioContext.resume();
     }
 
     volSlider.addEventListener('input', (e) => {
       currentMasterVolume = parseFloat(e.target.value);
-
-      if (studioStreamVideo) {
-        studioStreamVideo.volume = currentMasterVolume;
-      }
-      if (gainNode && audioContext) {
-        gainNode.gain.setValueAtTime(currentMasterVolume, audioContext.currentTime);
-      }
+      studioStreamVideo.volume = currentMasterVolume;
+      if (gainNode) gainNode.gain.setValueAtTime(currentMasterVolume, audioContext.currentTime);
     });
 
-    function playHostSpeechLocally(text) {
-      if (!('speechSynthesis' in window)) return;
-      window.speechSynthesis.cancel();
-      const utt = new SpeechSynthesisUtterance(text);
-      utt.rate = 0.95;
-      utt.pitch = 1.25;
-      utt.volume = currentMasterVolume;
-      window.speechSynthesis.speak(utt);
-    }
-
-    // Password Check Gate
-    function verifyPasscodeAndEnter() {
-      const entered = passcodeInput.value.trim();
-      if (entered.toUpperCase() !== CURRENT_SHOW_PASSWORD.toUpperCase()) {
-        passcodeError.textContent = "❌ INCORRECT PASSCODE";
-        passcodeInput.value = '';
-        passcodeInput.focus();
-        return;
-      }
-      passcodeError.textContent = '';
-      unlockMobileAudio();
-      connectAsContestant2();
-    }
-
-    document.getElementById('btn-enter-june').addEventListener('click', verifyPasscodeAndEnter);
-    passcodeInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') verifyPasscodeAndEnter();
-    });
-
-    async function connectAsContestant2() {
+    async function startLiveContestantPipeline() {
       tapCard.style.display = 'none';
       liveStagePortal.style.display = 'flex';
 
@@ -440,19 +201,15 @@
         localSelfiePip.srcObject = localStream;
 
         peer = new Peer(contestantId);
-
         peer.on('open', () => {
           const call = peer.call("goody-main-studio", localStream, {
             metadata: { contestant: contestantId, name: contestantName }
           });
 
-          call.on('stream', (returnStudioStream) => {
-            studioStreamVideo.srcObject = returnStudioStream;
-            studioStreamVideo.muted = false;
+          call.on('stream', (studioStream) => {
+            studioStreamVideo.srcObject = studioStream;
             studioStreamVideo.volume = currentMasterVolume;
             studioStreamVideo.play().catch(console.error);
-
-            setupAudioPipeline(returnStudioStream);
           });
 
           dataConn = peer.connect("goody-main-studio", {
@@ -460,326 +217,38 @@
           });
 
           dataConn.on('open', () => {
-            statusPill.textContent = "Connected! Right stage monitor online.";
+            statusPill.textContent = "Connected to Studio!";
           });
 
           dataConn.on('data', (data) => {
-            if (data.type === "HOST_SPEAK") {
-              playHostSpeechLocally(data.text);
-            } else if (data.type === "START_DICE_COUNTDOWN") {
-              startTenSecondRoll();
-            } else if (data.type === "SYNC_MATCH_TIMER") {
-              matchTimerBadge.textContent = `⏱️ ${data.timeStr}`;
-            } else if (data.type === "ENABLE_TURN_ROLL") {
-              recapCard.style.display = 'none';
-              btnRollDice.style.display = 'block';
-
+            if (data.type === 'ENABLE_TURN_ROLL') {
               const isMe = data.activeContestantId === contestantId;
-              updateTurnBanner(isMe, `${data.activeContestantName}'S TURN TO ROLL`);
-              if (isMe) {
-                startTenSecondRoll();
-              } else {
-                statusPill.textContent = `Waiting for ${data.activeContestantName} to roll...`;
-                btnRollDice.disabled = true;
-                btnRollDice.classList.remove('active-roll');
-                btnRollDice.textContent = `🎲 WAITING FOR ${data.activeContestantName.toUpperCase()}...`;
-              }
-            } else if (data.type === "SHOW_QUESTION_LOCKED") {
-              isTieBreaker = false;
-              recapCard.style.display = 'none';
-              const isMe = data.activeContestantId === contestantId;
-              updateTurnBanner(isMe, `${data.activeContestantName}'S QUESTION`);
-              showQuestionLocked(data.question, isMe, data.activeContestantName);
-            } else if (data.type === "UNLOCK_QUESTION_INPUT") {
-              if (data.activeContestantId === contestantId) {
-                unlockQuestionInput();
-              }
-            } else if (data.type === "START_TIE_BREAKER") {
-              isTieBreaker = true;
-              recapCard.style.display = 'none';
-              btnRollDice.style.display = 'none';
               turnBanner.style.display = 'block';
-              turnBanner.className = 'turn-tie';
-              turnBanner.textContent = '⚡ TIE-BREAKER! FIRST TO BUZZ WINS!';
-              startTieBreakerQuestion(data.question);
-            } else if (data.type === "OPPONENT_ANSWERED") {
-              if (data.contestant !== contestantId) {
-                const chosenIdx = currentQuestionData ? currentQuestionData.options.indexOf(data.chosenAnswer) : -1;
-                if (chosenIdx !== -1) {
-                  optButtons.forEach(b => {
-                    b.disabled = true;
-                    b.classList.remove('unlocked');
-                  });
-                  optButtons[chosenIdx].classList.add('selected');
-                  statusPill.textContent = "Opponent locked in! Checking with Goody...";
-                }
+              turnBanner.className = isMe ? 'turn-mine' : 'turn-theirs';
+              turnBanner.textContent = isMe ? "👉 YOUR TURN TO ROLL!" : `⏳ ${data.activeContestantName}'S TURN`;
+
+              if (isMe) {
+                btnRollDice.disabled = false;
+                btnRollDice.classList.add('active-roll');
+                btnRollDice.textContent = "🎲 ROLL DICE NOW!";
               }
-            } else if (data.type === "EVALUATION_RESULT") {
-              handleEvaluationResult(data);
-            } else if (data.type === "TIE_BREAKER_RESULT") {
-              handleTieBreakerResult(data);
-            } else if (data.type === "GAME_OVER") {
-              handleGameOver(data);
             }
           });
         });
-
       } catch (err) {
-        alert("Camera & microphone permissions required: " + err.message);
+        alert("Camera/Mic required: " + err.message);
       }
     }
 
-    function updateTurnBanner(isMe, subText) {
-      turnBanner.style.display = 'block';
-      if (isMe) {
-        turnBanner.className = 'turn-mine';
-        turnBanner.textContent = `👉 YOUR TURN (${subText})!`;
-      } else {
-        turnBanner.className = 'turn-theirs';
-        turnBanner.textContent = `⏳ WAITING: ${subText}`;
-      }
-    }
-
-    let touchStartX = 0;
-    let touchStartY = 0;
-
-    interactiveViewport.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-      }
-    }, { passive: true });
-
-    interactiveViewport.addEventListener('touchmove', (e) => {
-      if (e.touches.length === 1 && dataConn && dataConn.open) {
-        const deltaX = e.touches[0].clientX - touchStartX;
-        const deltaY = e.touches[0].clientY - touchStartY;
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-
-        dataConn.send({
-          type: "PLUSHIE_LOOK",
-          contestant: contestantId,
-          deltaX: -deltaX,
-          deltaY: deltaY
-        });
-      }
-    }, { passive: true });
-
-    function startTenSecondRoll() {
-      hasRolled = false;
-      btnRollDice.disabled = false;
-      btnRollDice.classList.add('active-roll');
-      btnRollDice.textContent = "🎲 ROLL DICE NOW!";
-
-      let timeLeft = 10;
-      statusPill.textContent = `⏱️ ROLL TIMER: ${timeLeft}s`;
-
-      if (rollTimer) clearInterval(rollTimer);
-      rollTimer = setInterval(() => {
-        timeLeft--;
-        if (timeLeft > 0) {
-          statusPill.textContent = `⏱️ ROLL TIMER: ${timeLeft}s`;
-        } else {
-          clearInterval(rollTimer);
-          if (!hasRolled) executeRoll(true);
-        }
-      }, 1000);
-    }
-
-    function executeRoll(isAuto = false) {
-      if (hasRolled) return;
-      hasRolled = true;
-      if (rollTimer) clearInterval(rollTimer);
-
+    btnRollDice.addEventListener('click', () => {
       btnRollDice.disabled = true;
       btnRollDice.classList.remove('active-roll');
-      btnRollDice.textContent = "DICE ROLLED!";
-
-      const rollValue = Math.floor(Math.random() * 6) + 1;
-      statusPill.textContent = isAuto ? `⏱️ Auto-rolled: ${rollValue}` : `🎲 You rolled: ${rollValue}!`;
-
+      const roll = Math.floor(Math.random() * 6) + 1;
+      statusPill.textContent = `🎲 You rolled: ${roll}`;
       if (dataConn && dataConn.open) {
-        dataConn.send({
-          type: "PLAYER_ROLLED_DICE",
-          contestant: contestantId,
-          name: contestantName,
-          roll: rollValue
-        });
+        dataConn.send({ type: 'PLAYER_ROLLED_DICE', contestant: contestantId, name: contestantName, roll: roll });
       }
-    }
-    btnRollDice.addEventListener('click', () => executeRoll(false));
-
-    function showQuestionLocked(qData, isMyTurn, activeName) {
-      currentQuestionData = qData;
-      selectedOptionIndex = null;
-      btnRollDice.style.display = 'none';
-      recapCard.style.display = 'none';
-      triviaCard.style.display = 'flex';
-      
-      qCountryTag.textContent = `🌍 ${qData.country} (${isMyTurn ? "YOUR QUESTION" : activeName.toUpperCase() + "'S QUESTION"})`;
-      qText.textContent = qData.text || qData.q || "Listen to host:";
-      qTimer.textContent = "🔒 LISTENING...";
-
-      qData.options.forEach((opt, idx) => {
-        optButtons[idx].textContent = `${["A", "B", "C", "D"][idx]}) ${opt}`;
-        optButtons[idx].className = "btn-opt";
-        optButtons[idx].disabled = true;
-      });
-    }
-
-    function unlockQuestionInput() {
-      qTimer.textContent = "⏱️ 30s";
-      optButtons.forEach(btn => {
-        btn.disabled = false;
-        btn.classList.add('unlocked');
-      });
-
-      let timeLeft = 30;
-      if (questionTimer) clearInterval(questionTimer);
-      questionTimer = setInterval(() => {
-        timeLeft--;
-        if (timeLeft > 0) {
-          qTimer.textContent = `⏱️ ${timeLeft}s`;
-        } else {
-          clearInterval(questionTimer);
-          qTimer.textContent = "TIME OUT!";
-          optButtons.forEach(b => b.disabled = true);
-          if (dataConn && dataConn.open) {
-            dataConn.send({ type: "PLAYER_TIMEOUT", contestant: contestantId });
-          }
-        }
-      }, 1000);
-    }
-
-    function startTieBreakerQuestion(qData) {
-      currentQuestionData = qData;
-      selectedOptionIndex = null;
-      triviaCard.style.display = 'flex';
-      qCountryTag.textContent = "⚡ SUDDEN DEATH TIE-BREAKER";
-      qText.textContent = qData.text || qData.q;
-      qTimer.textContent = "BUZZ IN NOW!";
-      statusPill.textContent = "First correct answer wins!";
-
-      qData.options.forEach((opt, idx) => {
-        optButtons[idx].textContent = `${["A", "B", "C", "D"][idx]}) ${opt}`;
-        optButtons[idx].className = "btn-opt unlocked";
-        optButtons[idx].disabled = false;
-      });
-    }
-
-    optButtons.forEach((btn, idx) => {
-      btn.addEventListener('click', () => {
-        if (selectedOptionIndex !== null) return;
-        selectedOptionIndex = idx;
-        if (questionTimer) clearInterval(questionTimer);
-
-        optButtons.forEach(b => {
-          b.disabled = true;
-          b.classList.remove('unlocked');
-        });
-        btn.classList.add('selected');
-        statusPill.textContent = "Locked in! Checking...";
-
-        if (dataConn && dataConn.open) {
-          dataConn.send({
-            type: "PLAYER_ANSWERED",
-            contestant: contestantId,
-            chosenAnswer: currentQuestionData.options[idx]
-          });
-        }
-      });
     });
-
-    function handleEvaluationResult(data) {
-      if (questionTimer) clearInterval(questionTimer);
-      const isMe = data.forContestant === contestantId;
-
-      const targetIdx = selectedOptionIndex !== null 
-        ? selectedOptionIndex 
-        : (currentQuestionData ? currentQuestionData.options.indexOf(data.chosenAnswer) : -1);
-
-      if (targetIdx !== -1 && optButtons[targetIdx]) {
-        if (data.isCorrect) {
-          optButtons[targetIdx].classList.add('flash-green');
-          statusPill.textContent = isMe ? "🎉 CORRECT! Tile secured." : "🎉 Opponent was CORRECT!";
-        } else {
-          optButtons[targetIdx].classList.add('flash-red');
-          statusPill.textContent = isMe ? "❌ INCORRECT! Back to start." : "❌ Opponent was INCORRECT!";
-        }
-      }
-
-      setTimeout(() => {
-        triviaCard.style.display = 'none';
-        recapHeader.textContent = `💡 WHAT WE LEARNED (${data.country}):`;
-        recapBody.textContent = data.recap;
-        recapCard.style.display = 'flex';
-        statusPill.textContent = "Goody is reviewing the recap...";
-      }, 1200);
-    }
-
-    function handleTieBreakerResult(data) {
-      const isMeWinner = data.winner.toLowerCase() === contestantName.toLowerCase();
-      statusPill.textContent = isMeWinner ? `🎉 YOU WON THE TIE-BREAKER!` : `❌ ${data.winner.toUpperCase()} WON THE TIE-BREAKER!`;
-
-      const targetIdx = currentQuestionData ? currentQuestionData.options.indexOf(data.chosenAnswer) : -1;
-      if (targetIdx !== -1 && optButtons[targetIdx]) {
-        optButtons[targetIdx].classList.add(data.isCorrect ? 'flash-green' : 'flash-red');
-      }
-
-      setTimeout(() => {
-        triviaCard.style.display = 'none';
-      }, 4000);
-    }
-
-    function handleGameOver(data) {
-      if (rollTimer) clearInterval(rollTimer);
-      turnBanner.style.display = 'block';
-
-      if (data.winner === "NOBODY") {
-        turnBanner.className = 'turn-theirs';
-        turnBanner.textContent = "⚠️ NOBODY WINS! PRIZE ROLLS OVER!";
-        statusPill.textContent = "Both players stayed at start. Prize rolls over!";
-      } else {
-        const isMe = data.winner.toLowerCase() === contestantName.toLowerCase();
-        turnBanner.className = isMe ? 'turn-mine' : 'turn-theirs';
-        turnBanner.textContent = `🏆 ${data.winner.toUpperCase()} WINS THE GAME!`;
-        statusPill.textContent = isMe ? "Well done! Congratulations!" : "Commiserations! Thanks for playing!";
-      }
-
-      btnRollDice.disabled = true;
-      btnRollDice.classList.remove('active-roll');
-    }
-
-    // Plushie Navigation
-    let dpadInterval = null;
-    function sendPlushieMove(direction) {
-      if (dataConn && dataConn.open) {
-        dataConn.send({ type: "PLUSHIE_MOVE", contestant: contestantId, direction: direction });
-      }
-    }
-    function startPlushieMove(direction) {
-      sendPlushieMove(direction);
-      if (dpadInterval) clearInterval(dpadInterval);
-      dpadInterval = setInterval(() => sendPlushieMove(direction), 100);
-    }
-    function stopPlushieMove() {
-      if (dpadInterval) { clearInterval(dpadInterval); dpadInterval = null; }
-    }
-
-    const bindDpad = (btnId, dir) => {
-      const el = document.getElementById(btnId);
-      el.addEventListener('touchstart', (e) => { e.preventDefault(); startPlushieMove(dir); });
-      el.addEventListener('touchend', (e) => { e.preventDefault(); stopPlushieMove(); });
-      el.addEventListener('mousedown', () => startPlushieMove(dir));
-      el.addEventListener('mouseup', () => stopPlushieMove());
-      el.addEventListener('mouseleave', () => stopPlushieMove());
-    };
-
-    bindDpad('dpad-fwd', 'FORWARD');
-    bindDpad('dpad-back', 'BACK');
-    bindDpad('dpad-left', 'LEFT');
-    bindDpad('dpad-right', 'RIGHT');
   </script>
 </body>
 </html>
