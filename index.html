@@ -199,12 +199,15 @@
 
     let isP1Connected = false;
     let isP2Connected = false;
+    let p1PeerId = null;
+    let p2PeerId = null;
+
     let timerExpired = false;
     let droppedOutContestant = null;
     let savedTurnPlayer = null;
     let intermissionTimeout = null;
     let savedActiveCountry = null;
-    let savedGameState = null; // Remembers INTRO_SPEECH, OPENING_DUEL, or IN_PLAY
+    let savedGameState = null;
 
     let autoStartSeconds = 10;
     let autoStartInterval = setInterval(() => {
@@ -307,7 +310,6 @@
       const numStr = contestantId === "goody-contestant-1" ? "1" : "2";
       countdownPill.innerHTML = ` <span style="color:#39ff14;">LIVE ON AIR!</span>`;
 
-      // Handshake recovering from opening intro monologue
       if (savedGameState === "INTRO_SPEECH" || savedGameState === "IDLE") {
         gameState = "INTRO_SPEECH";
         renderStageQuestionBoard();
@@ -318,7 +320,6 @@
         return;
       }
 
-      // Handshake recovering from initial duel
       if (savedGameState === "OPENING_DUEL") {
         gameState = "OPENING_DUEL";
         renderStageQuestionBoard();
@@ -329,7 +330,6 @@
         return;
       }
 
-      // Recovery during normal game play
       gameState = "IN_PLAY";
       renderStageQuestionBoard();
       startTwentyMinuteMatchTimer();
@@ -415,7 +415,6 @@
 
       countdownPill.innerHTML = ` <span style="color:#00f0ff;">GOODY VS ${humanName.toUpperCase()}!</span>`;
 
-      // Intro or duel recovery vs Goody
       if (savedGameState === "INTRO_SPEECH" || savedGameState === "OPENING_DUEL" || savedGameState === "IDLE") {
         gameState = "OPENING_DUEL";
         renderStageQuestionBoard();
@@ -704,12 +703,22 @@
         studioPeer.on('call', (call) => {
           const passcode = call.metadata ? call.metadata.passcode : "";
           if (passcode !== studioRoomCode) {
-            console.warn("Call rejected: Invalid passcode from", call.peer);
             call.close();
             return;
           }
 
-          const isJune = call.metadata && call.metadata.contestant === "goody-contestant-2";
+          const cId = call.metadata ? call.metadata.contestant : null;
+          // Check if slot is already occupied by a different peer
+          if (cId === "goody-contestant-1" && isP1Connected && p1PeerId && p1PeerId !== call.peer) {
+            call.close();
+            return;
+          }
+          if (cId === "goody-contestant-2" && isP2Connected && p2PeerId && p2PeerId !== call.peer) {
+            call.close();
+            return;
+          }
+
+          const isJune = cId === "goody-contestant-2";
           const returnStream = isJune ? streamJune : streamJake;
           call.answer(returnStream);
 
@@ -738,18 +747,41 @@
             return;
           }
 
+          const cId = conn.metadata ? conn.metadata.contestant : null;
+          const isSlot1Taken = (cId === "goody-contestant-1" && isP1Connected && p1PeerId && p1PeerId !== conn.peer);
+          const isSlot2Taken = (cId === "goody-contestant-2" && isP2Connected && p2PeerId && p2PeerId !== conn.peer);
+
+          if (isSlot1Taken || isSlot2Taken) {
+            conn.on('open', () => {
+              conn.send({
+                type: "SLOT_TAKEN",
+                takenNum: cId === "goody-contestant-1" ? "1" : "2",
+                slotName: cId === "goody-contestant-1" ? "Jake" : "June",
+                altNum: cId === "goody-contestant-1" ? "2" : "1",
+                altSlotName: cId === "goody-contestant-1" ? "June" : "Jake"
+              });
+              setTimeout(() => conn.close(), 600);
+            });
+            return;
+          }
+
           connectedDataConns.push(conn);
 
           conn.on('open', () => {
+            const cName = (conn.metadata && conn.metadata.name) ? conn.metadata.name : (cId === "goody-contestant-2" ? "June" : "Jake");
+
+            if (cId === "goody-contestant-1") {
+              isP1Connected = true;
+              p1PeerId = conn.peer;
+            }
+            if (cId === "goody-contestant-2") {
+              isP2Connected = true;
+              p2PeerId = conn.peer;
+            }
+
             conn.send({ type: "AUTH_SUCCESS" });
             connectedAudiencePeers.add(conn.peer);
             broadcastAudienceCount();
-
-            const cId = conn.metadata ? conn.metadata.contestant : null;
-            const cName = (conn.metadata && conn.metadata.name) ? conn.metadata.name : (cId === "goody-contestant-2" ? "June" : "Jake");
-
-            if (cId === "goody-contestant-1") isP1Connected = true;
-            if (cId === "goody-contestant-2") isP2Connected = true;
 
             if (!studioPower) {
               checkBothContestantsReady();
@@ -814,8 +846,14 @@
             broadcastAudienceCount();
 
             const cId = conn.metadata ? conn.metadata.contestant : null;
-            if (cId === "goody-contestant-1") isP1Connected = false;
-            if (cId === "goody-contestant-2") isP2Connected = false;
+            if (cId === "goody-contestant-1" && p1PeerId === conn.peer) {
+              isP1Connected = false;
+              p1PeerId = null;
+            }
+            if (cId === "goody-contestant-2" && p2PeerId === conn.peer) {
+              isP2Connected = false;
+              p2PeerId = null;
+            }
 
             if (!studioPower && timerExpired) {
               checkReadyOrWait();
@@ -1452,7 +1490,7 @@
 
       const speech = isCorrect
         ? `That is correct! Well done to our winner ${winner}, and commiserations to ${loser}! Thanks for watching, come again next show, shows are at 9 PM most days! Goodnight!`
-        : `That is incorrect! By default, well done to our winner ${winner}, and commiserations to ${loser}! Thanks for watching, come again next show, shows are at 9 PM most days! Goodnight!` ;
+        : `That is incorrect! By default, well done to our winner ${winner}, and commiserations to ${loser}! Thanks for watching, come again next show, shows are at 9 PM most days! Goodnight!`;
 
       speakGoody(speech);
       broadcastGameOver(winner, "TIE_BREAKER_DECISION");
