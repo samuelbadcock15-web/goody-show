@@ -28,40 +28,35 @@
       width: 100%; max-width: 420px; background: #1b0933; border: 2px solid #ff79b0;
       border-radius: 16px; padding: 20px; text-align: center; margin-top: 20px;
     }
+    .code-input-container {
+      margin: 12px 0 16px 0;
+      text-align: center;
+    }
+    #passcode-input {
+      width: 180px;
+      padding: 12px;
+      font-size: 1.8rem;
+      font-family: monospace;
+      font-weight: 900;
+      letter-spacing: 8px;
+      text-align: center;
+      background: #080313;
+      color: #39ff14;
+      border: 2px solid #a29bfe;
+      border-radius: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #passcode-input:focus {
+      border-color: #39ff14;
+      box-shadow: 0 0 10px rgba(57, 255, 20, 0.4);
+    }
     .btn-select {
       width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: none;
       font-size: 0.95rem; font-weight: bold; text-transform: uppercase; cursor: pointer; color: #fff;
     }
     .btn-jake { background: #0984e3; }
     .btn-june { background: #d63031; }
-
-    #pin-input-container {
-      margin: 12px 0 6px 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-    }
-    #pin-code-input {
-      width: 180px;
-      padding: 10px;
-      background: #080214;
-      border: 2px solid #00f0ff;
-      border-radius: 10px;
-      color: #39ff14;
-      font-family: monospace;
-      font-size: 1.5rem;
-      font-weight: 900;
-      text-align: center;
-      letter-spacing: 8px;
-      outline: none;
-    }
-    #pin-error {
-      color: #ff7675;
-      font-size: 0.78rem;
-      font-family: monospace;
-      min-height: 16px;
-    }
 
     #live-stage-portal {
       width: 100%;
@@ -198,13 +193,12 @@
 
   <div id="setup-card">
     <h2 style="color: #ffda66; margin-bottom: 8px; font-size: 1.3rem;">The Goody Tonight Show</h2>
-    <p style="color: #ebdcf9; font-size: 0.85rem; margin-bottom: 12px;">Enter the 4-digit code shown on screen & select profile:</p>
-
-    <div id="pin-input-container">
-      <input type="text" id="pin-code-input" maxlength="4" placeholder="0000" inputmode="numeric" autocomplete="off" />
-      <span id="pin-error"></span>
+    
+    <div class="code-input-container">
+      <input type="text" id="passcode-input" maxlength="4" placeholder="0000" inputmode="numeric" pattern="[0-9]*" autocomplete="off" />
     </div>
 
+    <p style="color: #ebdcf9; font-size: 0.85rem; margin-bottom: 12px;">Select profile to activate controls:</p>
     <button class="btn-select btn-jake" id="btn-jake">I am Contestant 1 (Jake)</button>
     <button class="btn-select btn-june" id="btn-june">I am Contestant 2 (June)</button>
   </div>
@@ -275,6 +269,7 @@
     let isTieBreaker = false;
     let mobileAudioUnlocked = false;
 
+    const passcodeInput = document.getElementById('passcode-input');
     const setupCard = document.getElementById('setup-card');
     const liveStagePortal = document.getElementById('live-stage-portal');
     const localSelfiePip = document.getElementById('local-selfie-pip');
@@ -285,9 +280,6 @@
     const statusPill = document.getElementById('status-pill');
     const btnRollDice = document.getElementById('btn-roll-dice');
     const interactiveViewport = document.getElementById('interactive-viewport');
-
-    const pinCodeInput = document.getElementById('pin-code-input');
-    const pinError = document.getElementById('pin-error');
 
     const triviaCard = document.getElementById('trivia-card');
     const qCountryTag = document.getElementById('q-country-tag');
@@ -308,8 +300,10 @@
       if (mobileAudioUnlocked) return;
       mobileAudioUnlocked = true;
 
+      // Unmute incoming stream video element
       studioStreamVideo.muted = false;
 
+      // Prime SpeechSynthesis so mobile iOS/Android does not block speech
       if ('speechSynthesis' in window) {
         const primeUtterance = new SpeechSynthesisUtterance('');
         primeUtterance.volume = 0;
@@ -326,32 +320,29 @@
       window.speechSynthesis.speak(utt);
     }
 
-    function getValidatedPin() {
-      const pin = pinCodeInput.value.trim();
-      if (!/^\d{4}$/.test(pin)) {
-        pinError.textContent = "Please enter the 4-digit code";
-        pinCodeInput.focus();
-        return null;
-      }
-      pinError.textContent = "";
-      return pin;
-    }
-
     document.getElementById('btn-jake').addEventListener('click', () => {
-      const pin = getValidatedPin();
-      if (!pin) return;
+      const code = passcodeInput.value.trim();
+      if (!/^\d{4}$/.test(code)) {
+        alert("Please enter the 4-digit code shown on the host screen.");
+        passcodeInput.focus();
+        return;
+      }
       unlockMobileAudio();
-      joinGame("goody-contestant-1", "Jake", pin);
+      joinGame("goody-contestant-1", "Jake", code);
     });
 
     document.getElementById('btn-june').addEventListener('click', () => {
-      const pin = getValidatedPin();
-      if (!pin) return;
+      const code = passcodeInput.value.trim();
+      if (!/^\d{4}$/.test(code)) {
+        alert("Please enter the 4-digit code shown on the host screen.");
+        passcodeInput.focus();
+        return;
+      }
       unlockMobileAudio();
-      joinGame("goody-contestant-2", "June", pin);
+      joinGame("goody-contestant-2", "June", code);
     });
 
-    async function joinGame(id, name, enteredPin) {
+    async function joinGame(id, name, enteredCode) {
       contestantId = id;
       contestantName = name;
       setupCard.style.display = 'none';
@@ -368,9 +359,8 @@
         peer = new Peer(contestantId);
 
         peer.on('open', () => {
-          // Pass the 4-digit PIN in peer metadata
           const call = peer.call("goody-main-studio", localStream, {
-            metadata: { contestant: contestantId, name: contestantName, pin: enteredPin }
+            metadata: { contestant: contestantId, name: contestantName, passcode: enteredCode }
           });
 
           call.on('stream', (returnStudioStream) => {
@@ -380,18 +370,20 @@
           });
 
           dataConn = peer.connect("goody-main-studio", {
-            metadata: { contestant: contestantId, name: contestantName, pin: enteredPin }
+            metadata: { contestant: contestantId, name: contestantName, passcode: enteredCode }
           });
 
           dataConn.on('open', () => {
-            statusPill.textContent = "Connected! Standby for host...";
+            statusPill.textContent = "Verifying code with host...";
           });
 
           dataConn.on('data', (data) => {
             if (data.type === "AUTH_FAILED") {
-              alert("Incorrect 4-digit code. Please reload and try again.");
+              alert("Incorrect 4-digit code! Please check the host screen and try again.");
               location.reload();
               return;
+            } else if (data.type === "AUTH_SUCCESS") {
+              statusPill.textContent = "Connected! Standby for host...";
             } else if (data.type === "HOST_SPEAK") {
               playHostSpeechLocally(data.text);
             } else if (data.type === "START_DICE_COUNTDOWN") {
