@@ -522,7 +522,6 @@
       goodyPlayerSlot = droppedOutContestant;
       contestantNames[goodyPlayerSlot] = "Goody";
 
-      // Dynamically update pawn name tag to Goody
       if (goodyPlayerSlot === "goody-contestant-1") {
         updatePawnNameBadge(pawn1, "Goody");
       } else {
@@ -1894,9 +1893,20 @@
     ];
 
     function createCountryFlagTexture(countryName) {
-      const c = document.createElement('canvas'); c.width = 256; c.height = 256;
-      const ctx = c.getContext('2d'); const w = 256; const h = 256;
-      ctx.save(); ctx.beginPath(); ctx.arc(128, 128, 126, 0, Math.PI * 2); ctx.clip();
+      const c = document.createElement('canvas'); 
+      c.width = 256; 
+      c.height = 256;
+      const ctx = c.getContext('2d'); 
+      const w = 256; 
+      const h = 256;
+
+      ctx.fillStyle = '#1e1035';
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.save(); 
+      ctx.beginPath(); 
+      ctx.arc(128, 128, 124, 0, Math.PI * 2); 
+      ctx.clip();
 
       switch(countryName) {
         case "France":
@@ -1906,24 +1916,25 @@
           break;
         case "Netherlands":
           ctx.fillStyle = '#AE1C28'; ctx.fillRect(0, 0, w, h / 3);
-          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, h / 3, w / 3, h);
-          ctx.fillStyle = '#21468B'; ctx.fillRect(0, (h / 3) * 2, w / 3, h);
+          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, h / 3, w, h / 3);
+          ctx.fillStyle = '#21468B'; ctx.fillRect(0, (h / 3) * 2, w, h / 3);
           break;
         case "Canada":
-          ctx.fillStyle = '#FF0000'; ctx.fillRect(0, 0, w * 0.25, h); ctx.fillRect(w * 0.75, 0, w * 0.25, h);
-          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w * 0.25, 0, w * 0.5, h);
-          ctx.fillStyle = '#FF0000'; ctx.beginPath(); ctx.arc(128, 128, 38, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = '#FF0000'; ctx.fillRect(0, 0, w * 0.28, h); ctx.fillRect(w * 0.72, 0, w * 0.28, h);
+          ctx.beginPath(); ctx.arc(128, 128, 36, 0, Math.PI * 2); ctx.fill();
           break;
         case "Brazil":
-          ctx.fillStyle = '#009739'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FEDD00';
-          ctx.beginPath(); ctx.moveTo(128, 24); ctx.lineTo(236, 128); ctx.lineTo(128, 232); ctx.lineTo(20, 128);
-          ctx.closePath(); ctx.fill();
+          ctx.fillStyle = '#009739'; ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = '#FEDD00';
+          ctx.beginPath(); ctx.moveTo(128, 24); ctx.lineTo(236, 128); ctx.lineTo(128, 232); ctx.lineTo(20, 128); ctx.closePath(); ctx.fill();
           ctx.fillStyle = '#012169'; ctx.beginPath(); ctx.arc(128, 128, 52, 0, Math.PI * 2); ctx.fill();
           ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(128, 134, 46, 3.4, 6.0); ctx.stroke();
           break;
         case "Sweden":
-          ctx.fillStyle = '#006AA7'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FECC00';
-          ctx.fillRect(80, 0, 40, h); ctx.fillRect(0, 108, w, 40);
+          ctx.fillStyle = '#006AA7'; ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = '#FECC00';
+          ctx.fillRect(75, 0, 36, h); ctx.fillRect(0, 110, w, 36);
           break;
         case "Italy":
           ctx.fillStyle = '#009246'; ctx.fillRect(0, 0, w / 3, h);
@@ -1931,8 +1942,9 @@
           ctx.fillStyle = '#CE2B37'; ctx.fillRect((w / 3) * 2, 0, w / 3, h);
           break;
         case "Denmark":
-          ctx.fillStyle = '#C60C30'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FFFFFF';
-          ctx.fillRect(85, 0, 36, h); ctx.fillRect(0, 110, w, 36);
+          ctx.fillStyle = '#C60C30'; ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(80, 0, 34, h); ctx.fillRect(0, 111, w, 34);
           break;
         case "Australia":
           ctx.fillStyle = '#00008B'; ctx.fillRect(0, 0, w, h);
@@ -1944,42 +1956,65 @@
           });
           break;
         case "Spain":
-          ctx.fillStyle = '#AA151B'; ctx.fillRect(0, 0, w, h * 0.25);
+          ctx.fillStyle = '#AA151B'; ctx.fillRect(0, 0, w, h);
           ctx.fillStyle = '#F1BF00'; ctx.fillRect(0, h * 0.25, w, h * 0.5);
-          ctx.fillStyle = '#AA151B'; ctx.fillRect(0, h * 0.75, w, h * 0.25);
+          ctx.fillStyle = '#AA151B';
           ctx.beginPath(); ctx.arc(80, 128, 22, 0, Math.PI * 2); ctx.fill();
           break;
         case "Germany":
           ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w, h / 3);
           ctx.fillStyle = '#DD0000'; ctx.fillRect(0, h / 3, w, h / 3);
-          ctx.fillStyle = '#FFCE00'; ctx.fillRect(0, (h / 3) * 2, w / 3, h);
+          ctx.fillStyle = '#FFCE00'; ctx.fillRect(0, (h / 3) * 2, w, h / 3);
           break;
         case "UK":
           ctx.fillStyle = '#012169'; ctx.fillRect(0, 0, w, h);
-          ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 32; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke();
-          ctx.strokeStyle = '#C8102E'; ctx.lineWidth = 14; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke();
-          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(104, 0, 48, h); ctx.fillRect(0, 104, w, 48);
-          ctx.fillStyle = '#C8102E'; ctx.fillRect(114, 0, 28, h); ctx.fillRect(0, 114, w, 28);
+          ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 36;
+          ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke();
+          ctx.strokeStyle = '#C8102E'; ctx.lineWidth = 14;
+          ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke();
+          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(100, 0, 56, h); ctx.fillRect(0, 100, w, 56);
+          ctx.fillStyle = '#C8102E'; ctx.fillRect(112, 0, 32, h); ctx.fillRect(0, 112, w, 32);
           break;
         case "Nigeria":
-          ctx.fillStyle = '#008751'; ctx.fillRect(0, 0, w, h / 3);
+          ctx.fillStyle = '#008751'; ctx.fillRect(0, 0, w / 3, h);
           ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h);
           ctx.fillStyle = '#008751'; ctx.fillRect((w / 3) * 2, 0, w / 3, h);
           break;
         case "United States":
-          for (let s = 0; s < 13; s++) { ctx.fillStyle = s % 2 === 0 ? '#B22234' : '#FFFFFF'; ctx.fillRect(0, s * (h / 13), w, h / 13 + 1); }
-          ctx.fillStyle = '#3C3B6E'; ctx.fillRect(0, 0, w * 0.48, h * 0.54); ctx.fillStyle = '#FFFFFF';
-          for (let r = 18; r < 125; r += 26) { for (let col = 16; col < 115; col += 24) { ctx.beginPath(); ctx.arc(col, r, 4, 0, Math.PI * 2); ctx.fill(); } }
+          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, w, h);
+          for (let s = 0; s < 13; s++) { 
+            if (s % 2 === 0) {
+              ctx.fillStyle = '#B22234'; 
+              ctx.fillRect(0, s * (h / 13), w, Math.ceil(h / 13)); 
+            }
+          }
+          ctx.fillStyle = '#3C3B6E'; ctx.fillRect(0, 0, w * 0.48, h * 0.54); 
+          ctx.fillStyle = '#FFFFFF';
+          for (let r = 18; r < 125; r += 26) { 
+            for (let col = 16; col < 115; col += 24) { 
+              ctx.beginPath(); ctx.arc(col, r, 4, 0, Math.PI * 2); ctx.fill(); 
+            } 
+          }
           break;
         case "Belgium":
           ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w / 3, h);
           ctx.fillStyle = '#FDDA24'; ctx.fillRect(w / 3, 0, w / 3, h);
           ctx.fillStyle = '#EF3340'; ctx.fillRect((w / 3) * 2, 0, w / 3, h);
           break;
+        default:
+          ctx.fillStyle = '#22143b'; ctx.fillRect(0, 0, w, h);
       }
       ctx.restore();
-      ctx.strokeStyle = '#e6c875'; ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(128, 128, 123, 0, Math.PI * 2); ctx.stroke();
-      const tex = new THREE.CanvasTexture(c); tex.needsUpdate = true; return tex;
+
+      ctx.strokeStyle = '#e6c875'; 
+      ctx.lineWidth = 8; 
+      ctx.beginPath(); 
+      ctx.arc(128, 128, 123, 0, Math.PI * 2); 
+      ctx.stroke();
+
+      const tex = new THREE.CanvasTexture(c); 
+      tex.needsUpdate = true; 
+      return tex;
     }
 
     const flagTextures = COUNTRIES.map(cName => createCountryFlagTexture(cName));
@@ -2020,7 +2055,6 @@
 
       ctx.clearRect(0, 0, w, h);
 
-      // Rounded badge frame
       const r = 24;
       ctx.fillStyle = '#0a0314';
       ctx.strokeStyle = tagColor;
@@ -2039,7 +2073,6 @@
       ctx.fill();
       ctx.stroke();
 
-      // Clean, high-visibility player name text
       ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -2072,12 +2105,15 @@
       bCanvas.height = 96;
       const bTex = new THREE.CanvasTexture(bCanvas);
 
-      const badgeMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.32, 0.12),
-        new THREE.MeshBasicMaterial({ map: bTex, transparent: true })
-      );
+      const badgeMat = new THREE.MeshBasicMaterial({ 
+        map: bTex, 
+        transparent: true, 
+        side: THREE.DoubleSide, 
+        depthWrite: false 
+      });
+
+      const badgeMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.13), badgeMat);
       badgeMesh.position.set(0, 0.35, 0);
-      badgeMesh.rotation.y = Math.PI; // Face the studio viewing camera
       pawn.add(badgeMesh);
 
       const hexStr = '#' + colorHex.toString(16).padStart(6, '0');
@@ -2754,6 +2790,13 @@
 
       renderBackstageScreens();
       renderGoodyFace(time);
+
+      if (pawn1 && pawn1.userData && pawn1.userData.badgeMesh) {
+        pawn1.userData.badgeMesh.quaternion.copy(camera.quaternion);
+      }
+      if (pawn2 && pawn2.userData && pawn2.userData.badgeMesh) {
+        pawn2.userData.badgeMesh.quaternion.copy(camera.quaternion);
+      }
 
       if (studioPower) {
         updateCameraAlignment();
