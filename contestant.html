@@ -6,7 +6,7 @@
   <title>Goody Tonight Show - Contestant Companion</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
-    
+   
     html, body {
       width: 100%;
       height: 100%;
@@ -28,20 +28,8 @@
       width: 100%; max-width: 420px; background: #1b0933; border: 2px solid #ff79b0;
       border-radius: 16px; padding: 20px; text-align: center; margin-top: 20px;
     }
-    .passcode-input-container { margin: 12px 0; text-align: left; }
-    .passcode-input-container label {
-      display: block; font-size: 0.75rem; color: #ffda66; font-family: monospace; margin-bottom: 4px; font-weight: bold;
-    }
-    .passcode-input-container input {
-      width: 100%; padding: 12px; background: #0c0419; border: 2px solid #00f0ff;
-      border-radius: 8px; color: #39ff14; font-family: monospace; font-size: 1.1rem;
-      font-weight: bold; text-align: center; text-transform: uppercase; outline: none;
-      letter-spacing: 2px;
-    }
-    .passcode-input-container input::placeholder { color: #636e72; font-size: 0.85rem; letter-spacing: 0; }
-
     .btn-select {
-      width: 100%; padding: 14px; margin: 6px 0; border-radius: 12px; border: none;
+      width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: none;
       font-size: 0.95rem; font-weight: bold; text-transform: uppercase; cursor: pointer; color: #fff;
     }
     .btn-jake { background: #0984e3; }
@@ -134,7 +122,7 @@
       font-size: 0.75rem; font-weight: bold; color: #ffda66; text-transform: uppercase;
     }
     #q-timer { font-family: monospace; font-weight: bold; color: #ff7675; font-size: 0.8rem; text-align: right; }
-    
+   
     #q-text {
       font-size: 0.82rem; font-weight: 600; line-height: 1.3; color: #ffffff;
       background: rgba(0,0,0,0.35); padding: 6px; border-radius: 6px; border-left: 3px solid #00f0ff;
@@ -182,13 +170,7 @@
 
   <div id="setup-card">
     <h2 style="color: #ffda66; margin-bottom: 8px; font-size: 1.3rem;">The Goody Tonight Show</h2>
-    <p style="color: #ebdcf9; font-size: 0.85rem; margin-bottom: 8px;">Enter the passcode sent by Goody to unlock:</p>
-    
-    <div class="passcode-input-container">
-      <label for="input-passcode">SHOW ACCESS PASSCODE:</label>
-      <input type="text" id="input-passcode" placeholder="e.g. SHOW-1234" autocomplete="off" autocorrect="off">
-    </div>
-
+    <p style="color: #ebdcf9; font-size: 0.85rem; margin-bottom: 12px;">Select profile to activate controls:</p>
     <button class="btn-select btn-jake" id="btn-jake">I am Contestant 1 (Jake)</button>
     <button class="btn-select btn-june" id="btn-june">I am Contestant 2 (June)</button>
   </div>
@@ -196,26 +178,26 @@
   <main id="live-stage-portal">
     <div class="badge-bar">
       <span id="role-tag" style="color: #00f0ff;">CONNECTING...</span>
-      <span id="match-timer-badge" style="color: #ffda66;"> 20:00</span>
-      <span style="color: #39ff14;"> LIVE</span>
+      <span id="match-timer-badge" style="color: #ffda66;">⏱️ 20:00</span>
+      <span style="color: #39ff14;">🔴 LIVE</span>
     </div>
 
     <div class="screens-container" id="interactive-viewport">
-      <div class="swipe-hint"> Drag to look</div>
+      <div class="swipe-hint">👆 Drag to look</div>
       <video id="studio-stream-video" autoplay playsinline></video>
       <video id="local-selfie-pip" autoplay playsinline muted></video>
     </div>
 
     <div id="turn-banner"></div>
 
-    <div id="status-pill">Authenticating with studio...</div>
+    <div id="status-pill">Waiting for host...</div>
 
-    <button id="btn-roll-dice" disabled> ROLL DICE (LOCKED)</button>
+    <button id="btn-roll-dice" disabled>🎲 ROLL DICE (LOCKED)</button>
 
     <div id="trivia-card">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <span id="q-country-tag">COUNTRY</span>
-        <span id="q-timer"> 30s</span>
+        <span id="q-timer">⏱️ 30s</span>
       </div>
       <div id="q-text">Loading question...</div>
       <div class="options-grid">
@@ -227,12 +209,12 @@
     </div>
 
     <div id="recap-card">
-      <div id="recap-header"> RECAP: WHAT WE LEARNED</div>
+      <div id="recap-header">💡 RECAP: WHAT WE LEARNED</div>
       <div id="recap-body">Recap loading...</div>
     </div>
 
     <div class="dpad-section">
-      <div style="font-size: 0.65rem; color: #ff9ff3; font-family: monospace;"> STUDIO NAVIGATION D-PAD</div>
+      <div style="font-size: 0.65rem; color: #ff9ff3; font-family: monospace;">🧸 STUDIO NAVIGATION D-PAD</div>
       <div class="dpad-grid">
         <div></div>
         <button class="dpad-btn" id="dpad-fwd">▲</button>
@@ -249,10 +231,8 @@
     let localStream = null;
     let peer = null;
     let dataConn = null;
-    let currentCall = null;
     let contestantId = "";
     let contestantName = "";
-    let contestantPasscode = "";
     let hasRolled = false;
     let rollTimer = null;
     let questionTimer = null;
@@ -260,10 +240,8 @@
     let selectedOptionIndex = null;
     let isTieBreaker = false;
     let mobileAudioUnlocked = false;
-    let heartbeatInterval = null;
 
     const setupCard = document.getElementById('setup-card');
-    const inputPasscode = document.getElementById('input-passcode');
     const liveStagePortal = document.getElementById('live-stage-portal');
     const localSelfiePip = document.getElementById('local-selfie-pip');
     const studioStreamVideo = document.getElementById('studio-stream-video');
@@ -293,8 +271,10 @@
       if (mobileAudioUnlocked) return;
       mobileAudioUnlocked = true;
 
+      // Unmute incoming stream video element
       studioStreamVideo.muted = false;
 
+      // Prime SpeechSynthesis so mobile iOS/Android does not block speech
       if ('speechSynthesis' in window) {
         const primeUtterance = new SpeechSynthesisUtterance('');
         primeUtterance.volume = 0;
@@ -311,23 +291,13 @@
       window.speechSynthesis.speak(utt);
     }
 
-    function validateAndStart(id, name) {
-      const code = inputPasscode.value.trim().toUpperCase();
-      if (!code) {
-        alert("Please enter the show access passcode sent to you by Goody!");
-        inputPasscode.focus();
-        return;
-      }
-      contestantPasscode = code;
-      unlockMobileAudio();
-      joinGame(id, name);
-    }
-
     document.getElementById('btn-jake').addEventListener('click', () => {
-      validateAndStart("goody-contestant-1", "Jake");
+      unlockMobileAudio();
+      joinGame("goody-contestant-1", "Jake");
     });
     document.getElementById('btn-june').addEventListener('click', () => {
-      validateAndStart("goody-contestant-2", "June");
+      unlockMobileAudio();
+      joinGame("goody-contestant-2", "June");
     });
 
     async function joinGame(id, name) {
@@ -343,146 +313,102 @@
           audio: { echoCancellation: true, noiseSuppression: true }
         });
         localSelfiePip.srcObject = localStream;
-      } catch (err) {
-        console.warn("Media access fallback:", err);
-        const blankCanvas = document.createElement('canvas');
-        blankCanvas.width = 320; blankCanvas.height = 240;
-        const bctx = blankCanvas.getContext('2d');
-        bctx.fillStyle = id === "goody-contestant-1" ? "#0984e3" : "#d63031";
-        bctx.fillRect(0, 0, 320, 240);
-        bctx.fillStyle = "#ffffff";
-        bctx.font = "bold 24px sans-serif";
-        bctx.textAlign = "center";
-        bctx.fillText(name, 160, 125);
-        localStream = blankCanvas.captureStream(5);
-        localSelfiePip.srcObject = localStream;
-      }
 
-      initPeerConnection();
-    }
+        peer = new Peer(contestantId);
 
-    function initPeerConnection() {
-      const dynamicPeerId = `${contestantId}-${Math.floor(Math.random() * 10000)}`;
-      peer = new Peer(dynamicPeerId);
+        peer.on('open', () => {
+          const call = peer.call("goody-main-studio", localStream, {
+            metadata: { contestant: contestantId, name: contestantName }
+          });
 
-      peer.on('open', () => {
-        connectToStudioHost();
-      });
+          call.on('stream', (returnStudioStream) => {
+            studioStreamVideo.srcObject = returnStudioStream;
+            studioStreamVideo.muted = false;
+            studioStreamVideo.play().catch(console.error);
+          });
 
-      peer.on('error', (err) => {
-        console.error("Peer error:", err);
-        statusPill.textContent = "Connecting to Studio...";
-        setTimeout(connectToStudioHost, 2500);
-      });
-    }
+          dataConn = peer.connect("goody-main-studio", {
+            metadata: { contestant: contestantId, name: contestantName }
+          });
 
-    function connectToStudioHost() {
-      if (!peer || peer.destroyed) return;
+          dataConn.on('open', () => {
+            statusPill.textContent = "Connected! Standby for host...";
+          });
 
-      currentCall = peer.call("goody-main-studio", localStream, {
-        metadata: { contestant: contestantId, name: contestantName, passcode: contestantPasscode }
-      });
+          dataConn.on('data', (data) => {
+            if (data.type === "HOST_SPEAK") {
+              playHostSpeechLocally(data.text);
+            } else if (data.type === "START_DICE_COUNTDOWN") {
+              startTenSecondRoll();
+            } else if (data.type === "SYNC_MATCH_TIMER") {
+              matchTimerBadge.textContent = `⏱️ ${data.timeStr}`;
+            } else if (data.type === "ENABLE_TURN_ROLL") {
+              recapCard.style.display = 'none';
+              btnRollDice.style.display = 'block';
 
-      if (currentCall) {
-        currentCall.on('stream', (returnStudioStream) => {
-          studioStreamVideo.srcObject = returnStudioStream;
-          studioStreamVideo.muted = false;
-          studioStreamVideo.play().catch(console.error);
-        });
-      }
-
-      dataConn = peer.connect("goody-main-studio", {
-        metadata: { contestant: contestantId, name: contestantName, passcode: contestantPasscode }
-      });
-
-      dataConn.on('open', () => {
-        statusPill.textContent = "Checking code with Goody...";
-        if (heartbeatInterval) clearInterval(heartbeatInterval);
-        heartbeatInterval = setInterval(() => {
-          if (dataConn && dataConn.open) dataConn.send({ type: "PING" });
-        }, 5000);
-      });
-
-      dataConn.on('data', (data) => {
-        if (data.type === "AUTH_FAILED") {
-          alert("Access Denied: " + data.error);
-          window.location.reload();
-          return;
-        } else if (data.type === "AUTH_SUCCESS") {
-          statusPill.textContent = "Code Verified! Standby for broadcast...";
-        } else if (data.type === "HOST_SPEAK") {
-          playHostSpeechLocally(data.text);
-        } else if (data.type === "START_DICE_COUNTDOWN") {
-          startTenSecondRoll();
-        } else if (data.type === "SYNC_MATCH_TIMER") {
-          matchTimerBadge.textContent = ` ${data.timeStr}`;
-        } else if (data.type === "ENABLE_TURN_ROLL") {
-          recapCard.style.display = 'none';
-          btnRollDice.style.display = 'block';
-
-          const isMe = data.activeContestantId === contestantId;
-          updateTurnBanner(isMe, `${data.activeContestantName}'S TURN TO ROLL`);
-          if (isMe) {
-            startTenSecondRoll();
-          } else {
-            statusPill.textContent = `Waiting for ${data.activeContestantName} to roll...`;
-            btnRollDice.disabled = true;
-            btnRollDice.classList.remove('active-roll');
-            btnRollDice.textContent = ` WAITING FOR ${data.activeContestantName.toUpperCase()}...`;
-          }
-        } else if (data.type === "SHOW_QUESTION_LOCKED") {
-          isTieBreaker = false;
-          recapCard.style.display = 'none';
-          const isMe = data.activeContestantId === contestantId;
-          updateTurnBanner(isMe, `${data.activeContestantName}'S QUESTION`);
-          showQuestionLocked(data.question, isMe, data.activeContestantName);
-        } else if (data.type === "UNLOCK_QUESTION_INPUT") {
-          if (data.activeContestantId === contestantId) {
-            unlockQuestionInput();
-          }
-        } else if (data.type === "START_TIE_BREAKER") {
-          isTieBreaker = true;
-          recapCard.style.display = 'none';
-          btnRollDice.style.display = 'none';
-          turnBanner.style.display = 'block';
-          turnBanner.className = 'turn-tie';
-          turnBanner.textContent = ' TIE-BREAKER! FIRST TO BUZZ WINS!';
-          startTieBreakerQuestion(data.question);
-        } else if (data.type === "OPPONENT_ANSWERED") {
-          if (data.contestant !== contestantId) {
-            const chosenIdx = currentQuestionData ? currentQuestionData.options.indexOf(data.chosenAnswer) : -1;
-            if (chosenIdx !== -1) {
-              optButtons.forEach(b => {
-                b.disabled = true;
-                b.classList.remove('unlocked');
-              });
-              optButtons[chosenIdx].classList.add('selected');
-              statusPill.textContent = "Opponent locked in! Checking with Goody...";
+              const isMe = data.activeContestantId === contestantId;
+              updateTurnBanner(isMe, `${data.activeContestantName}'S TURN TO ROLL`);
+              if (isMe) {
+                startTenSecondRoll();
+              } else {
+                statusPill.textContent = `Waiting for ${data.activeContestantName} to roll...`;
+                btnRollDice.disabled = true;
+                btnRollDice.classList.remove('active-roll');
+                btnRollDice.textContent = `🎲 WAITING FOR ${data.activeContestantName.toUpperCase()}...`;
+              }
+            } else if (data.type === "SHOW_QUESTION_LOCKED") {
+              isTieBreaker = false;
+              recapCard.style.display = 'none';
+              const isMe = data.activeContestantId === contestantId;
+              updateTurnBanner(isMe, `${data.activeContestantName}'S QUESTION`);
+              showQuestionLocked(data.question, isMe, data.activeContestantName);
+            } else if (data.type === "UNLOCK_QUESTION_INPUT") {
+              if (data.activeContestantId === contestantId) {
+                unlockQuestionInput();
+              }
+            } else if (data.type === "START_TIE_BREAKER") {
+              isTieBreaker = true;
+              recapCard.style.display = 'none';
+              btnRollDice.style.display = 'none';
+              turnBanner.style.display = 'block';
+              turnBanner.className = 'turn-tie';
+              turnBanner.textContent = '⚡ TIE-BREAKER! FIRST TO BUZZ WINS!';
+              startTieBreakerQuestion(data.question);
+            } else if (data.type === "OPPONENT_ANSWERED") {
+              if (data.contestant !== contestantId) {
+                const chosenIdx = currentQuestionData ? currentQuestionData.options.indexOf(data.chosenAnswer) : -1;
+                if (chosenIdx !== -1) {
+                  optButtons.forEach(b => {
+                    b.disabled = true;
+                    b.classList.remove('unlocked');
+                  });
+                  optButtons[chosenIdx].classList.add('selected');
+                  statusPill.textContent = "Opponent locked in! Checking with Goody...";
+                }
+              }
+            } else if (data.type === "EVALUATION_RESULT") {
+              handleEvaluationResult(data);
+            } else if (data.type === "TIE_BREAKER_RESULT") {
+              handleTieBreakerResult(data);
+            } else if (data.type === "GAME_OVER") {
+              handleGameOver(data);
             }
-          }
-        } else if (data.type === "EVALUATION_RESULT") {
-          handleEvaluationResult(data);
-        } else if (data.type === "TIE_BREAKER_RESULT") {
-          handleTieBreakerResult(data);
-        } else if (data.type === "GAME_OVER") {
-          handleGameOver(data);
-        }
-      });
+          });
+        });
 
-      dataConn.on('close', () => {
-        statusPill.textContent = "Connection interrupted. Reconnecting...";
-        setTimeout(connectToStudioHost, 2000);
-      });
+      } catch (err) {
+        alert("Camera & microphone permissions required: " + err.message);
+      }
     }
 
     function updateTurnBanner(isMe, subText) {
       turnBanner.style.display = 'block';
       if (isMe) {
         turnBanner.className = 'turn-mine';
-        turnBanner.textContent = ` YOUR TURN (${subText})!`;
+        turnBanner.textContent = `👉 YOUR TURN (${subText})!`;
       } else {
         turnBanner.className = 'turn-theirs';
-        turnBanner.textContent = ` WAITING: ${subText}`;
+        turnBanner.textContent = `⏳ WAITING: ${subText}`;
       }
     }
 
@@ -516,16 +442,16 @@
       hasRolled = false;
       btnRollDice.disabled = false;
       btnRollDice.classList.add('active-roll');
-      btnRollDice.textContent = " ROLL DICE NOW!";
+      btnRollDice.textContent = "🎲 ROLL DICE NOW!";
 
       let timeLeft = 10;
-      statusPill.textContent = ` ROLL TIMER: ${timeLeft}s`;
+      statusPill.textContent = `⏱️ ROLL TIMER: ${timeLeft}s`;
 
       if (rollTimer) clearInterval(rollTimer);
       rollTimer = setInterval(() => {
         timeLeft--;
         if (timeLeft > 0) {
-          statusPill.textContent = ` ROLL TIMER: ${timeLeft}s`;
+          statusPill.textContent = `⏱️ ROLL TIMER: ${timeLeft}s`;
         } else {
           clearInterval(rollTimer);
           if (!hasRolled) executeRoll(true);
@@ -543,7 +469,7 @@
       btnRollDice.textContent = "DICE ROLLED!";
 
       const rollValue = Math.floor(Math.random() * 6) + 1;
-      statusPill.textContent = isAuto ? ` Auto-rolled: ${rollValue}` : ` You rolled: ${rollValue}!`;
+      statusPill.textContent = isAuto ? `⏱️ Auto-rolled: ${rollValue}` : `🎲 You rolled: ${rollValue}!`;
 
       if (dataConn && dataConn.open) {
         dataConn.send({
@@ -562,10 +488,10 @@
       btnRollDice.style.display = 'none';
       recapCard.style.display = 'none';
       triviaCard.style.display = 'flex';
-      
-      qCountryTag.textContent = ` ${qData.country} (${isMyTurn ? "YOUR QUESTION" : activeName.toUpperCase() + "'S QUESTION"})`;
+     
+      qCountryTag.textContent = `🌍 ${qData.country} (${isMyTurn ? "YOUR QUESTION" : activeName.toUpperCase() + "'S QUESTION"})`;
       qText.textContent = qData.text || qData.q || "Listen to host:";
-      qTimer.textContent = " LISTENING...";
+      qTimer.textContent = "🔒 LISTENING...";
 
       qData.options.forEach((opt, idx) => {
         optButtons[idx].textContent = `${["A", "B", "C", "D"][idx]}) ${opt}`;
@@ -575,7 +501,7 @@
     }
 
     function unlockQuestionInput() {
-      qTimer.textContent = " 30s";
+      qTimer.textContent = "⏱️ 30s";
       optButtons.forEach(btn => {
         btn.disabled = false;
         btn.classList.add('unlocked');
@@ -586,7 +512,7 @@
       questionTimer = setInterval(() => {
         timeLeft--;
         if (timeLeft > 0) {
-          qTimer.textContent = ` ${timeLeft}s`;
+          qTimer.textContent = `⏱️ ${timeLeft}s`;
         } else {
           clearInterval(questionTimer);
           qTimer.textContent = "TIME OUT!";
@@ -602,7 +528,7 @@
       currentQuestionData = qData;
       selectedOptionIndex = null;
       triviaCard.style.display = 'flex';
-      qCountryTag.textContent = " SUDDEN DEATH TIE-BREAKER";
+      qCountryTag.textContent = "⚡ SUDDEN DEATH TIE-BREAKER";
       qText.textContent = qData.text || qData.q;
       qTimer.textContent = "BUZZ IN NOW!";
       statusPill.textContent = "First correct answer wins!";
@@ -648,16 +574,16 @@
       if (targetIdx !== -1 && optButtons[targetIdx]) {
         if (data.isCorrect) {
           optButtons[targetIdx].classList.add('flash-green');
-          statusPill.textContent = isMe ? " CORRECT! Tile secured." : " Opponent was CORRECT!";
+          statusPill.textContent = isMe ? "🎉 CORRECT! Tile secured." : "🎉 Opponent was CORRECT!";
         } else {
           optButtons[targetIdx].classList.add('flash-red');
-          statusPill.textContent = isMe ? " INCORRECT! Back to start." : " Opponent was INCORRECT!";
+          statusPill.textContent = isMe ? "❌ INCORRECT! Back to start." : "❌ Opponent was INCORRECT!";
         }
       }
 
       setTimeout(() => {
         triviaCard.style.display = 'none';
-        recapHeader.textContent = ` WHAT WE LEARNED (${data.country}):`;
+        recapHeader.textContent = `💡 WHAT WE LEARNED (${data.country}):`;
         recapBody.textContent = data.recap;
         recapCard.style.display = 'flex';
         statusPill.textContent = "Goody is reviewing the recap...";
@@ -666,7 +592,7 @@
 
     function handleTieBreakerResult(data) {
       const isMeWinner = data.winner.toLowerCase() === contestantName.toLowerCase();
-      statusPill.textContent = isMeWinner ? ` YOU WON THE TIE-BREAKER!` : ` ${data.winner.toUpperCase()} WON THE TIE-BREAKER!`;
+      statusPill.textContent = isMeWinner ? `🎉 YOU WON THE TIE-BREAKER!` : `❌ ${data.winner.toUpperCase()} WON THE TIE-BREAKER!`;
 
       const targetIdx = currentQuestionData ? currentQuestionData.options.indexOf(data.chosenAnswer) : -1;
       if (targetIdx !== -1 && optButtons[targetIdx]) {
@@ -684,12 +610,12 @@
 
       if (data.winner === "NOBODY") {
         turnBanner.className = 'turn-theirs';
-        turnBanner.textContent = " NOBODY WINS! PRIZE ROLLS OVER!";
+        turnBanner.textContent = "⚠️ NOBODY WINS! PRIZE ROLLS OVER!";
         statusPill.textContent = "Both players stayed at start. Prize rolls over!";
       } else {
         const isMe = data.winner.toLowerCase() === contestantName.toLowerCase();
         turnBanner.className = isMe ? 'turn-mine' : 'turn-theirs';
-        turnBanner.textContent = ` ${data.winner.toUpperCase()} WINS THE GAME!`;
+        turnBanner.textContent = `🏆 ${data.winner.toUpperCase()} WINS THE GAME!`;
         statusPill.textContent = isMe ? "Well done! Congratulations!" : "Commiserations! Thanks for playing!";
       }
 
