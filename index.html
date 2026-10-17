@@ -32,11 +32,24 @@
     #hud {
       position: absolute; top: 18px; left: 20px; background: rgba(22, 9, 44, 0.88);
       border: 2px solid #ff79b0; border-radius: 12px; padding: 12px 18px; color: #fff;
-      font-family: monospace; font-size: 0.85rem; pointer-events: none; z-index: 20;
+      font-family: monospace; font-size: 0.85rem; pointer-events: auto; z-index: 20;
     }
     #countdown-pill { margin-top: 6px; font-weight: bold; color: #ffda66; font-size: 0.95rem; }
     #match-clock-hud { margin-top: 4px; font-weight: bold; color: #00f0ff; font-size: 0.95rem; }
     #audience-pill { margin-top: 4px; font-weight: bold; color: #39ff14; }
+    
+    /* Director Passcode Widget */
+    #passcode-box {
+      margin-top: 10px; padding: 8px 10px; background: #130624; border: 1.5px solid #00f0ff;
+      border-radius: 8px; display: flex; flex-direction: column; gap: 5px;
+    }
+    .passcode-header { font-size: 0.72rem; color: #ffda66; font-weight: bold; }
+    .passcode-value { font-size: 1.05rem; color: #39ff14; font-weight: 900; letter-spacing: 2px; }
+    .btn-gen {
+      background: #6c5ce7; border: 1px solid #a29bfe; color: #fff; border-radius: 4px;
+      padding: 4px 6px; font-size: 0.7rem; font-family: monospace; font-weight: bold; cursor: pointer;
+    }
+    .btn-gen:hover { background: #5644d8; }
   </style>
 </head>
 <body>
@@ -47,6 +60,12 @@
     <div id="countdown-pill">BROADCAST STARTS IN: <span id="timer-val" style="color:#ff7675;">10s</span></div>
     <div id="match-clock-hud">SHOW CLOCK: <span id="game-clock-val" style="color:#ffda66;">20:00</span></div>
     <div id="audience-pill">AUDIENCE WATCHING: <span id="audience-count" style="color:#39ff14;">1</span></div>
+
+    <div id="passcode-box">
+      <div class="passcode-header">DIRECTOR CONTESTANT CODE:</div>
+      <div class="passcode-value" id="current-passcode-display">SHOW-8392</div>
+      <button class="btn-gen" id="btn-generate-code" onclick="generateNewPasscode()">GENERATE NEW CODE</button>
+    </div>
   </div>
 
   <div id="blocker">
@@ -65,6 +84,16 @@
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
   <script>
+    let activeShowPasscode = "SHOW-" + Math.floor(1000 + Math.random() * 9000);
+    const passDisplayEl = document.getElementById('current-passcode-display');
+    if (passDisplayEl) passDisplayEl.textContent = activeShowPasscode;
+
+    function generateNewPasscode() {
+      activeShowPasscode = "SHOW-" + Math.floor(1000 + Math.random() * 9000);
+      if (passDisplayEl) passDisplayEl.textContent = activeShowPasscode;
+      console.log("New Active Show Passcode:", activeShowPasscode);
+    }
+
     let studioPower = false;
     let showJake = false;
     let showJune = false;
@@ -240,6 +269,13 @@
         studioPeer.on('open', (id) => console.log("Master Host Registered:", id));
 
         studioPeer.on('call', (call) => {
+          const pass = call.metadata ? call.metadata.passcode : "";
+          if (pass !== activeShowPasscode) {
+            console.warn("Blocked unauthenticated call attempt!");
+            call.close();
+            return;
+          }
+
           const isJune = call.metadata && call.metadata.contestant === "goody-contestant-2";
           const returnStream = isJune ? streamJune : streamJake;
           call.answer(returnStream);
@@ -260,12 +296,27 @@
         });
 
         studioPeer.on('connection', (conn) => {
+          const isContestant = conn.metadata && conn.metadata.contestant;
+          if (isContestant) {
+            const pass = conn.metadata.passcode;
+            if (pass !== activeShowPasscode) {
+              console.warn("Invalid contestant passcode:", pass);
+              conn.on('open', () => {
+                conn.send({ type: "AUTH_FAILED", error: "Invalid Show Passcode!" });
+                setTimeout(() => conn.close(), 500);
+              });
+              return;
+            }
+          }
+
           connectedDataConns.push(conn);
 
           conn.on('open', () => {
             connectedAudiencePeers.add(conn.peer);
             broadcastAudienceCount();
-            if (conn.metadata && conn.metadata.contestant) {
+
+            if (isContestant) {
+              conn.send({ type: "AUTH_SUCCESS" });
               if (conn.metadata.contestant === "goody-contestant-1") showJake = true;
               if (conn.metadata.contestant === "goody-contestant-2") showJune = true;
             }
@@ -1524,7 +1575,7 @@
     function createStudioRoboticCamera(x, z) {
       const camRig = new THREE.Group(); camRig.position.set(x, 0.44, z);
       const darkMat = new THREE.MeshStandardMaterial({ color: 0x1f1f26 });
-      const basePlate = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.42, 0.08, 16), darkMat); basePlate.position.y = 0.04; camRig.add(basePlate);
+      const basePlate = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.42, 0.08, 16), basePlateMat = darkMat); basePlate.position.y = 0.04; camRig.add(basePlate);
       const outerCol = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.13, 0.55, 16), darkMat); outerCol.position.y = 0.35; camRig.add(outerCol);
       const headPivot = new THREE.Group(); headPivot.position.y = 1.0;
       const cameraBox = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.24, 0.42), darkMat); headPivot.add(cameraBox);
