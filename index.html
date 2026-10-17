@@ -46,21 +46,34 @@
       border-radius: 12px;
       display: none;
     }
+    .producer-btn-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 10px;
+    }
     .btn-producer {
-      background: #d63031;
-      border: 2px solid #ff7675;
+      border: 2px solid;
       color: #fff;
       font-family: monospace;
       font-weight: bold;
-      padding: 10px 18px;
+      padding: 10px 16px;
       border-radius: 8px;
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 0.82rem;
       text-transform: uppercase;
-      margin-top: 8px;
       transition: background 0.2s;
     }
-    .btn-producer:hover { background: #e17055; }
+    .btn-producer-solo {
+      background: #d63031;
+      border-color: #ff7675;
+    }
+    .btn-producer-solo:hover { background: #e17055; }
+    .btn-producer-choice {
+      background: #8e44ad;
+      border-color: #a29bfe;
+    }
+    .btn-producer-choice:hover { background: #9b59b6; }
     #hud {
       position: absolute; top: 18px; left: 20px; background: rgba(22, 9, 44, 0.88);
       border: 2px solid #ff79b0; border-radius: 12px; padding: 12px 18px; color: #fff;
@@ -91,13 +104,18 @@
       <p><strong>Click Anywhere to Enter Control Mode</strong></p>
       <p><span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> &nbsp;Walk around freely</p>
 
-      <!-- PRODUCER OVERRIDE PANEL -->
+      <!-- SAM'S PRODUCER OVERRIDE PANEL -->
       <div id="producer-panel">
         <div style="color: #ffda66; font-weight: bold; font-family: monospace;">PRODUCER OVERRIDE: INTERMISSION ACTIVE</div>
         <p id="producer-status-txt" style="font-size: 0.8rem; margin: 4px 0;">Looking for replacement contestant...</p>
-        <button id="btn-force-solo" class="btn-producer" onclick="event.stopPropagation(); triggerOnePlayerMode();">
-          Continue as 1-Player Solo Race
-        </button>
+        <div class="producer-btn-row">
+          <button id="btn-force-solo" class="btn-producer btn-producer-solo" onclick="event.stopPropagation(); triggerOnePlayerMode();">
+            Force 1-Player Solo
+          </button>
+          <button id="btn-offer-choice" class="btn-producer btn-producer-choice" onclick="event.stopPropagation(); triggerOfferChoiceMode();">
+            Allow Player To Choose
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -130,6 +148,8 @@
 
     let gameState = "IDLE";
     let isSoloMode = false;
+    let isVsGoodyMode = false;
+    let goodyPlayerSlot = null; // "goody-contestant-1" or "goody-contestant-2"
     let soloPlayerId = null;
 
     let diceCountdown = 0;
@@ -172,6 +192,12 @@
       "goody-contestant-2": "June"
     };
 
+    // Tracking human player skill ratio for dynamic Goody AI adjustments
+    const playerStats = {
+      asked: 0,
+      correct: 0
+    };
+
     // Dropout & State Persistence Tracking
     let isP1Connected = false;
     let isP2Connected = false;
@@ -179,7 +205,7 @@
     let droppedOutContestant = null;
     let savedTurnPlayer = null;
     let intermissionTimeout = null;
-    let savedActiveCountry = null; // Stores country if dropout occurs mid-question
+    let savedActiveCountry = null;
 
     let autoStartSeconds = 10;
     let autoStartInterval = setInterval(() => {
@@ -217,7 +243,7 @@
       }
     }
 
-    // --- INTERMISSION & DISCONNECT HANDLER ---
+    // --- INTERMISSION & DROPOUT HANDLER ---
     function handleMidGameDropout(contestantId) {
       if (gameState === "GAME_OVER" || gameState === "INTERMISSION") return;
 
@@ -228,8 +254,6 @@
       if (matchTimerInterval) clearInterval(matchTimerInterval);
 
       savedTurnPlayer = activePlayer;
-
-      // Retain country if drop happens during a question
       if (activeQuestion) {
         savedActiveCountry = activeQuestion.country;
       } else {
@@ -261,12 +285,12 @@
       if (intermissionTimeout) clearTimeout(intermissionTimeout);
       intermissionTimeout = setTimeout(() => {
         if (gameState === "INTERMISSION") {
-          triggerOnePlayerMode();
+          triggerOfferChoiceMode();
         }
       }, 90000);
     }
 
-    // --- RESUME PATH 1: HOT-SWAP REPLACEMENT JOINS ---
+    // --- RESUME 1: HUMAN REPLACEMENT JOINS VIA CODE ---
     function handleReplacementJoined(contestantId, newName) {
       if (gameState !== "INTERMISSION" || contestantId !== droppedOutContestant) return;
 
@@ -293,13 +317,14 @@
       });
     }
 
-    // --- RESUME PATH 2: PRODUCER (OR TIMEOUT) CHOOSES 1-PLAYER SOLO ---
+    // --- RESUME 2: SAM DIRECTLY TRIGGERS 1-PLAYER SOLO ---
     function triggerOnePlayerMode() {
-      if (gameState !== "INTERMISSION") return;
+      if (gameState !== "INTERMISSION" && gameState !== "CONTESTANT_CHOOSING") return;
 
       if (intermissionTimeout) clearTimeout(intermissionTimeout);
       producerPanel.style.display = "none";
       isSoloMode = true;
+      isVsGoodyMode = false;
 
       soloPlayerId = isP1Connected ? "goody-contestant-1" : "goody-contestant-2";
       const soloNum = soloPlayerId === "goody-contestant-1" ? "1" : "2";
@@ -321,6 +346,58 @@
         } else {
           savedActiveCountry = null;
           startTurnCleanly(soloPlayerId);
+        }
+      });
+    }
+
+    // --- RESUME 3: SAM OFFERS CHOICE TO CONTESTANT ---
+    function triggerOfferChoiceMode() {
+      if (gameState !== "INTERMISSION") return;
+
+      if (intermissionTimeout) clearTimeout(intermissionTimeout);
+      producerPanel.style.display = "none";
+      gameState = "CONTESTANT_CHOOSING";
+
+      const remainingId = isP1Connected ? "goody-contestant-1" : "goody-contestant-2";
+      const remainingName = contestantNames[remainingId];
+
+      countdownPill.innerHTML = ` <span style="color:#ffda66;">WAITING FOR ${remainingName.toUpperCase()}'S CHOICE...</span>`;
+      renderStageQuestionBoard();
+
+      const speech = `Welcome back to The Goody Tonight Show! Unfortunately, we have been unable to find a replacement contestant. But the show must go on! So ${remainingName}, we are placing the power in your hands! You have two choices: You can choose to go it alone as a solo race to see if you can reach tile 32 before the 20-minute timer expires—remember, if time runs out, nobody wins and the prize rolls over! Or, you can choose to go head-to-head with me, Goody! I will take over the board right where your opponent left off! ${remainingName}, make your choice now!`;
+      
+      speakGoody(speech, () => {
+        connectedDataConns.forEach(c => {
+          if (c.open) c.send({ type: "OFFER_CONTESTANT_CHOICE" });
+        });
+      });
+    }
+
+    // --- RESUME 4: CONTESTANT PICKS HEAD-TO-HEAD VS GOODY ---
+    function triggerVsGoodyMode() {
+      isSoloMode = false;
+      isVsGoodyMode = true;
+
+      goodyPlayerSlot = droppedOutContestant;
+      contestantNames[goodyPlayerSlot] = "Goody";
+
+      const humanId = isP1Connected ? "goody-contestant-1" : "goody-contestant-2";
+      const humanName = contestantNames[humanId];
+
+      countdownPill.innerHTML = ` <span style="color:#00f0ff;">GOODY VS ${humanName.toUpperCase()}!</span>`;
+      gameState = "IN_PLAY";
+      renderStageQuestionBoard();
+
+      startTwentyMinuteMatchTimer();
+
+      const speech = `A bold choice, ${humanName}! You have chosen to battle me, Goody! I am now taking over the controls and hopping into the hot seat! Let's see if you can outsmart the machine! Let's resume the game!`;
+      speakGoody(speech, () => {
+        if (savedActiveCountry) {
+          const countryToAsk = savedActiveCountry;
+          savedActiveCountry = null;
+          resumeWithFreshQuestion(savedTurnPlayer, countryToAsk);
+        } else {
+          startTurnCleanly(savedTurnPlayer);
         }
       });
     }
@@ -359,14 +436,19 @@
       const speech = `Resuming on ${country} for ${pName}! Here is your fresh question: ${activeQuestion.q}... You have 30 seconds to lock in!`;
       speakGoody(speech, () => {
         if (gameState === "INTERMISSION") return;
-        connectedDataConns.forEach(c => {
-          if (c.open) c.send({
-            type: "UNLOCK_QUESTION_INPUT",
-            activeContestantId: activePlayer,
-            activeContestantName: pName
+
+        if (activePlayer === goodyPlayerSlot) {
+          executeGoodyAnswer();
+        } else {
+          connectedDataConns.forEach(c => {
+            if (c.open) c.send({
+              type: "UNLOCK_QUESTION_INPUT",
+              activeContestantId: activePlayer,
+              activeContestantName: pName
+            });
           });
-        });
-        startQuestionCountdown();
+          startQuestionCountdown();
+        }
       });
     }
 
@@ -381,16 +463,89 @@
       p2RollVal = null;
       renderStageQuestionBoard();
 
-      speakGoody(`It is now ${pName}'s turn! You have 10 seconds to roll your dice!`, () => {
-        startTurnDiceCountdown(activePlayer, pName);
-        connectedDataConns.forEach(c => {
-          if (c.open) c.send({
-            type: "ENABLE_TURN_ROLL",
-            activeContestantId: activePlayer,
-            activeContestantName: pName
+      if (activePlayer === goodyPlayerSlot) {
+        speakGoody(`It is my turn! Goody is rolling the dice!`, () => {
+          setTimeout(executeGoodyTurnRoll, 1000);
+        });
+      } else {
+        speakGoody(`It is now ${pName}'s turn! You have 10 seconds to roll your dice!`, () => {
+          startTurnDiceCountdown(activePlayer, pName);
+          connectedDataConns.forEach(c => {
+            if (c.open) c.send({
+              type: "ENABLE_TURN_ROLL",
+              activeContestantId: activePlayer,
+              activeContestantName: pName
+            });
           });
         });
-      });
+      }
+    }
+
+    // --- GOODY AI TURN EXECUTION ---
+    function executeGoodyTurnRoll() {
+      const isGoodyP2 = goodyPlayerSlot === "goody-contestant-2";
+      if (isGoodyP2) isDiceRollingP2 = true;
+      else isDiceRollingP1 = true;
+
+      const rollVal = Math.floor(Math.random() * 6) + 1;
+      setTimeout(() => {
+        handlePlayerRoll(goodyPlayerSlot, "Goody", rollVal);
+      }, 1200);
+    }
+
+    // Goody Accuracy Calculation (Adaptive Rubber-Banding)
+    function calculateGoodyAccuracy() {
+      let accuracy = 0.65; // Base 65%
+
+      // Evaluate human player success rate
+      if (playerStats.asked > 0) {
+        const humanRatio = playerStats.correct / playerStats.asked;
+        if (humanRatio > 0.7) accuracy += 0.15; // If human is sharp, Goody sharpens up
+        if (humanRatio < 0.4) accuracy -= 0.15; // If human is struggling, Goody gives breathing room
+      }
+
+      // Evaluate board lead
+      const humanIdx = goodyPlayerSlot === "goody-contestant-1" ? p2Index : p1Index;
+      const goodyIdx = goodyPlayerSlot === "goody-contestant-1" ? p1Index : p2Index;
+      const leadGap = goodyIdx - humanIdx;
+
+      if (leadGap >= 4) {
+        accuracy -= 0.25; // Goody is far ahead: blunder chance increases!
+      } else if (leadGap <= -4) {
+        accuracy += 0.20; // Goody is far behind: catch-up mode
+      }
+
+      return Math.max(0.30, Math.min(0.90, accuracy));
+    }
+
+    function executeGoodyAnswer() {
+      const willBeCorrect = Math.random() < calculateGoodyAccuracy();
+      let chosen = activeQuestion.ans;
+
+      if (!willBeCorrect) {
+        const wrongOpts = activeQuestion.options.filter(o => o !== activeQuestion.ans);
+        chosen = wrongOpts[Math.floor(Math.random() * wrongOpts.length)];
+      }
+
+      setTimeout(() => {
+        stageSelectedOption = chosen;
+        stageOptionStatus = 'selected';
+        renderStageQuestionBoard();
+
+        connectedDataConns.forEach(c => {
+          if (c.open) {
+            c.send({
+              type: "OPPONENT_ANSWERED",
+              contestant: "goody-host-bot",
+              chosenAnswer: chosen
+            });
+          }
+        });
+
+        setTimeout(() => {
+          evaluateAnswer(goodyPlayerSlot, chosen);
+        }, 1400);
+      }, 2500);
     }
 
     const INTRO_SPEECH =
@@ -570,7 +725,14 @@
           conn.on('data', (data) => {
             if (gameState === "INTERMISSION") return;
 
-            if (data.type === "PLAYER_ROLLED_DICE") {
+            if (data.type === "CONTESTANT_CHOSE_PATH") {
+              if (gameState !== "CONTESTANT_CHOOSING") return;
+              if (data.choice === "SOLO") {
+                triggerOnePlayerMode();
+              } else if (data.choice === "GOODY") {
+                triggerVsGoodyMode();
+              }
+            } else if (data.type === "PLAYER_ROLLED_DICE") {
               handlePlayerRoll(data.contestant, data.name, data.roll);
             } else if (data.type === "PLAYER_ANSWERED") {
               if (isTieBreakerActive) {
@@ -621,7 +783,7 @@
 
             if (!studioPower && timerExpired) {
               checkReadyOrWait();
-            } else if (studioPower && gameState === "IN_PLAY" && !isSoloMode) {
+            } else if (studioPower && gameState === "IN_PLAY" && !isSoloMode && !isVsGoodyMode) {
               if (cId === "goody-contestant-1" || cId === "goody-contestant-2") {
                 handleMidGameDropout(cId);
               }
@@ -795,7 +957,11 @@
         }
         playTone(587, 'sine', 0.15, 0.08);
 
-        speakGoody(`${name} rolled a ${roll}! Moving ${roll} spaces.`, () => {
+        const speech = contestant === goodyPlayerSlot
+          ? `I rolled a ${roll}! Moving forwards ${roll} spaces!`
+          : `${name} rolled a ${roll}! Moving ${roll} spaces.`;
+
+        speakGoody(speech, () => {
           advanceTurnPlayer(contestant, roll);
         });
       }
@@ -956,17 +1122,25 @@
         });
         renderStageQuestionBoard();
 
-        const speech = `${activeName} landed on ${landedCountry}! Here is your question: ${activeQuestion.q}... You have 30 seconds to lock in!`;
+        const speech = activePlayer === goodyPlayerSlot
+          ? `I landed on ${landedCountry}! Here is my question: ${activeQuestion.q}... Let me process this in my circuits!`
+          : `${activeName} landed on ${landedCountry}! Here is your question: ${activeQuestion.q}... You have 30 seconds to lock in!`;
+
         speakGoody(speech, () => {
           if (gameState === "INTERMISSION") return;
-          connectedDataConns.forEach(c => {
-            if (c.open) c.send({
-              type: "UNLOCK_QUESTION_INPUT",
-              activeContestantId: activePlayer,
-              activeContestantName: activeName
+
+          if (activePlayer === goodyPlayerSlot) {
+            executeGoodyAnswer();
+          } else {
+            connectedDataConns.forEach(c => {
+              if (c.open) c.send({
+                type: "UNLOCK_QUESTION_INPUT",
+                activeContestantId: activePlayer,
+                activeContestantName: activeName
+              });
             });
-          });
-          startQuestionCountdown();
+            startQuestionCountdown();
+          }
         });
       });
     }
@@ -992,6 +1166,12 @@
       if (questionInterval) clearInterval(questionInterval);
       const isCorrect = chosen === activeQuestion.ans;
 
+      // Track human stats for Goody's dynamic difficulty
+      if (contestant !== goodyPlayerSlot) {
+        playerStats.asked++;
+        if (isCorrect) playerStats.correct++;
+      }
+
       stageOptionStatus = isCorrect ? 'correct' : 'wrong';
       renderStageQuestionBoard();
 
@@ -1012,12 +1192,21 @@
         renderStageQuestionBoard();
       }, 1400);
 
+      const isGoody = contestant === goodyPlayerSlot;
       if (isCorrect) {
-        speakGoody(`Well done, that's correct! Here is what we learned: ${activeQuestion.recap}`, () => {
+        const speech = isGoody
+          ? `My circuits calculated correctly! That is correct! Here is what we learned: ${activeQuestion.recap}`
+          : `Well done, that's correct! Here is what we learned: ${activeQuestion.recap}`;
+
+        speakGoody(speech, () => {
           transitionToRulesAndNextTurn();
         });
       } else {
-        speakGoody(`Unlucky, that's incorrect. You must go back to the start! Here is what we learned: ${activeQuestion.recap}`, () => {
+        const speech = isGoody
+          ? `Oh no! A system malfunction in my memory bank! I got it wrong! I must go back to the start! Here is what we learned: ${activeQuestion.recap}`
+          : `Unlucky, that's incorrect. You must go back to the start! Here is what we learned: ${activeQuestion.recap}`;
+
+        speakGoody(speech, () => {
           resetPlayerToStart(contestant, () => {
             transitionToRulesAndNextTurn();
           });
@@ -1027,6 +1216,10 @@
 
     function handleQuestionTimeout(contestant) {
       if (questionInterval) clearInterval(questionInterval);
+      if (contestant !== goodyPlayerSlot) {
+        playerStats.asked++;
+      }
+
       stageOptionStatus = 'wrong';
       renderStageQuestionBoard();
 
@@ -1100,16 +1293,22 @@
       p2RollVal = null;
       renderStageQuestionBoard();
 
-      speakGoody(`It is now ${pName}'s turn! You have 10 seconds to roll your dice!`, () => {
-        startTurnDiceCountdown(activePlayer, pName);
-        connectedDataConns.forEach(c => {
-          if (c.open) c.send({
-            type: "ENABLE_TURN_ROLL",
-            activeContestantId: activePlayer,
-            activeContestantName: pName
+      if (activePlayer === goodyPlayerSlot) {
+        speakGoody(`It is my turn! Goody is rolling the dice!`, () => {
+          setTimeout(executeGoodyTurnRoll, 1000);
+        });
+      } else {
+        speakGoody(`It is now ${pName}'s turn! You have 10 seconds to roll your dice!`, () => {
+          startTurnDiceCountdown(activePlayer, pName);
+          connectedDataConns.forEach(c => {
+            if (c.open) c.send({
+              type: "ENABLE_TURN_ROLL",
+              activeContestantId: activePlayer,
+              activeContestantName: pName
+            });
           });
         });
-      });
+      }
     }
 
     function evaluateFinalShowdown() {
@@ -1173,6 +1372,15 @@
             question: activeQuestion
           });
         });
+
+        if (isVsGoodyMode) {
+          // Goody has a delayed buzz-in attempt during tie-breakers
+          setTimeout(() => {
+            if (!tieBreakerAnswered) {
+              handleTieBreakerAnswer(goodyPlayerSlot, activeQuestion.ans);
+            }
+          }, 8000 + Math.random() * 4000);
+        }
       });
     }
 
@@ -1521,10 +1729,32 @@
         qBoardCtx.fillText("SEARCHING FOR REPLACEMENT CONTESTANT...", 256, 195);
         qBoardCtx.fillText("PLEASE STAND BY AS WE RESOLVE TECHNICAL ISSUES.", 256, 235);
 
-        // Room passcode intentionally omitted from board
         qBoardCtx.fillStyle = '#39ff14';
         qBoardCtx.font = 'bold 16px monospace';
         qBoardCtx.fillText("BROADCAST WILL RESUME SHORTLY", 256, 290);
+      } else if (gameState === "CONTESTANT_CHOOSING") {
+        qBoardCtx.fillStyle = '#ffda66';
+        qBoardCtx.font = 'bold 24px sans-serif';
+        qBoardCtx.textAlign = 'center';
+        qBoardCtx.fillText("DECISION TIME IN PROGRESS", 256, 70);
+
+        qBoardCtx.fillStyle = '#00f0ff';
+        qBoardCtx.fillRect(36, 88, 440, 2);
+
+        qBoardCtx.fillStyle = '#ffffff';
+        qBoardCtx.font = '18px sans-serif';
+        qBoardCtx.fillText("AWAITING REMAINING CONTESTANT DECISION:", 256, 150);
+
+        qBoardCtx.fillStyle = '#3498db';
+        qBoardCtx.font = 'bold 18px monospace';
+        qBoardCtx.fillText("[1] RACE SOLO AGAINST 20-MIN CLOCK", 256, 210);
+
+        qBoardCtx.fillStyle = '#9b59b6';
+        qBoardCtx.fillText("[2] BATTLE GOODY HEAD-TO-HEAD", 256, 255);
+
+        qBoardCtx.fillStyle = '#39ff14';
+        qBoardCtx.font = 'bold 15px monospace';
+        qBoardCtx.fillText("MAKING SELECTION ON COMPANION DEVICE...", 256, 320);
       } else if (activeRecap) {
         qBoardCtx.fillStyle = activeRecap.isCorrect ? '#00b894' : '#ff7675';
         qBoardCtx.font = 'bold 22px sans-serif';
@@ -1663,10 +1893,11 @@
             qBoardCtx.fillText(`MISSING: ${missing.join(' & ')}`, 256, 260);
           }
         } else {
+          const headerTxt = isSoloMode ? " SOLO RACE ACTIVE " : (isVsGoodyMode ? " GOODY HEAD-TO-HEAD BATTLE " : " OFFICIAL GAME RULES ");
           qBoardCtx.fillStyle = '#ffda66';
           qBoardCtx.font = 'bold 24px sans-serif';
           qBoardCtx.textAlign = 'center';
-          qBoardCtx.fillText(isSoloMode ? " SOLO RACE ACTIVE " : " OFFICIAL GAME RULES ", 256, 44);
+          qBoardCtx.fillText(headerTxt, 256, 44);
 
           qBoardCtx.fillStyle = '#00f0ff';
           qBoardCtx.fillRect(36, 56, 440, 2);
@@ -1817,11 +2048,51 @@
     const sScreenCtx = studioScreenCanvas.getContext('2d');
     const studioScreenTex = new THREE.CanvasTexture(studioScreenCanvas);
 
-    function drawScreenFeed(ctx, x, y, width, height, name, city, isLive, videoElem, isGuy, currentRoll, isRolling) {
+    function drawScreenFeed(ctx, x, y, width, height, name, city, isLive, videoElem, isGuy, currentRoll, isRolling, isGoodyHostSlot) {
       ctx.fillStyle = '#05020a'; ctx.fillRect(x, y, width, height);
-      ctx.strokeStyle = isLive ? '#39ff14' : '#ffb300'; ctx.lineWidth = 3; ctx.strokeRect(x, y, width, height);
+      ctx.strokeStyle = isGoodyHostSlot ? '#a29bfe' : (isLive ? '#39ff14' : '#ffb300');
+      ctx.lineWidth = 3;
+      ctx.strokeRect(x, y, width, height);
 
-      if (isLive && videoElem.readyState >= 2) {
+      if (isGoodyHostSlot) {
+        // RENDER GOODY'S TAKEOVER FACE FEED
+        ctx.fillStyle = '#16082b';
+        ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
+
+        const cx = x + width / 2;
+        const cy = y + height * 0.45;
+
+        ctx.fillStyle = '#cccccc';
+        ctx.strokeStyle = '#00f0ff';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(cx - 40, cy - 35, 80, 70);
+
+        ctx.strokeStyle = '#39ff14';
+        ctx.lineWidth = 3;
+        // Left Eye '^'
+        ctx.beginPath();
+        ctx.moveTo(cx - 24, cy - 10);
+        ctx.lineTo(cx - 14, cy - 22);
+        ctx.lineTo(cx - 4, cy - 10);
+        ctx.stroke();
+
+        // Right Eye '^'
+        ctx.beginPath();
+        ctx.moveTo(cx + 4, cy - 10);
+        ctx.lineTo(cx + 14, cy - 22);
+        ctx.lineTo(cx + 24, cy - 10);
+        ctx.stroke();
+
+        if (isGoodySpeaking) {
+          ctx.beginPath();
+          ctx.ellipse(cx, cy + 15, 16, 8, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+          ctx.arc(cx, cy + 10, 12, 0.2, Math.PI - 0.2, false);
+          ctx.stroke();
+        }
+      } else if (isLive && videoElem.readyState >= 2) {
         ctx.save(); ctx.drawImage(videoElem, x + 2, y + 2, width - 4, height - 4); ctx.restore();
       } else {
         ctx.fillStyle = isGuy ? '#1b2a47' : '#3d1b38'; ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
@@ -1831,7 +2102,7 @@
         ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(cx - 5, cy - 10, 2, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(cx + 5, cy - 10, 2, 0, Math.PI * 2); ctx.fill();
       }
 
-      if (diceCountdown > 0) {
+      if (diceCountdown > 0 && !isGoodyHostSlot) {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.75)'; ctx.fillRect(x + 8, y + 8, 120, 28);
         ctx.fillStyle = '#ff7675'; ctx.font = 'bold 13px monospace'; ctx.textAlign = 'center';
         ctx.fillText(` ROLL: ${diceCountdown}s`, x + 68, y + 26);
@@ -1849,22 +2120,36 @@
       }
 
       ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(x, y + height - 26, width, 26);
-      ctx.fillStyle = isLive ? '#39ff14' : '#ffda66'; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
-      ctx.fillText(`${isLive ? ' LIVE ' : ' CALL'} ${name.toUpperCase()} [${city.toUpperCase()}]`, x + width/2, y + height - 8);
+      ctx.fillStyle = isGoodyHostSlot ? '#00f0ff' : (isLive ? '#39ff14' : '#ffda66');
+      ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
+      
+      const tag = isGoodyHostSlot
+        ? `[AI HOST: GOODY]`
+        : `${isLive ? ' LIVE ' : ' CALL'} ${name.toUpperCase()} [${city.toUpperCase()}]`;
+
+      ctx.fillText(tag, x + width/2, y + height - 8);
     }
 
     function renderBackstageScreens() {
       sScreenCtx.fillStyle = '#060210'; sScreenCtx.fillRect(0, 0, 512, 256);
       if (studioPower) {
-        if (showJake) drawScreenFeed(sScreenCtx, 15, 20, 225, 215, contestantNames["goody-contestant-1"], "London", hasLiveJakeStream, videoJake, true, p1RollVal, isDiceRollingP1);
-        else {
+        const isP1Goody = isVsGoodyMode && goodyPlayerSlot === "goody-contestant-1";
+        const isP2Goody = isVsGoodyMode && goodyPlayerSlot === "goody-contestant-2";
+
+        // Feed Jake / P1
+        if (isP1Goody || showJake) {
+          drawScreenFeed(sScreenCtx, 15, 20, 225, 215, contestantNames["goody-contestant-1"], "London", hasLiveJakeStream, videoJake, true, p1RollVal, isDiceRollingP1, isP1Goody);
+        } else {
           sScreenCtx.strokeStyle = '#ffb300'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(15, 20, 225, 215);
           sScreenCtx.fillStyle = '#ffda66'; sScreenCtx.font = 'bold 22px sans-serif'; sScreenCtx.textAlign = 'center';
           sScreenCtx.fillText(isSoloMode && soloPlayerId !== "goody-contestant-1" ? "WITHDRAWN" : "CONTESTANT 1", 127, 120);
           sScreenCtx.fillStyle = '#39ff14'; sScreenCtx.font = '14px monospace'; sScreenCtx.fillText(gameState === "INTERMISSION" ? "DISCONNECTED" : "STANDBY...", 127, 150);
         }
-        if (showJune) drawScreenFeed(sScreenCtx, 272, 20, 225, 215, contestantNames["goody-contestant-2"], "Nottingham", hasLiveJuneStream, videoJune, false, p2RollVal, isDiceRollingP2);
-        else {
+
+        // Feed June / P2
+        if (isP2Goody || showJune) {
+          drawScreenFeed(sScreenCtx, 272, 20, 225, 215, contestantNames["goody-contestant-2"], "Nottingham", hasLiveJuneStream, videoJune, false, p2RollVal, isDiceRollingP2, isP2Goody);
+        } else {
           sScreenCtx.strokeStyle = '#ffb300'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(272, 20, 225, 215);
           sScreenCtx.fillStyle = '#ffda66'; sScreenCtx.font = 'bold 22px sans-serif'; sScreenCtx.textAlign = 'center';
           sScreenCtx.fillText(isSoloMode && soloPlayerId !== "goody-contestant-2" ? "WITHDRAWN" : "CONTESTANT 2", 384, 120);
