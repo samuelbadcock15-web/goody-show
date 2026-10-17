@@ -83,6 +83,92 @@
     #countdown-pill { margin-top: 6px; font-weight: bold; color: #ffda66; font-size: 0.95rem; }
     #match-clock-hud { margin-top: 4px; font-weight: bold; color: #00f0ff; font-size: 0.95rem; }
     #audience-pill { margin-top: 4px; font-weight: bold; color: #39ff14; }
+
+    /* HOST MODERATION TRAY */
+    #mod-tray {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      width: 380px;
+      background: rgba(10, 4, 22, 0.92);
+      border: 2px solid #a29bfe;
+      border-radius: 12px;
+      padding: 10px;
+      z-index: 30;
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      box-shadow: 0 0 20px rgba(162, 155, 254, 0.3);
+    }
+    #mod-tray-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+      font-weight: bold;
+      color: #ffda66;
+      border-bottom: 1px solid #331555;
+      padding-bottom: 6px;
+      margin-bottom: 6px;
+      font-family: monospace;
+    }
+    #mod-chat-stream {
+      height: 120px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.76rem;
+      padding-right: 4px;
+    }
+    .mod-chat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 3px 6px;
+      border-radius: 4px;
+    }
+    .mod-chat-row.is-shadowbanned {
+      opacity: 0.5;
+      background: rgba(214, 48, 49, 0.15);
+      border-left: 2px solid #ff7675;
+    }
+    .mod-btn-ban {
+      background: #c0392b;
+      border: 1px solid #e74c3c;
+      color: #fff;
+      font-size: 0.65rem;
+      font-family: monospace;
+      padding: 2px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .mod-btn-ban:hover { background: #e74c3c; }
+    .mod-controls-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid #331555;
+    }
+    .btn-emergency-mute {
+      background: #27ae60;
+      border: 1px solid #2ecc71;
+      color: #fff;
+      font-family: monospace;
+      font-size: 0.72rem;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .btn-emergency-mute.muted-state {
+      background: #d63031;
+      border-color: #ff7675;
+    }
   </style>
 </head>
 <body>
@@ -133,6 +219,21 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- HOST AUDIENCE CHAT & MODERATION TRAY -->
+  <div id="mod-tray">
+    <div id="mod-tray-header">
+      <span>AUDIENCE CHAT MODERATOR</span>
+      <span id="mod-spectator-count" style="color:#39ff14;">0 SPECTATORS</span>
+    </div>
+    <div id="mod-chat-stream">
+      <div style="color:#888; font-style:italic;">No spectator messages yet.</div>
+    </div>
+    <div class="mod-controls-row">
+      <span style="font-size:0.72rem; color:#aaa;">Tripwire: <strong style="color:#39ff14;">ACTIVE</strong></span>
+      <button id="btn-toggle-all-chat" class="btn-emergency-mute" onclick="toggleGlobalAudienceChat()">CHAT: UNLOCKED</button>
     </div>
   </div>
 
@@ -933,6 +1034,53 @@
     controls.addEventListener('lock', () => { blocker.style.display = 'none'; });
     controls.addEventListener('unlock', () => { blocker.style.display = 'flex'; });
 
+    // --- MODERATION & SHADOWBAN STORE ---
+    const shadowbannedTokens = new Set();
+    const shadowbannedHardwareIds = new Set();
+    let isAudienceChatGlobalMuted = false;
+
+    // Automated Profanity & Harassment Tripwire Regex
+    const profanityTripwireRegex = /\b(fuck|shit|bitch|cunt|nigger|nigga|faggot|retard|whore|slut|pussy|dick|bastard|asshole)\b/i;
+
+    function isSenderShadowbanned(token, hardwareId) {
+      if (token && shadowbannedTokens.has(token)) return true;
+      if (hardwareId && shadowbannedHardwareIds.has(hardwareId)) return true;
+      return false;
+    }
+
+    function shadowbanSpectator(token, hardwareId, name) {
+      if (token) shadowbannedTokens.add(token);
+      if (hardwareId) shadowbannedHardwareIds.add(hardwareId);
+      addModeratorLog(`[SYSTEM] Shadowbanned ${name || 'Spectator'}. Messages dropped.`);
+    }
+
+    const modChatStream = document.getElementById('mod-chat-stream');
+    const modSpectatorCount = document.getElementById('mod-spectator-count');
+    const btnToggleAllChat = document.getElementById('btn-toggle-all-chat');
+
+    function addModeratorLog(text) {
+      const row = document.createElement('div');
+      row.style.color = '#ff7675';
+      row.style.fontSize = '0.70rem';
+      row.style.fontFamily = 'monospace';
+      row.textContent = text;
+      modChatStream.appendChild(row);
+      modChatStream.scrollTop = modChatStream.scrollHeight;
+    }
+
+    function toggleGlobalAudienceChat() {
+      isAudienceChatGlobalMuted = !isAudienceChatGlobalMuted;
+      if (isAudienceChatGlobalMuted) {
+        btnToggleAllChat.textContent = "CHAT: MUTED (ALL)";
+        btnToggleAllChat.className = "btn-emergency-mute muted-state";
+        addModeratorLog("[HOST] Audience chatroom locked.");
+      } else {
+        btnToggleAllChat.textContent = "CHAT: UNLOCKED";
+        btnToggleAllChat.className = "btn-emergency-mute";
+        addModeratorLog("[HOST] Audience chatroom unlocked.");
+      }
+    }
+
     let studioPeer = null;
     let connectedDataConns = [];
     const connectedAudiencePeers = new Set();
@@ -980,39 +1128,65 @@
         });
 
         studioPeer.on('connection', (conn) => {
-          const passcode = conn.metadata ? conn.metadata.passcode : "";
-          if (passcode !== studioRoomCode) {
-            conn.on('open', () => {
-              conn.send({ type: "AUTH_FAILED", message: "Invalid 4-digit code." });
-              setTimeout(() => conn.close(), 500);
-            });
-            return;
-          }
+          const isAudience = conn.metadata && conn.metadata.role === 'AUDIENCE';
 
-          const cId = conn.metadata ? conn.metadata.contestant : null;
-          const isSlot1Taken = (cId === "goody-contestant-1" && isP1Connected && p1PeerId && p1PeerId !== conn.peer);
-          const isSlot2Taken = (cId === "goody-contestant-2" && isP2Connected && p2PeerId && p2PeerId !== conn.peer);
-
-          if (isSlot1Taken || isSlot2Taken) {
-            conn.on('open', () => {
-              conn.send({
-                type: "SLOT_TAKEN",
-                takenNum: cId === "goody-contestant-1" ? "1" : "2",
-                slotName: contestantNames[cId] || "Occupied",
-                altNum: cId === "goody-contestant-1" ? "2" : "1",
-                altSlotName: contestantNames[cId === "goody-contestant-1" ? "goody-contestant-2" : "goody-contestant-1"] || "Contestant"
+          // Contestants Jake and June must verify passcode; audience members join freely
+          if (!isAudience) {
+            const passcode = conn.metadata ? conn.metadata.passcode : "";
+            if (passcode !== studioRoomCode) {
+              conn.on('open', () => {
+                conn.send({ type: "AUTH_FAILED", message: "Invalid 4-digit code." });
+                setTimeout(() => conn.close(), 500);
               });
-              setTimeout(() => conn.close(), 600);
-            });
-            return;
+              return;
+            }
+
+            const cId = conn.metadata ? conn.metadata.contestant : null;
+            const isSlot1Taken = (cId === "goody-contestant-1" && isP1Connected && p1PeerId && p1PeerId !== conn.peer);
+            const isSlot2Taken = (cId === "goody-contestant-2" && isP2Connected && p2PeerId && p2PeerId !== conn.peer);
+
+            if (isSlot1Taken || isSlot2Taken) {
+              conn.on('open', () => {
+                conn.send({
+                  type: "SLOT_TAKEN",
+                  takenNum: cId === "goody-contestant-1" ? "1" : "2",
+                  slotName: contestantNames[cId] || "Occupied",
+                  altNum: cId === "goody-contestant-1" ? "2" : "1",
+                  altSlotName: contestantNames[cId === "goody-contestant-1" ? "goody-contestant-2" : "goody-contestant-1"] || "Contestant"
+                });
+                setTimeout(() => conn.close(), 600);
+              });
+              return;
+            }
           }
 
           connectedDataConns.push(conn);
 
           conn.on('open', () => {
+            if (isAudience) {
+              connectedAudiencePeers.add(conn.peer);
+              broadcastAudienceCount();
+
+              // Send initial state sync to incoming audience member
+              const mins = Math.max(0, Math.floor(matchTimerSeconds / 60)).toString().padStart(2, '0');
+              const secs = Math.max(0, (matchTimerSeconds % 60)).toString().padStart(2, '0');
+              conn.send({ type: "SYNC_MATCH_TIMER", timeStr: `${mins}:${secs}`, secondsLeft: matchTimerSeconds });
+
+              if (activeQuestion) {
+                conn.send({
+                  type: "SHOW_QUESTION_LOCKED",
+                  question: activeQuestion,
+                  activeContestantId: activePlayer,
+                  activeContestantName: contestantNames[activePlayer]
+                });
+              }
+              return;
+            }
+
             const clientName = (conn.metadata && conn.metadata.name) ? conn.metadata.name.trim() : (cId === "goody-contestant-2" ? "June" : "Jake");
             const clientCity = (conn.metadata && conn.metadata.city) ? conn.metadata.city.trim() : (cId === "goody-contestant-2" ? "Nottingham" : "London");
             const clientToken = conn.metadata ? conn.metadata.sessionToken : null;
+            const cId = conn.metadata ? conn.metadata.contestant : null;
 
             if (cId === "goody-contestant-1") {
               isP1Connected = true;
@@ -1047,6 +1221,62 @@
           });
 
           conn.on('data', (data) => {
+            // --- AUDIENCE LIVE CHAT & SHADOWBAN DISPATCHER ---
+            if (data.type === "AUDIENCE_CHAT_MESSAGE") {
+              const senderToken = data.sessionToken;
+              const senderHw = data.hardwareId;
+              const authorName = data.author || "Guest";
+              const rawText = data.text || "";
+
+              const alreadyBanned = isSenderShadowbanned(senderToken, senderHw);
+              const tripsFilter = profanityTripwireRegex.test(rawText);
+
+              if (tripsFilter && !alreadyBanned) {
+                shadowbanSpectator(senderToken, senderHw, authorName);
+              }
+
+              const isShadowbanned = alreadyBanned || tripsFilter;
+
+              // Append to host moderation tray
+              const chatRow = document.createElement('div');
+              chatRow.className = `mod-chat-row ${isShadowbanned ? 'is-shadowbanned' : ''}`;
+              
+              const textSpan = document.createElement('span');
+              textSpan.innerHTML = `<strong style="color:${isShadowbanned ? '#ff7675' : '#00f0ff'};">${authorName}:</strong> ${rawText} ${isShadowbanned ? '<em style="color:#ff7675;">[SHADOWBANNED]</em>' : ''}`;
+
+              chatRow.appendChild(textSpan);
+
+              if (!isShadowbanned) {
+                const banBtn = document.createElement('button');
+                banBtn.className = 'mod-btn-ban';
+                banBtn.textContent = 'Mute';
+                banBtn.onclick = () => {
+                  shadowbanSpectator(senderToken, senderHw, authorName);
+                  chatRow.classList.add('is-shadowbanned');
+                  textSpan.innerHTML += ' <em style="color:#ff7675;">[MUTED]</em>';
+                  banBtn.remove();
+                };
+                chatRow.appendChild(banBtn);
+              }
+
+              modChatStream.appendChild(chatRow);
+              modChatStream.scrollTop = modChatStream.scrollHeight;
+
+              // If allowed and chat is not globally muted, broadcast to all spectators
+              if (!isShadowbanned && !isAudienceChatGlobalMuted) {
+                connectedDataConns.forEach(c => {
+                  if (c.open && c.metadata && c.metadata.role === 'AUDIENCE') {
+                    c.send({
+                      type: "AUDIENCE_CHAT_BROADCAST",
+                      author: authorName,
+                      text: rawText
+                    });
+                  }
+                });
+              }
+              return;
+            }
+
             if (gameState === "INTERMISSION") return;
 
             if (data.type === "CONTESTANT_CHOSE_PATH") {
@@ -1143,6 +1373,8 @@
     function broadcastAudienceCount() {
       audienceCount = Math.max(1, connectedAudiencePeers.size + 1);
       audienceCountEl.textContent = audienceCount;
+      if (modSpectatorCount) modSpectatorCount.textContent = `${connectedAudiencePeers.size} SPECTATORS`;
+
       connectedDataConns.forEach(c => {
         if (c.open) c.send({ type: "AUDIENCE_COUNT", count: audienceCount });
       });
@@ -1976,7 +2208,7 @@
           ctx.fillStyle = '#C8102E'; ctx.fillRect(112, 0, 32, h); ctx.fillRect(0, 112, w, 32);
           break;
         case "Nigeria":
-          ctx.fillStyle = '#008751'; ctx.fillRect(0, 0, w / 3, h);
+          ctx.fillStyle = '#008751'; ctx.fillRect(0, 0, w, h / 3);
           ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h);
           ctx.fillStyle = '#008751'; ctx.fillRect((w / 3) * 2, 0, w / 3, h);
           break;
