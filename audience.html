@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Goody Tonight Show - Live Audience</title>
+  <title>Goody Tonight Show - Live Audience Experience</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
     html, body {
@@ -42,7 +42,25 @@
     }
     .btn-join:active { transform: scale(0.98); }
 
-    /* HUD */
+    /* BROADCAST CAMERAMAN LENS CUTSCENE OVERLAY */
+    #lens-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 50; display: none;
+    }
+    .letterbox-bar {
+      position: absolute; left: 0; width: 100%; height: 10%;
+      background: #000; transition: transform 0.8s ease-in-out;
+    }
+    #bar-top { top: 0; transform: translateY(0); }
+    #bar-bottom { bottom: 0; transform: translateY(0); }
+    .lens-ui {
+      position: absolute; top: 12%; left: 4%; right: 4%;
+      display: flex; justify-content: space-between; font-family: monospace; font-size: 0.8rem;
+    }
+    .rec-indicator { color: #ff3838; font-weight: bold; animation: blinkRec 1s infinite alternate; }
+    @keyframes blinkRec { from { opacity: 1; } to { opacity: 0.2; } }
+
+    /* IN-GAME HUD */
     #spectator-ui {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       display: none; flex-direction: column; justify-content: space-between;
@@ -53,8 +71,18 @@
       background: rgba(18, 7, 36, 0.85); border: 1.5px solid #a29bfe; border-radius: 8px;
       padding: 6px 10px; font-family: monospace; font-size: 0.78rem; pointer-events: auto;
     }
+    #location-pill { color: #39ff14; font-weight: bold; }
 
-    /* TRIVIA OVERLAY */
+    /* ELEVATOR PROMPT */
+    #elevator-prompt {
+      position: absolute; top: 22%; left: 50%; transform: translateX(-50%);
+      background: rgba(18, 7, 36, 0.92); border: 2px solid #fdcb6e; border-radius: 10px;
+      padding: 8px 16px; color: #ffda66; font-family: monospace; font-weight: bold;
+      font-size: 0.82rem; display: none; pointer-events: auto; text-align: center;
+      box-shadow: 0 0 15px rgba(253, 203, 110, 0.4);
+    }
+
+    /* TRIVIA SYNC BANNER */
     #stage-synced-banner {
       background: rgba(22, 9, 44, 0.94); border: 2px solid #00f0ff; border-radius: 10px;
       padding: 8px 12px; margin: 6px auto; width: 100%; max-width: 440px; text-align: center;
@@ -118,26 +146,43 @@
 <body>
   <canvas id="canvas3d"></canvas>
 
+  <!-- ENTRY SCREEN -->
   <div id="entry-modal">
     <div class="entry-card">
-      <div class="badge-audience">SPECTATOR PASS</div>
+      <div class="badge-audience">VIP PASS</div>
       <h2 style="color: #ffda66; font-size: 1.3rem; margin-bottom: 8px;">The Goody Tonight Show</h2>
       <p style="color: #ebdcf9; font-size: 0.85rem; margin-bottom: 16px;">
-        Join the live audience, roam the full studio in plushie form, and watch the show in real time!
+        Arrive curbside in style, explore the grand foyer, and head up to the live broadcast!
       </p>
-      <input type="text" id="audience-name-input" class="text-field" maxlength="14" placeholder="Your Nickname (Optional)" autocomplete="off" />
-      <button class="btn-join" id="btn-join-studio">Enter Studio</button>
+      <input type="text" id="audience-name-input" class="text-field" maxlength="14" placeholder="Your Name" autocomplete="off" />
+      <button class="btn-join" id="btn-join-studio">Arrive at Studios</button>
     </div>
   </div>
 
+  <!-- BROADCAST CAMERAMAN CUTSCENE -->
+  <div id="lens-overlay">
+    <div class="letterbox-bar" id="bar-top"></div>
+    <div class="letterbox-bar" id="bar-bottom"></div>
+    <div class="lens-ui">
+      <div class="rec-indicator">● LIVE FEED [CAM 04]</div>
+      <div style="color: #ffda66;">FOYER ENTRANCE CURB</div>
+    </div>
+  </div>
+
+  <!-- AUDIENCE IN-WORLD HUD -->
   <main id="spectator-ui">
     <div class="top-bar">
       <span id="user-display-name" style="color:#00f0ff;">SPECTATOR</span>
+      <span id="location-pill">LOCATION: GRAND FOYER</span>
       <span id="show-clock-pill" style="color:#ffda66;">SHOW: 20:00</span>
-      <span style="color:#39ff14;">LIVE IN AUDIENCE</span>
     </div>
 
-    <!-- STAGE TRIVIA SYNC WITH MULTIPLE CHOICE -->
+    <!-- ELEVATOR ACTION PROMPT -->
+    <div id="elevator-prompt">
+      PRESS [ ▲ FORWARD ] TO TAKE ELEVATOR
+    </div>
+
+    <!-- TRIVIA OVERLAY -->
     <div id="stage-synced-banner">
       <div id="stage-q-title">CURRENT QUESTION</div>
       <div id="stage-q-text">Standby for next question...</div>
@@ -149,14 +194,15 @@
       </div>
     </div>
 
+    <!-- CHAT & CONTROLS -->
     <div style="display:flex; flex-direction:column; align-items:center; width:100%;">
       <div id="chat-container">
         <div id="chat-header">
-          <span>LIVE AUDIENCE CHAT</span>
+          <span>COMMUNAL AUDIENCE CHAT</span>
           <span id="chat-toggle-icon">▼</span>
         </div>
         <div id="chat-messages">
-          <div class="chat-msg" style="color:#aaa; font-style:italic;">Welcome to the studio! Keep messages friendly.</div>
+          <div class="chat-msg" style="color:#aaa; font-style:italic;">Welcome to the studios! Have a great taping.</div>
         </div>
         <div class="chat-input-row">
           <input type="text" id="chat-text-input" maxlength="120" placeholder="Say something..." autocomplete="off" />
@@ -184,6 +230,7 @@
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
   <script>
+    // --- 1. HARDWARE FINGERPRINT & STORAGE ---
     function generateDeviceFingerprint() {
       try {
         const c = document.createElement('canvas');
@@ -211,7 +258,9 @@
     const btnJoinStudio = document.getElementById('btn-join-studio');
     const spectatorUi = document.getElementById('spectator-ui');
     const userDisplayName = document.getElementById('user-display-name');
+    const locationPill = document.getElementById('location-pill');
     const showClockPill = document.getElementById('show-clock-pill');
+    const elevatorPrompt = document.getElementById('elevator-prompt');
     const stageSyncedBanner = document.getElementById('stage-synced-banner');
     const stageQTitle = document.getElementById('stage-q-title');
     const stageQText = document.getElementById('stage-q-text');
@@ -222,6 +271,10 @@
       document.getElementById('aud-opt-2'),
       document.getElementById('aud-opt-3')
     ];
+
+    const lensOverlay = document.getElementById('lens-overlay');
+    const barTop = document.getElementById('bar-top');
+    const barBottom = document.getElementById('bar-bottom');
 
     const chatContainer = document.getElementById('chat-container');
     const chatHeader = document.getElementById('chat-header');
@@ -234,7 +287,9 @@
     let dataConn = null;
     let lastMessageSentTime = 0;
     let isGoodySpeaking = false;
-    let studioPower = false;
+    let studioPower = true;
+    let isSpectatorControlsLocked = true;
+    let currentZone = "STREET"; // "STREET", "FOYER", "STUDIO"
 
     let p1ContestantName = "Jake";
     let p2ContestantName = "June";
@@ -247,18 +302,20 @@
     let activeRecap = null;
     let stageSelectedOption = null;
     let stageOptionStatus = null;
-    let questionTimer = 0;
-    let questionInterval = null;
+
+    // Multiplayer Peers Representation Map
+    const peerPlushies = new Map();
 
     btnJoinStudio.addEventListener('click', () => {
       const entered = audienceNameInput.value.trim();
       if (entered.length > 0) audienceNickname = entered;
       userDisplayName.textContent = audienceNickname.toUpperCase();
       entryModal.style.display = 'none';
-      spectatorUi.style.display = 'flex';
       connectToStudio();
+      startLimoArrivalCutscene();
     });
 
+    // --- 2. PEERJS WEBRTC CONNECTION ---
     function connectToStudio() {
       peer = new Peer();
       peer.on('open', () => {
@@ -272,7 +329,7 @@
         });
 
         dataConn.on('open', () => {
-          addChatMessage('System', 'Connected to live studio stream!', 'is-host');
+          addChatMessage('System', 'Connected to live studio relay!', 'is-host');
         });
 
         dataConn.on('data', (data) => {
@@ -311,7 +368,6 @@
             stageSelectedOption = data.chosenAnswer;
             stageOptionStatus = 'selected';
             renderStageQuestionBoard();
-
             if (activeQuestion && activeQuestion.options) {
               const idx = activeQuestion.options.indexOf(data.chosenAnswer);
               if (idx !== -1) audOptBoxes[idx].className = 'opt-box selected';
@@ -320,17 +376,14 @@
             stageOptionStatus = data.isCorrect ? 'correct' : 'wrong';
             stageSelectedOption = data.chosenAnswer;
             renderStageQuestionBoard();
-
             if (activeQuestion && activeQuestion.options) {
               const idx = activeQuestion.options.indexOf(data.chosenAnswer);
               if (idx !== -1) audOptBoxes[idx].className = `opt-box ${data.isCorrect ? 'correct' : 'wrong'}`;
             }
-
             setTimeout(() => {
               activeRecap = { country: data.country, text: data.recap, isCorrect: data.isCorrect };
               activeQuestion = null;
               renderStageQuestionBoard();
-
               stageSyncedBanner.style.display = 'block';
               stageOptionsGrid.style.display = 'none';
               stageQTitle.textContent = `WHAT WE LEARNED (${data.country})`;
@@ -341,15 +394,8 @@
             setTimeout(() => { isGoodySpeaking = false; }, 3200);
           } else if (data.type === 'AUDIENCE_CHAT_BROADCAST') {
             addChatMessage(data.author, data.text, data.isHost ? 'is-host' : '');
-          } else if (data.type === 'GAME_OVER') {
-            activeQuestion = null;
-            activeRecap = null;
-            renderStageQuestionBoard();
-
-            stageSyncedBanner.style.display = 'block';
-            stageOptionsGrid.style.display = 'none';
-            stageQTitle.textContent = 'BROADCAST CONCLUDED';
-            stageQText.textContent = data.winner === 'NOBODY' ? 'No winner tonight! Prize rolls over!' : `Winner: ${data.winner}!`;
+          } else if (data.type === 'SPECTATOR_POS_RELAY') {
+            handleRemoteSpectatorMovement(data);
           }
         });
 
@@ -362,6 +408,43 @@
       peer.on('error', () => setTimeout(connectToStudio, 4000));
     }
 
+    // --- 3. MULTIPLAYER SPECTATOR RELAY ---
+    function broadcastSpectatorMovement() {
+      if (dataConn && dataConn.open && !isSpectatorControlsLocked) {
+        dataConn.send({
+          type: 'SPECTATOR_MOVE',
+          peerId: peer.id,
+          name: audienceNickname,
+          x: playerPos.x,
+          y: playerPos.y,
+          z: playerPos.z,
+          yaw: playerYaw,
+          zone: currentZone
+        });
+      }
+    }
+
+    function handleRemoteSpectatorMovement(data) {
+      if (!peer || data.peerId === peer.id) return;
+
+      // Invisibility rule: If remote spectator is in the tabletop studio, or we are in studio, hide them!
+      const shouldBeHidden = (data.zone === "STUDIO" || currentZone === "STUDIO");
+
+      let otherP = peerPlushies.get(data.peerId);
+      if (!otherP) {
+        otherP = createCutePlushie3D(0x55efc4);
+        scene.add(otherP);
+        peerPlushies.set(data.peerId, otherP);
+      }
+
+      otherP.visible = !shouldBeHidden;
+      if (!shouldBeHidden) {
+        otherP.position.set(data.x, data.y, data.z);
+        otherP.rotation.y = data.yaw;
+      }
+    }
+
+    // --- 4. CHAT FUNCTIONS ---
     function addChatMessage(author, text, customClass = '') {
       const msgEl = document.createElement('div');
       msgEl.className = 'chat-msg';
@@ -406,7 +489,7 @@
       document.getElementById('chat-toggle-icon').textContent = hidden ? '▼' : '▲';
     });
 
-    // --- 3D SCENE SETUP ---
+    // --- 5. 3D SCENE & WORLD GENERATION ---
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x040208);
     scene.fog = new THREE.FogExp2(0x040208, 0.015);
@@ -417,22 +500,102 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
 
-    const ambientLight = new THREE.AmbientLight(0x181026, 0.95); scene.add(ambientLight);
+    const ambientLight = new THREE.AmbientLight(0x24143a, 1.2); scene.add(ambientLight);
     const ceilingLight = new THREE.PointLight(0xffecd2, 1.0, 50); ceilingLight.position.set(0, 13.5, 0); scene.add(ceilingLight);
     const studioSpot = new THREE.SpotLight(0x00f0ff, 5.0, 30, Math.PI / 3, 0.4); studioSpot.position.set(0, 9, -2); scene.add(studioSpot);
 
+    // ==========================================
+    // GROUND LEVEL: STREET & GRAND THEATER FOYER
+    // ==========================================
+    const groundLevelGroup = new THREE.Group();
+    groundLevelGroup.position.set(0, 0, 0);
+
+    // Asphalt Street & Curbside Pavement
+    const streetMat = new THREE.MeshStandardMaterial({ color: 0x111116, roughness: 0.8 });
+    const street = new THREE.Mesh(new THREE.PlaneGeometry(36, 16), streetMat);
+    street.rotation.x = -Math.PI / 2; street.position.set(0, 0, 14); groundLevelGroup.add(street);
+
+    const curbMat = new THREE.MeshStandardMaterial({ color: 0x3a3a46, roughness: 0.6 });
+    const curb = new THREE.Mesh(new THREE.BoxGeometry(36, 0.25, 3), curbMat);
+    curb.position.set(0, 0.125, 6.5); groundLevelGroup.add(curb);
+
+    // Red Carpet from Limo to Foyer Doors
+    const redCarpet = new THREE.Mesh(new THREE.PlaneGeometry(3.5, 9), new THREE.MeshStandardMaterial({ color: 0xb71540 }));
+    redCarpet.rotation.x = -Math.PI / 2; redCarpet.position.set(0, 0.26, 3.5); groundLevelGroup.add(redCarpet);
+
+    // Grand Foyer Building Shell
+    const foyerWallMat = new THREE.MeshStandardMaterial({ color: 0x1f0d38 });
+    const foyerFloorMat = new THREE.MeshStandardMaterial({ color: 0x2d1847, roughness: 0.3 }); // Polished marble
+    const foyerFloor = new THREE.Mesh(new THREE.PlaneGeometry(24, 16), foyerFloorMat);
+    foyerFloor.rotation.x = -Math.PI / 2; foyerFloor.position.set(0, 0.25, -5); groundLevelGroup.add(foyerFloor);
+
+    // Grand Entrance Doors & Canopy Marquee
+    const marqueeGroup = new THREE.Group();
+    marqueeGroup.position.set(0, 4.0, 4.5);
+    const canopy = new THREE.Mesh(new THREE.BoxGeometry(10, 0.6, 4), new THREE.MeshStandardMaterial({ color: 0x110820 })); marqueeGroup.add(canopy);
+
+    const marqueeCanvas = document.createElement('canvas'); marqueeCanvas.width = 512; marqueeCanvas.height = 128;
+    const mctx = marqueeCanvas.getContext('2d');
+    mctx.fillStyle = '#0a0314'; mctx.fillRect(0, 0, 512, 128);
+    mctx.strokeStyle = '#ffda66'; mctx.lineWidth = 6; mctx.strokeRect(4, 4, 504, 120);
+    mctx.fillStyle = '#ffda66'; mctx.font = 'bold 24px monospace'; mctx.textAlign = 'center';
+    mctx.fillText("THE GOODY TONIGHT SHOW", 256, 48);
+    mctx.fillStyle = '#39ff14'; mctx.font = 'bold 22px monospace';
+    mctx.fillText("● TELEVISION STUDIOS ●", 256, 92);
+    const marqueeTex = new THREE.CanvasTexture(marqueeCanvas);
+    const marqueeSign = new THREE.Mesh(new THREE.PlaneGeometry(8, 2), new THREE.MeshBasicMaterial({ map: marqueeTex }));
+    marqueeSign.position.set(0, 0.2, 2.01); marqueeGroup.add(marqueeSign);
+    groundLevelGroup.add(marqueeGroup);
+
+    // Foyer Concession Bar (Refreshments & Popcorn)
+    const barCounter = new THREE.Mesh(new THREE.BoxGeometry(6, 1.1, 1.8), new THREE.MeshStandardMaterial({ color: 0x3e1866 }));
+    barCounter.position.set(-7, 0.8, -5); groundLevelGroup.add(barCounter);
+
+    const barSignCanvas = document.createElement('canvas'); barSignCanvas.width = 256; barSignCanvas.height = 64;
+    const bsctx = barSignCanvas.getContext('2d'); bsctx.fillStyle = '#110526'; bsctx.fillRect(0,0,256,64);
+    bsctx.fillStyle = '#00f0ff'; bsctx.font = 'bold 20px monospace'; bsctx.textAlign = 'center'; bsctx.fillText("STUDIO BAR & SNACKS", 128, 40);
+    const barSign = new THREE.Mesh(new THREE.PlaneGeometry(3, 0.75), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(barSignCanvas) }));
+    barSign.position.set(-7, 2.2, -4.9); groundLevelGroup.add(barSign);
+
+    // Restroom Doors & Corridor Sign
+    const restroomSignCanvas = document.createElement('canvas'); restroomSignCanvas.width = 256; restroomSignCanvas.height = 64;
+    const rsctx = restroomSignCanvas.getContext('2d'); rsctx.fillStyle = '#110526'; rsctx.fillRect(0,0,256,64);
+    rsctx.fillStyle = '#ff7675'; rsctx.font = 'bold 20px monospace'; rsctx.textAlign = 'center'; rsctx.fillText("◀ RESTROOMS", 128, 40);
+    const restroomSign = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 0.65), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(restroomSignCanvas) }));
+    restroomSign.position.set(7, 2.2, -4.9); groundLevelGroup.add(restroomSign);
+
+    // ==========================================
+    // EXPRESS STUDIO ELEVATOR (FOYER TO TABLE)
+    // ==========================================
+    const elevatorGroup = new THREE.Group();
+    elevatorGroup.position.set(0, 0.25, -12.5);
+
+    const elevOuter = new THREE.Mesh(new THREE.BoxGeometry(4.5, 4.5, 3.5), new THREE.MeshStandardMaterial({ color: 0x221338 }));
+    elevOuter.position.y = 2.25; elevatorGroup.add(elevOuter);
+
+    const elevDoorL = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 3.2), new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.8 }));
+    elevDoorL.position.set(-0.8, 1.8, 1.76); elevatorGroup.add(elevDoorL);
+    const elevDoorR = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 3.2), new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.8 }));
+    elevDoorR.position.set(0.8, 1.8, 1.76); elevatorGroup.add(elevDoorR);
+
+    const elevSignCanvas = document.createElement('canvas'); elevSignCanvas.width = 256; elevSignCanvas.height = 64;
+    const esctx = elevSignCanvas.getContext('2d'); esctx.fillStyle = '#0a0314'; esctx.fillRect(0,0,256,64);
+    esctx.fillStyle = '#ffda66'; esctx.font = 'bold 18px monospace'; esctx.textAlign = 'center'; esctx.fillText("EXPRESS STUDIO LIFT", 128, 40);
+    const elevSign = new THREE.Mesh(new THREE.PlaneGeometry(3, 0.75), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(elevSignCanvas) }));
+    elevSign.position.set(0, 3.8, 1.77); elevatorGroup.add(elevSign);
+
+    groundLevelGroup.add(elevatorGroup);
+    scene.add(groundLevelGroup);
+
+    // ==========================================
+    // TOP LEVEL: TABLETOP BROADCAST STUDIO
+    // ==========================================
     const bedroomGroup = new THREE.Group();
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(36, 36), new THREE.MeshStandardMaterial({ color: 0x1f140e }));
-    floor.rotation.x = -Math.PI / 2; bedroomGroup.add(floor);
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0x180f26 });
-    const backWall = new THREE.Mesh(new THREE.PlaneGeometry(36, 16), wallMat); backWall.position.set(0, 8, -18); bedroomGroup.add(backWall);
-    const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(36, 16), wallMat); leftWall.position.set(-18, 8, 0); leftWall.rotation.y = Math.PI / 2; bedroomGroup.add(leftWall);
-    const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(36, 16), wallMat); rightWall.position.set(18, 8, 0); rightWall.rotation.y = -Math.PI / 2; bedroomGroup.add(rightWall);
     const deskTop = new THREE.Mesh(new THREE.BoxGeometry(22, 1.0, 16), new THREE.MeshStandardMaterial({ color: 0x331c0e }));
-    deskTop.position.set(0, 3.4, -9); bedroomGroup.add(deskTop);
+    deskTop.position.set(0, 7.5, -9); bedroomGroup.add(deskTop);
     scene.add(bedroomGroup);
 
-    const miniDiorama = new THREE.Group(); miniDiorama.position.set(0, 3.95, -9);
+    const miniDiorama = new THREE.Group(); miniDiorama.position.set(0, 8.05, -9);
     const feltCarpet = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 0.08, 48), new THREE.MeshStandardMaterial({ color: 0x271147 }));
     feltCarpet.position.y = 0.44; miniDiorama.add(feltCarpet);
 
@@ -456,7 +619,7 @@
     const wallClockMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.2), new THREE.MeshBasicMaterial({ map: wallClockTex }));
     wallClockMesh.position.set(0, 6.2, -4.4); miniDiorama.add(wallClockMesh);
 
-    // Full 14-Country Flag Textures
+    // Full 14-Country Clean Vector Flag Textures
     const COUNTRIES = [
       "France", "Netherlands", "Canada", "Sweden", "Italy", "Denmark",
       "Brazil", "Australia", "Spain", "Germany", "UK", "Nigeria",
@@ -632,7 +795,7 @@
     }
     setPawnTilePosition(pawn1, 0, -0.08); setPawnTilePosition(pawn2, 0, 0.08);
 
-    // --- FULL 3D STAGE QUESTION BOARD MESH (MATCHES HOST STAGE) ---
+    // Dynamic 3D Stage Question Board
     const qBoardCanvas = document.createElement('canvas'); qBoardCanvas.width = 512; qBoardCanvas.height = 384;
     const qBoardCtx = qBoardCanvas.getContext('2d');
     const qBoardTex = new THREE.CanvasTexture(qBoardCanvas);
@@ -723,7 +886,7 @@
     qBoardMesh.position.set(-4.8, 3.4, -3.2); qBoardMesh.rotation.y = 0.8; miniDiorama.add(qBoardMesh);
 
     // --- ACCURATE 3D PLUSHIE GENERATOR ---
-    // Facing forward toward -Z so camera behind it looks past its ears toward the stage
+    // Modeled facing forward toward -Z with ears, blush, eyes, snout, mouth
     function createCutePlushie3D(color) {
       const pGroup = new THREE.Group();
       const pMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.95 });
@@ -732,11 +895,9 @@
       const pBody = new THREE.Mesh(new THREE.SphereGeometry(0.28, 14, 14), pMat); pBody.position.y = 0.28; pGroup.add(pBody);
       const pHead = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 14), pMat); pHead.position.y = 0.58; pGroup.add(pHead);
 
-      // Ears on top
       const ear1 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), pMat); ear1.position.set(-0.14, 0.74, 0);
       const ear2 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), earMat); ear2.position.set(0.14, 0.74, 0); pGroup.add(ear1, ear2);
 
-      // Facial features positioned on -Z (Forward facing)
       const blushMat = new THREE.MeshBasicMaterial({ color: 0xff69b4 });
       const blush1 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat); blush1.position.set(-0.11, 0.54, -0.17);
       const blush2 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat); blush2.position.set(0.11, 0.54, -0.17); pGroup.add(blush1, blush2);
@@ -756,7 +917,7 @@
       return pGroup;
     }
 
-    // Audience Stands Plushies
+    // Costume Audience in Stands
     const miniAudience = new THREE.Group();
     const plushColors = [0xff7675, 0x74b9ff, 0xa29bfe, 0xffbe76, 0x55efc4, 0xfd79a8, 0xf6e58d, 0x48dbfb, 0xff9ff3];
     [5.7, 6.4].forEach((radius, rowIdx) => {
@@ -767,7 +928,7 @@
         const pGroup = createCutePlushie3D(col);
         pGroup.position.set(Math.sin(theta) * radius, 0.46 + rowIdx * 0.25, Math.cos(theta) * (radius * 0.95) + 0.8);
         pGroup.lookAt(0, 1.8, -2.6);
-        pGroup.rotation.y += Math.PI; // Face the stage
+        pGroup.rotation.y += Math.PI;
         pGroup.userData = { initialY: pGroup.position.y, phase: Math.random() * Math.PI * 2 };
         miniAudience.add(pGroup);
       }
@@ -839,7 +1000,7 @@
     const studioBackScreenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshBasicMaterial({ map: studioScreenTex }));
     studioBackScreenMesh.position.set(0, 3.4, -4.5); miniDiorama.add(studioBackScreenMesh);
 
-    // Robotic Camera Rigs (Accurately target Goody's head)
+    // Robotic Camera Rigs (Pointing directly at Goody)
     function createStudioRoboticCamera(x, z) {
       const camRig = new THREE.Group(); camRig.position.set(x, 0.44, z);
       const darkMat = new THREE.MeshStandardMaterial({ color: 0x1f1f26 });
@@ -868,28 +1029,123 @@
     }
     updateCameraAlignment();
 
+    miniDiorama.position.set(0, 7.95, -9);
     scene.add(miniDiorama);
 
     function updateStudioPowerVisuals(isPower) {
       studioSpot.intensity = isPower ? 5.0 : 1.2;
     }
 
-    // --- SPECTATOR PERSONAL PLUSHIE (FACING AWAY FROM CAMERA, TOWARD STAGE) ---
+    // ==========================================
+    // 6. LIMOUSINE & DOORMAN AUTOMATION (CUTSCENE)
+    // ==========================================
+    const limoGroup = new THREE.Group();
+    limoGroup.position.set(-18, 0.4, 8.5); // Starts down the street
+
+    // Black Stretch Limousine Body
+    const limoMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0f, metalness: 0.9, roughness: 0.2 });
+    const limoBody = new THREE.Mesh(new THREE.BoxGeometry(8.5, 1.4, 2.2), limoMat);
+    limoBody.position.y = 0.55; limoGroup.add(limoBody);
+
+    const limoCabin = new THREE.Mesh(new THREE.BoxGeometry(5.5, 1.0, 1.9), new THREE.MeshStandardMaterial({ color: 0x050508, roughness: 0.1 }));
+    limoCabin.position.set(-0.4, 1.6, 0); limoGroup.add(limoCabin);
+
+    // Opening Passenger Door (Pivots open)
+    const limoDoorPivot = new THREE.Group();
+    limoDoorPivot.position.set(0.5, 0.55, -1.1); // Door hinge on passenger side
+    const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.3, 0.1), limoMat);
+    doorMesh.position.set(0.6, 0, 0); limoDoorPivot.add(doorMesh);
+    limoGroup.add(limoDoorPivot);
+
+    // Wheels
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
+    [-3.0, -1.0, 1.0, 3.0].forEach(wx => {
+      const wL = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.3, 16), wheelMat);
+      wL.rotation.x = Math.PI / 2; wL.position.set(wx, 0.2, 1.15); limoGroup.add(wL);
+      const wR = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.3, 16), wheelMat);
+      wR.rotation.x = Math.PI / 2; wR.position.set(wx, 0.2, -1.15); limoGroup.add(wR);
+    });
+    scene.add(limoGroup);
+
+    // Doorman Staff Plushie (Standing on sidewalk by marquee)
+    const doormanPlushie = createCutePlushie3D(0x2d3436); // Uniform color
+    doormanPlushie.position.set(2.2, 0.26, 6.2);
+    doormanPlushie.rotation.y = -Math.PI / 2; // Facing the street curb
+    scene.add(doormanPlushie);
+
+    // Spectator's Personal Plushie
     const myPlushie = createCutePlushie3D(0xff7675);
+    myPlushie.position.set(0, 0.26, 7.0); // Spawns outside limo
+    myPlushie.visible = false;
     scene.add(myPlushie);
 
-    let playerPos = { x: 0, y: 0.46, z: 4.5 };
-    let playerYaw = 0; // Look forward into the set (-Z)
-    let playerPitch = -0.15;
+    // Player position and yaw
+    let playerPos = { x: 0, y: 0.26, z: 7.0 };
+    let playerYaw = 0; // Facing forward toward Foyer (-Z)
+    let playerPitch = -0.12;
 
+    // --- 7. CUTSCENE ANIMATION SEQUENCER ---
+    let cutsceneActive = false;
+    let cutsceneStartTime = 0;
+
+    function startLimoArrivalCutscene() {
+      cutsceneActive = true;
+      cutsceneStartTime = performance.now();
+      lensOverlay.style.display = 'block';
+
+      // Start camera looking from pavement at arriving limo
+      camera.position.set(3.5, 1.8, 4.0);
+      camera.lookAt(-10, 1.0, 8.5);
+    }
+
+    function updateCutscene(now) {
+      const elapsed = (now - cutsceneStartTime) / 1000;
+
+      // Phase 1: Limo drives in along street (0s - 3s)
+      if (elapsed < 3.0) {
+        const t = elapsed / 3.0;
+        limoGroup.position.x = -18 + (18 * Math.sin(t * Math.PI / 2)); // Ease into curb at x = 0
+        camera.lookAt(limoGroup.position.x, 1.0, 8.5);
+      }
+      // Phase 2: Doorman walks up & opens door (3s - 4.5s)
+      else if (elapsed < 4.5) {
+        const t = (elapsed - 3.0) / 1.5;
+        limoDoorPivot.rotation.y = -t * 1.4; // Door swings open
+        doormanPlushie.position.x = 2.2 - (t * 0.8); // Doorman steps closer
+        camera.position.set(3.2 - (t * 0.6), 1.6, 4.5);
+        camera.lookAt(0.5, 0.8, 7.5);
+      }
+      // Phase 3: Player plushie steps out onto red carpet (4.5s - 6.5s)
+      else if (elapsed < 6.5) {
+        myPlushie.visible = true;
+        const t = (elapsed - 4.5) / 2.0;
+        myPlushie.position.set(0, 0.26, 8.0 - (t * 1.6)); // Steps onto red carpet at z = 6.4
+        playerPos.z = myPlushie.position.z;
+
+        // Camera smoothly glides around to driving slot behind plushie
+        camera.position.lerp(new THREE.Vector3(playerPos.x, playerPos.y + 0.85, playerPos.z + 1.4), 0.08);
+        camera.lookAt(playerPos.x, playerPos.y + 0.6, playerPos.z - 4.0);
+      }
+      // Phase 4: Seamless transition to free player controls
+      else {
+        cutsceneActive = false;
+        isSpectatorControlsLocked = false;
+        lensOverlay.style.display = 'none';
+        barTop.style.transform = 'translateY(-100%)';
+        barBottom.style.transform = 'translateY(100%)';
+        spectatorUi.style.display = 'flex';
+      }
+    }
+
+    // --- 8. TOUCH TO LOOK & D-PAD NAVIGATION ---
     let touchStartX = 0; let touchStartY = 0;
     window.addEventListener('touchstart', (e) => {
-      if (e.target.closest('#chat-container') || e.target.closest('.dpad-section') || e.target.closest('#entry-modal') || e.target.closest('#stage-synced-banner')) return;
+      if (isSpectatorControlsLocked || e.target.closest('#chat-container') || e.target.closest('.dpad-section') || e.target.closest('#entry-modal') || e.target.closest('#stage-synced-banner')) return;
       if (e.touches.length === 1) { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }
     }, { passive: true });
 
     window.addEventListener('touchmove', (e) => {
-      if (e.target.closest('#chat-container') || e.target.closest('.dpad-section') || e.target.closest('#entry-modal') || e.target.closest('#stage-synced-banner')) return;
+      if (isSpectatorControlsLocked || e.target.closest('#chat-container') || e.target.closest('.dpad-section') || e.target.closest('#entry-modal') || e.target.closest('#stage-synced-banner')) return;
       if (e.touches.length === 1) {
         const dx = e.touches[0].clientX - touchStartX; const dy = e.touches[0].clientY - touchStartY;
         touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY;
@@ -900,16 +1156,67 @@
 
     let moveInterval = null;
     function moveStep(dir) {
+      if (isSpectatorControlsLocked) return;
+
       const step = 0.24;
       const fwdX = -Math.sin(playerYaw); const fwdZ = -Math.cos(playerYaw);
       const rightX = Math.cos(playerYaw); const rightZ = -Math.sin(playerYaw);
+
       if (dir === 'FORWARD') { playerPos.x += fwdX * step; playerPos.z += fwdZ * step; }
       if (dir === 'BACK') { playerPos.x -= fwdX * step; playerPos.z -= fwdZ * step; }
       if (dir === 'LEFT') { playerPos.x -= rightX * step; playerPos.z -= rightZ * step; }
       if (dir === 'RIGHT') { playerPos.x += rightX * step; playerPos.z += rightZ * step; }
-      playerPos.x = Math.max(-6.5, Math.min(6.5, playerPos.x));
-      playerPos.z = Math.max(-6.5, Math.min(6.5, playerPos.z));
+
+      checkZoneAndElevatorTriggers();
+      broadcastSpectatorMovement();
     }
+
+    function checkZoneAndElevatorTriggers() {
+      // 1. Street to Foyer Boundary
+      if (currentZone === "STREET" && playerPos.z < 4.0) {
+        currentZone = "FOYER";
+        locationPill.textContent = "LOCATION: GRAND FOYER";
+      } else if (currentZone === "FOYER" && playerPos.z > 4.5) {
+        currentZone = "STREET";
+        locationPill.textContent = "LOCATION: STREET CURBSIDE";
+      }
+
+      // 2. Foyer Elevator Trigger: Step into Elevator to ride up to tabletop studio
+      if (currentZone === "FOYER" && Math.abs(playerPos.x) < 1.6 && playerPos.z < -10.5) {
+        elevatorPrompt.style.display = 'block';
+        elevatorPrompt.textContent = "TAKING LIFT TO STUDIO MEZZANINE...";
+        isSpectatorControlsLocked = true;
+
+        setTimeout(() => {
+          // Transport directly to tabletop diorama observation rim
+          currentZone = "STUDIO";
+          locationPill.textContent = "LOCATION: LIVE STUDIO TABLE";
+          elevatorPrompt.style.display = 'none';
+
+          playerPos.set ? playerPos.set(0, 8.41, -4.5) : (playerPos.x = 0, playerPos.y = 8.41, playerPos.z = -4.5);
+          playerYaw = 0; // Facing Goody and gameboard
+          isSpectatorControlsLocked = false;
+        }, 1200);
+      }
+
+      // 3. Tabletop Exit Trigger: Walk back to elevator to return to grand foyer
+      if (currentZone === "STUDIO" && playerPos.z > -2.0) {
+        elevatorPrompt.style.display = 'block';
+        elevatorPrompt.textContent = "TAKING LIFT DOWN TO GRAND FOYER...";
+        isSpectatorControlsLocked = true;
+
+        setTimeout(() => {
+          currentZone = "FOYER";
+          locationPill.textContent = "LOCATION: GRAND FOYER";
+          elevatorPrompt.style.display = 'none';
+
+          playerPos.x = 0; playerPos.y = 0.26; playerPos.z = -9.0;
+          playerYaw = Math.PI; // Facing outward into lobby
+          isSpectatorControlsLocked = false;
+        }, 1200);
+      }
+    }
+
     const bindDpad = (id, dir) => {
       const el = document.getElementById(id);
       const start = (e) => { e.preventDefault(); moveStep(dir); if (moveInterval) clearInterval(moveInterval); moveInterval = setInterval(() => moveStep(dir), 90); };
@@ -925,43 +1232,52 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    let prevTime = performance.now();
+    // --- 9. MAIN RENDER LOOP ---
+    let prevBroadcastTime = 0;
     function animate() {
       requestAnimationFrame(animate);
       const time = performance.now();
 
+      if (cutsceneActive) {
+        updateCutscene(time);
+      } else {
+        // Normal third-person driving camera locked behind plushie
+        myPlushie.position.set(playerPos.x, playerPos.y, playerPos.z);
+        myPlushie.rotation.y = playerYaw;
+
+        const camDist = 1.35;
+        const camHeight = 0.85;
+        camera.position.set(
+          playerPos.x + Math.sin(playerYaw) * camDist,
+          playerPos.y + camHeight,
+          playerPos.z + Math.cos(playerYaw) * camDist
+        );
+
+        const lookTarget = new THREE.Vector3(
+          playerPos.x - Math.sin(playerYaw) * 4.0,
+          playerPos.y + camHeight + playerPitch * 3.0,
+          playerPos.z - Math.cos(playerYaw) * 4.0
+        );
+        camera.lookAt(lookTarget);
+
+        // Low-bandwidth movement broadcast (6Hz)
+        if (time - prevBroadcastTime > 160) {
+          prevBroadcastTime = time;
+          broadcastSpectatorMovement();
+        }
+      }
+
       renderGoodyFace(time);
       renderBackstageScreens();
 
-      // Billboards keep pawns and question board easily readable
+      // Billboards keep pawns and names legible from active camera
       if (pawn1 && pawn1.userData && pawn1.userData.badgeMesh) pawn1.userData.badgeMesh.quaternion.copy(camera.quaternion);
       if (pawn2 && pawn2.userData && pawn2.userData.badgeMesh) pawn2.userData.badgeMesh.quaternion.copy(camera.quaternion);
 
-      // Audience stands gentle bounce animation
+      // Idle bounce for audience stands
       miniAudience.children.forEach((p) => {
         p.position.y = p.userData.initialY + Math.sin(time * 0.006 + p.userData.phase) * 0.04;
       });
-
-      // Update spectator plushie position & yaw
-      myPlushie.position.set(playerPos.x, playerPos.y, playerPos.z);
-      myPlushie.rotation.y = playerYaw;
-
-      // Position third-person camera directly behind the plushie (offset on +Z relative to yaw)
-      const camDist = 1.35;
-      const camHeight = 0.85;
-      camera.position.set(
-        playerPos.x + Math.sin(playerYaw) * camDist,
-        playerPos.y + camHeight,
-        playerPos.z + Math.cos(playerYaw) * camDist
-      );
-
-      // Look past the plushie's ears into the distance (-Z direction)
-      const lookTarget = new THREE.Vector3(
-        playerPos.x - Math.sin(playerYaw) * 4.0,
-        playerPos.y + camHeight + playerPitch * 3.0,
-        playerPos.z - Math.cos(playerYaw) * 4.0
-      );
-      camera.lookAt(lookTarget);
 
       renderer.render(scene, camera);
     }
