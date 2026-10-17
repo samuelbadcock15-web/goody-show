@@ -32,7 +32,6 @@
     p { color: #ebdcf9; font-size: 0.92rem; line-height: 1.4; margin: 6px 0; }
     .key { background: #391563; padding: 2px 7px; border-radius: 4px; border: 1px solid #9c4dd6; font-weight: bold; color: #ff69b4; }
     
-    /* Director Passcode Box on the overlay */
     #director-card-box {
       margin: 16px 0; padding: 12px 16px; background: #0c0419; border: 2px solid #00f0ff;
       border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px;
@@ -114,10 +113,16 @@
     let showJake = false;
     let showJune = false;
 
+    // Separate video elements for textures and audio elements for loud contestant voices
     const videoJake = document.createElement('video');
-    videoJake.autoplay = true; videoJake.playsInline = true; videoJake.muted = false;
+    videoJake.autoplay = true; videoJake.playsInline = true; videoJake.muted = true;
+    const audioJake = new Audio();
+    audioJake.autoplay = true; audioJake.playsInline = true;
+
     const videoJune = document.createElement('video');
-    videoJune.autoplay = true; videoJune.playsInline = true; videoJune.muted = false;
+    videoJune.autoplay = true; videoJune.playsInline = true; videoJune.muted = true;
+    const audioJune = new Audio();
+    audioJune.autoplay = true; audioJune.playsInline = true;
 
     let hasLiveJakeStream = false;
     let hasLiveJuneStream = false;
@@ -264,8 +269,38 @@
     const camJake = new THREE.PerspectiveCamera(65, 16 / 9, 0.1, 100);
     const camJune = new THREE.PerspectiveCamera(65, 16 / 9, 0.1, 100);
 
-    const streamJake = canvasJake.captureStream(30);
-    const streamJune = canvasJune.captureStream(30);
+    const streamJakeVideoOnly = canvasJake.captureStream(30);
+    const streamJuneVideoOnly = canvasJune.captureStream(30);
+
+    // Audio Pipeline - Studio mixes tones, voice & contestants
+    let audioCtx = null;
+    let studioMasterGain = null;
+    let studioAudioDestination = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        studioMasterGain = audioCtx.createGain();
+        studioMasterGain.gain.setValueAtTime(1.0, audioCtx.currentTime);
+        studioMasterGain.connect(audioCtx.destination);
+        
+        studioAudioDestination = audioCtx.createMediaStreamDestination();
+        studioMasterGain.connect(studioAudioDestination);
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (audioJake.srcObject) audioJake.play().catch(() => {});
+      if (audioJune.srcObject) audioJune.play().catch(() => {});
+    }
+
+    function getCombinedStream(isJune) {
+      const vStream = isJune ? streamJuneVideoOnly : streamJakeVideoOnly;
+      const combined = new MediaStream();
+      vStream.getVideoTracks().forEach(t => combined.addTrack(t));
+      if (studioAudioDestination && studioAudioDestination.stream.getAudioTracks().length > 0) {
+        combined.addTrack(studioAudioDestination.stream.getAudioTracks()[0]);
+      }
+      return combined;
+    }
 
     const controls = new THREE.PointerLockControls(camera, document.body);
     const blocker = document.getElementById('blocker');
@@ -297,20 +332,23 @@
             return;
           }
 
+          initAudio();
           const isJune = call.metadata && call.metadata.contestant === "goody-contestant-2";
-          const returnStream = isJune ? streamJune : streamJake;
+          const returnStream = getCombinedStream(isJune);
           call.answer(returnStream);
 
           call.on('stream', (remoteStream) => {
             if (isJune) {
               videoJune.srcObject = remoteStream;
-              videoJune.muted = false;
               videoJune.play().catch(console.error);
+              audioJune.srcObject = remoteStream;
+              audioJune.play().catch(console.error);
               hasLiveJuneStream = true; showJune = true;
             } else {
               videoJake.srcObject = remoteStream;
-              videoJake.muted = false;
               videoJake.play().catch(console.error);
+              audioJake.srcObject = remoteStream;
+              audioJake.play().catch(console.error);
               hasLiveJakeStream = true; showJake = true;
             }
           });
@@ -405,15 +443,7 @@
       });
     }
 
-    let audioCtx = null;
-    let goodyUtterance = null;
-    function initAudio() {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      if (videoJake.srcObject) videoJake.play();
-      if (videoJune.srcObject) videoJune.play();
-    }
-    function playTone(freq, type, duration, gainVal = 0.05) {
+    function playTone(freq, type, duration, gainVal = 0.08) {
       if (!audioCtx) return;
       try {
         const osc = audioCtx.createOscillator();
@@ -421,12 +451,14 @@
         osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
         g.gain.setValueAtTime(gainVal, audioCtx.currentTime);
         g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-        osc.connect(g); g.connect(audioCtx.destination);
+        osc.connect(g); g.connect(studioMasterGain);
         osc.start(); osc.stop(audioCtx.currentTime + duration);
       } catch(e) {}
     }
 
+    let goodyUtterance = null;
     function speakGoody(text, onComplete) {
+      // Broadcast speech to mobile devices so their UI synchronizes with subtitles
       connectedDataConns.forEach(c => {
         if (c.open) c.send({ type: "HOST_SPEAK", text: text });
       });
@@ -441,7 +473,7 @@
       goodyUtterance.rate = 0.95;
       goodyUtterance.pitch = 1.25;
       goodyUtterance.onboundary = () => {
-        playTone(460 + Math.random() * 200, 'triangle', 0.05, 0.02);
+        playTone(460 + Math.random() * 200, 'triangle', 0.05, 0.03);
       };
       let finished = false;
       const done = () => {
@@ -487,7 +519,7 @@
       diceInterval = setInterval(() => {
         diceCountdown--;
         if (diceCountdown > 0) {
-          playTone(440, 'triangle', 0.08, 0.03);
+          playTone(440, 'triangle', 0.08, 0.04);
         } else {
           clearInterval(diceInterval);
           finalizeDiceDuel();
@@ -504,7 +536,7 @@
       diceInterval = setInterval(() => {
         diceCountdown--;
         if (diceCountdown > 0) {
-          playTone(440, 'triangle', 0.08, 0.03);
+          playTone(440, 'triangle', 0.08, 0.04);
         } else {
           clearInterval(diceInterval);
           const autoVal = Math.floor(Math.random() * 6) + 1;
@@ -1143,7 +1175,7 @@
           for (let r = 18; r < 125; r += 26) { for (let col = 16; col < 115; col += 24) { ctx.beginPath(); ctx.arc(col, r, 4, 0, Math.PI * 2); ctx.fill(); } }
           break;
         case "Belgium":
-          ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w / 3, h);
+          ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w, h / 3);
           ctx.fillStyle = '#FDDA24'; ctx.fillRect(w / 3, 0, w / 3, h);
           ctx.fillStyle = '#EF3340'; ctx.fillRect((w / 3) * 2, 0, w / 3, h);
           break;
