@@ -29,6 +29,22 @@
     h1 { color: #ffda66; margin-top: 0; font-size: 1.6rem; letter-spacing: 1.5px; }
     p { color: #ebdcf9; font-size: 0.92rem; line-height: 1.5; margin: 8px 0; }
     .key { background: #391563; padding: 2px 7px; border-radius: 4px; border: 1px solid #9c4dd6; font-weight: bold; color: #ff69b4; }
+    
+    #access-pin-box {
+      margin: 16px auto 10px auto;
+      background: #0f041e;
+      border: 2px dashed #00f0ff;
+      border-radius: 12px;
+      padding: 10px 18px;
+      width: fit-content;
+      color: #39ff14;
+      font-family: monospace;
+      font-size: 2.4rem;
+      font-weight: 900;
+      letter-spacing: 10px;
+      text-shadow: 0 0 12px rgba(57, 255, 20, 0.6);
+    }
+
     #hud {
       position: absolute; top: 18px; left: 20px; background: rgba(22, 9, 44, 0.88);
       border: 2px solid #ff79b0; border-radius: 12px; padding: 12px 18px; color: #fff;
@@ -42,17 +58,20 @@
 <body>
   <div id="crosshair"></div>
   <div id="hud">
-    <div class="hud-title" id="mode-title" style="color: #ffda66;">🏠 BEDROOM WORKSHOP</div>
+    <div class="hud-title" id="mode-title" style="color: #ffda66;">BEDROOM WORKSHOP</div>
     <div class="hud-sub" id="mode-sub">WebRTC Studio Host: ONLINE • FULL GAME LOOP READY</div>
-    <div id="countdown-pill">⏳ BROADCAST STARTS IN: <span id="timer-val" style="color:#ff7675;">10s</span></div>
-    <div id="match-clock-hud">⏱️ SHOW CLOCK: <span id="game-clock-val" style="color:#ffda66;">20:00</span></div>
-    <div id="audience-pill">👥 AUDIENCE WATCHING: <span id="audience-count" style="color:#39ff14;">1</span></div>
+    <div id="countdown-pill">BROADCAST STARTS IN: <span id="timer-val" style="color:#ff7675;">10s</span></div>
+    <div id="match-clock-hud">SHOW CLOCK: <span id="game-clock-val" style="color:#ffda66;">20:00</span></div>
+    <div id="audience-pill">AUDIENCE WATCHING: <span id="audience-count" style="color:#39ff14;">1</span></div>
   </div>
 
   <div id="blocker">
     <div id="instructions-card">
       <h1>The Goody Tonight Show</h1>
       <p>Synchronized tiles & 20-minute race to the finish active!</p>
+      
+      <div id="access-pin-box">0000</div>
+      
       <p><strong>Click Anywhere to Enter</strong></p>
       <p><span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> &nbsp;Walk around freely</p>
     </div>
@@ -65,6 +84,11 @@
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
   <script>
+    // 4-Digit Code Generator
+    const studioPin = Math.floor(1000 + Math.random() * 9000).toString();
+    const pinBox = document.getElementById('access-pin-box');
+    if (pinBox) pinBox.textContent = studioPin;
+
     let currentMode = 'BEDROOM';
     let studioPower = false;
 
@@ -120,7 +144,7 @@
         timerValEl.textContent = `${autoStartSeconds}s`;
       } else {
         clearInterval(autoStartInterval);
-        countdownPill.innerHTML = `🟢 <span style="color:#39ff14;">LIVE ON AIR!</span>`;
+        countdownPill.innerHTML = ` <span style="color:#39ff14;">LIVE ON AIR!</span>`;
         if (!studioPower) bootStudio();
       }
       renderStageQuestionBoard();
@@ -244,6 +268,13 @@
         studioPeer.on('open', (id) => console.log("Master Host Registered:", id));
 
         studioPeer.on('call', (call) => {
+          // Verify PIN from call metadata
+          if (!call.metadata || String(call.metadata.pin).trim() !== studioPin) {
+            console.warn("Call rejected: Invalid PIN");
+            call.close();
+            return;
+          }
+
           const isJune = call.metadata && call.metadata.contestant === "goody-contestant-2";
           const returnStream = isJune ? streamJune : streamJake;
           call.answer(returnStream);
@@ -264,6 +295,16 @@
         });
 
         studioPeer.on('connection', (conn) => {
+          // Verify PIN from data channel connection
+          if (!conn.metadata || String(conn.metadata.pin).trim() !== studioPin) {
+            console.warn("Connection rejected: Invalid PIN");
+            conn.on('open', () => {
+              conn.send({ type: "AUTH_FAILED", message: "Incorrect PIN" });
+              conn.close();
+            });
+            return;
+          }
+
           connectedDataConns.push(conn);
 
           conn.on('open', () => {
@@ -365,7 +406,6 @@
     }
 
     function speakGoody(text, onComplete) {
-      // Broadcast Goody's speech to all mobile devices so contestants hear it
       connectedDataConns.forEach(c => {
         if (c.open) c.send({ type: "HOST_SPEAK", text: text });
       });
@@ -456,7 +496,7 @@
         }
       } else if (gameState === "IN_PLAY") {
         if (contestant !== activePlayer) return;
-       
+        
         if (diceInterval) clearInterval(diceInterval);
         diceCountdown = 0;
 
@@ -482,7 +522,7 @@
         const mins = Math.max(0, Math.floor(matchTimerSeconds / 60)).toString().padStart(2, '0');
         const secs = Math.max(0, (matchTimerSeconds % 60)).toString().padStart(2, '0');
         const timeStr = `${mins}:${secs}`;
-       
+        
         gameClockValEl.textContent = timeStr;
         renderWallClockTexture(timeStr);
 
@@ -539,7 +579,7 @@
       const landedCountry = boardTileCoords[currentTileIdx].country;
       const qPool = COUNTRY_QUESTIONS[landedCountry] || COUNTRY_QUESTIONS["UK"];
       const rawQ = qPool[Math.floor(Math.random() * qPool.length)];
-     
+      
       activeQuestion = {
         country: landedCountry,
         text: rawQ.q,
@@ -1088,11 +1128,11 @@
         qBoardCtx.fillStyle = activeRecap.isCorrect ? '#00b894' : '#ff7675';
         qBoardCtx.font = 'bold 22px sans-serif';
         qBoardCtx.textAlign = 'center';
-        qBoardCtx.fillText(activeRecap.isCorrect ? "🎉 CORRECT! WHAT WE LEARNED:" : "❌ INCORRECT! WHAT WE LEARNED:", 256, 44);
+        qBoardCtx.fillText(activeRecap.isCorrect ? " CORRECT! WHAT WE LEARNED:" : " INCORRECT! WHAT WE LEARNED:", 256, 44);
 
         qBoardCtx.fillStyle = '#ffda66';
         qBoardCtx.font = 'bold 16px monospace';
-        qBoardCtx.fillText(`🌍 COUNTRY: ${activeRecap.country.toUpperCase()}`, 256, 78);
+        qBoardCtx.fillText(` COUNTRY: ${activeRecap.country.toUpperCase()}`, 256, 78);
 
         qBoardCtx.fillStyle = '#00f0ff';
         qBoardCtx.fillRect(36, 94, 440, 2);
@@ -1125,13 +1165,13 @@
         qBoardCtx.fillStyle = '#ffda66';
         qBoardCtx.font = 'bold 18px monospace';
         qBoardCtx.textAlign = 'left';
-        qBoardCtx.fillText(`⚡ ${activeQuestion.country.toUpperCase()} [${pName}]`, 20, 36);
+        qBoardCtx.fillText(` ${activeQuestion.country.toUpperCase()} [${pName}]`, 20, 36);
 
         if (questionTimer > 0 && !isTieBreakerActive) {
           qBoardCtx.fillStyle = '#ff7675';
           qBoardCtx.font = 'bold 20px monospace';
           qBoardCtx.textAlign = 'right';
-          qBoardCtx.fillText(`⏱️ ${questionTimer}s`, 492, 36);
+          qBoardCtx.fillText(` ${questionTimer}s`, 492, 36);
         }
 
         qBoardCtx.fillStyle = '#ffffff';
@@ -1207,18 +1247,18 @@
           qBoardCtx.fillStyle = '#ffda66';
           qBoardCtx.font = 'bold 24px sans-serif';
           qBoardCtx.textAlign = 'center';
-          qBoardCtx.fillText("⭐ OFFICIAL GAME RULES ⭐", 256, 44);
+          qBoardCtx.fillText(" OFFICIAL GAME RULES ", 256, 44);
 
           qBoardCtx.fillStyle = '#00f0ff';
           qBoardCtx.fillRect(36, 56, 440, 2);
 
           const rules = [
-            "🎲 1. You have 10 seconds to roll your dice when active.",
-            "🌍 2. Land on a tile to trigger that country's trivia.",
-            "⏱️ 3. You have 30 seconds to lock in your final answer.",
-            "✅ 4. Correct answer secures your position on the tile.",
-            "❌ 5. Incorrect answer or timeout sends you to START!",
-            "🏆 6. Reach tile 32 or be furthest ahead at 20:00 to WIN!"
+            " 1. You have 10 seconds to roll your dice when active.",
+            " 2. Land on a tile to trigger that country's trivia.",
+            " 3. You have 30 seconds to lock in your final answer.",
+            " 4. Correct answer secures your position on the tile.",
+            " 5. Incorrect answer or timeout sends you to START!",
+            " 6. Reach tile 32 or be furthest ahead at 20:00 to WIN!"
           ];
 
           qBoardCtx.font = '14px monospace';
@@ -1231,7 +1271,7 @@
           qBoardCtx.fillStyle = '#39ff14';
           qBoardCtx.font = 'bold 15px monospace';
           qBoardCtx.textAlign = 'center';
-          qBoardCtx.fillText("🔴 LIVE BROADCAST IN PROGRESS", 256, 342);
+          qBoardCtx.fillText(" LIVE BROADCAST IN PROGRESS", 256, 342);
         }
       }
       qBoardTex.needsUpdate = true;
@@ -1368,7 +1408,7 @@
       if (diceCountdown > 0) {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.75)'; ctx.fillRect(x + 8, y + 8, 120, 28);
         ctx.fillStyle = '#ff7675'; ctx.font = 'bold 13px monospace'; ctx.textAlign = 'center';
-        ctx.fillText(`⏱️ ROLL: ${diceCountdown}s`, x + 68, y + 26);
+        ctx.fillText(` ROLL: ${diceCountdown}s`, x + 68, y + 26);
       }
 
       const diceSize = 42;
@@ -1384,7 +1424,7 @@
 
       ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(x, y + height - 26, width, 26);
       ctx.fillStyle = isLive ? '#39ff14' : '#ffda66'; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
-      ctx.fillText(`${isLive ? '🔴 LIVE 🎙️' : '📱 CALL'} ${name.toUpperCase()} [${city.toUpperCase()}]`, x + width/2, y + height - 8);
+      ctx.fillText(`${isLive ? ' LIVE ' : ' CALL'} ${name.toUpperCase()} [${city.toUpperCase()}]`, x + width/2, y + height - 8);
     }
 
     function renderBackstageScreens() {
