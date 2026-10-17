@@ -204,6 +204,7 @@
     let savedTurnPlayer = null;
     let intermissionTimeout = null;
     let savedActiveCountry = null;
+    let savedGameState = null; // Remembers INTRO_SPEECH, OPENING_DUEL, or IN_PLAY
 
     let autoStartSeconds = 10;
     let autoStartInterval = setInterval(() => {
@@ -256,6 +257,7 @@
       if (questionInterval) clearInterval(questionInterval);
       if (matchTimerInterval) clearInterval(matchTimerInterval);
 
+      savedGameState = gameState;
       savedTurnPlayer = activePlayer;
       if (activeQuestion) {
         savedActiveCountry = activeQuestion.country;
@@ -304,15 +306,37 @@
 
       const numStr = contestantId === "goody-contestant-1" ? "1" : "2";
       countdownPill.innerHTML = ` <span style="color:#39ff14;">LIVE ON AIR!</span>`;
-      gameState = "IN_PLAY";
 
+      // Handshake recovering from opening intro monologue
+      if (savedGameState === "INTRO_SPEECH" || savedGameState === "IDLE") {
+        gameState = "INTRO_SPEECH";
+        renderStageQuestionBoard();
+        const speech = `Welcome back to The Goody Tonight Show! We have our replacement! Stepping into the studio as contestant number ${numStr} is ${newName}! Now, where was I? Ah, yes! Welcome to the show! We need to determine who moves first! Contestants, you both have 10 seconds to roll your dice!`;
+        speakGoody(speech, () => {
+          beginTenSecondDiceDuel();
+        });
+        return;
+      }
+
+      // Handshake recovering from initial duel
+      if (savedGameState === "OPENING_DUEL") {
+        gameState = "OPENING_DUEL";
+        renderStageQuestionBoard();
+        const speech = `Welcome back to the show! ${newName} has joined us as contestant number ${numStr}! Now, where were we? Ah yes, we were about to roll to see who takes the first turn! Both contestants, get ready to roll!`;
+        speakGoody(speech, () => {
+          beginTenSecondDiceDuel();
+        });
+        return;
+      }
+
+      // Recovery during normal game play
+      gameState = "IN_PLAY";
+      renderStageQuestionBoard();
       startTwentyMinuteMatchTimer();
 
-      const speech = `Welcome back to The Goody Tonight Show! We have found a replacement! Joining us in the hot seat is ${newName}, taking over contestant number ${numStr}'s spot on the board! Let's resume!`;
+      const speech = `Welcome back to The Goody Tonight Show! Joining us in the hot seat is ${newName}, taking over contestant number ${numStr}'s spot on the board! Let's resume the race!`;
       speakGoody(speech, () => {
-        if (matchTimerSeconds === 20 * 60 && !savedActiveCountry && p1Index === 0 && p2Index === 0) {
-          beginTenSecondDiceDuel();
-        } else if (savedActiveCountry) {
+        if (savedActiveCountry) {
           const countryToAsk = savedActiveCountry;
           savedActiveCountry = null;
           resumeWithFreshQuestion(savedTurnPlayer, countryToAsk);
@@ -390,16 +414,25 @@
       const humanName = contestantNames[humanId];
 
       countdownPill.innerHTML = ` <span style="color:#00f0ff;">GOODY VS ${humanName.toUpperCase()}!</span>`;
+
+      // Intro or duel recovery vs Goody
+      if (savedGameState === "INTRO_SPEECH" || savedGameState === "OPENING_DUEL" || savedGameState === "IDLE") {
+        gameState = "OPENING_DUEL";
+        renderStageQuestionBoard();
+        const speech = `A bold choice, ${humanName}! You have chosen to battle me, Goody! I am taking over the board! Now, where were we? Ah yes, let's roll our dice to determine who goes first!`;
+        speakGoody(speech, () => {
+          beginTenSecondDiceDuel();
+        });
+        return;
+      }
+
       gameState = "IN_PLAY";
       renderStageQuestionBoard();
-
       startTwentyMinuteMatchTimer();
 
-      const speech = `A bold choice, ${humanName}! You have chosen to battle me, Goody! I am now taking over the controls and hopping into the hot seat! Let's see if you can outsmart the machine! Let's resume the game!`;
+      const speech = `A bold choice, ${humanName}! You have chosen to battle me, Goody! I am now taking over the controls and hopping into the hot seat! Let's resume!`;
       speakGoody(speech, () => {
-        if (matchTimerSeconds === 20 * 60 && !savedActiveCountry && p1Index === 0 && p2Index === 0) {
-          beginTenSecondDiceDuel();
-        } else if (savedActiveCountry) {
+        if (savedActiveCountry) {
           const countryToAsk = savedActiveCountry;
           savedActiveCountry = null;
           resumeWithFreshQuestion(savedTurnPlayer, countryToAsk);
@@ -786,7 +819,7 @@
 
             if (!studioPower && timerExpired) {
               checkReadyOrWait();
-            } else if (studioPower && (gameState === "IN_PLAY" || gameState === "OPENING_DUEL" || gameState === "IDLE") && !isSoloMode && !isVsGoodyMode) {
+            } else if (studioPower && (gameState === "IN_PLAY" || gameState === "OPENING_DUEL" || gameState === "INTRO_SPEECH" || gameState === "IDLE") && !isSoloMode && !isVsGoodyMode) {
               if (cId === "goody-contestant-1" || cId === "goody-contestant-2") {
                 handleMidGameDropout(cId);
               }
@@ -886,6 +919,7 @@
 
     function bootStudio() {
       studioPower = true;
+      gameState = "INTRO_SPEECH";
       updateStudioLighting(true);
       updateCameraAlignment();
       renderStageQuestionBoard();
@@ -894,6 +928,7 @@
 
     function beginTenSecondDiceDuel() {
       gameState = "OPENING_DUEL";
+      renderStageQuestionBoard();
       diceCountdown = 10;
       p1RollVal = null;
       p2RollVal = null;
@@ -1010,6 +1045,7 @@
       const winRoll = winnerNum === 1 ? p1RollVal : p2RollVal;
 
       gameState = "IN_PLAY";
+      renderStageQuestionBoard();
       startTwentyMinuteMatchTimer();
 
       speakGoody(`Contestant number ${winnerNum} wins the roll and goes first! The 20-minute show clock has begun! Moving ${winRoll} spaces.`, () => {
@@ -1416,7 +1452,7 @@
 
       const speech = isCorrect
         ? `That is correct! Well done to our winner ${winner}, and commiserations to ${loser}! Thanks for watching, come again next show, shows are at 9 PM most days! Goodnight!`
-        : `That is incorrect! By default, well done to our winner ${winner}, and commiserations to ${loser}! Thanks for watching, come again next show, shows are at 9 PM most days! Goodnight!`;
+        : `That is incorrect! By default, well done to our winner ${winner}, and commiserations to ${loser}! Thanks for watching, come again next show, shows are at 9 PM most days! Goodnight!` ;
 
       speakGoody(speech);
       broadcastGameOver(winner, "TIE_BREAKER_DECISION");
