@@ -87,11 +87,9 @@
     let studioPower = false;
     let isGoodySpeaking = false;
 
-    // Track active claimed slots
-    const claimedSlots = {
-      "goody-contestant-1": false,
-      "goody-contestant-2": false
-    };
+    // Slot state
+    let slotJakeOwner = null;
+    let slotJuneOwner = null;
 
     let showJake = false;
     let showJune = false;
@@ -263,16 +261,15 @@
     const connectedAudiencePeers = new Set();
 
     function broadcastSlotStatus() {
-      connectedDataConns.forEach(c => {
-        if (c.open) {
-          c.send({
-            type: "SLOTS_UPDATE",
-            slots: {
-              jake: claimedSlots["goody-contestant-1"],
-              june: claimedSlots["goody-contestant-2"]
-            }
-          });
+      const payload = {
+        type: "SLOTS_UPDATE",
+        slots: {
+          jake: !!slotJakeOwner,
+          june: !!slotJuneOwner
         }
+      };
+      connectedDataConns.forEach(c => {
+        if (c.open) c.send(payload);
       });
     }
 
@@ -285,18 +282,11 @@
         studioPeer.on('call', (call) => {
           const passcode = call.metadata ? call.metadata.passcode : "";
           if (passcode !== studioRoomCode) {
-            console.warn("Call rejected: Invalid passcode from", call.peer);
             call.close();
             return;
           }
 
           const contestantKey = call.metadata ? call.metadata.contestant : null;
-          if (contestantKey && claimedSlots[contestantKey]) {
-            console.warn("Call rejected: Slot already claimed", contestantKey);
-            call.close();
-            return;
-          }
-
           const isJune = contestantKey === "goody-contestant-2";
           const returnStream = isJune ? streamJune : streamJake;
           call.answer(returnStream);
@@ -317,41 +307,40 @@
         });
 
         studioPeer.on('connection', (conn) => {
-          const passcode = conn.metadata ? conn.metadata.passcode : "";
-          const reqContestant = conn.metadata ? conn.metadata.contestant : null;
-
-          if (passcode !== studioRoomCode) {
-            conn.on('open', () => {
-              conn.send({ type: "AUTH_FAILED", message: "Invalid 4-digit code." });
-              setTimeout(() => conn.close(), 500);
-            });
-            return;
-          }
-
-          // Check if slot requested is already taken
-          if (reqContestant && claimedSlots[reqContestant]) {
-            conn.on('open', () => {
-              conn.send({ type: "SLOT_TAKEN_ERROR", message: "That contestant has already been chosen by someone else!" });
-              setTimeout(() => conn.close(), 500);
-            });
-            return;
-          }
-
-          if (reqContestant) {
-            claimedSlots[reqContestant] = true;
-          }
-
           connectedDataConns.push(conn);
 
           conn.on('open', () => {
-            conn.send({ type: "AUTH_SUCCESS" });
-            broadcastSlotStatus();
+            // Send initial slot status regardless of whether contestant is selected yet
+            conn.send({
+              type: "SLOTS_UPDATE",
+              slots: { jake: !!slotJakeOwner, june: !!slotJuneOwner }
+            });
             connectedAudiencePeers.add(conn.peer);
             broadcastAudienceCount();
           });
 
           conn.on('data', (data) => {
-            if (data.type === "CHECK_SLOTS") {
+            if (data.type === "REQUEST_JOIN") {
+              if (data.passcode !== studioRoomCode) {
+                conn.send({ type: "AUTH_FAILED" });
+                return;
+              }
+
+              if (data.requestedSlot === "goody-contestant-1") {
+                if (slotJakeOwner && slotJakeOwner !== conn.peer) {
+                  conn.send({ type: "SLOT_TAKEN", slot: "Jake" });
+                  return;
+                }
+                slotJakeOwner = conn.peer;
+              } else if (data.requestedSlot === "goody-contestant-2") {
+                if (slotJuneOwner && slotJuneOwner !== conn.peer) {
+                  conn.send({ type: "SLOT_TAKEN", slot: "June" });
+                  return;
+                }
+                slotJuneOwner = conn.peer;
+              }
+
+              conn.send({ type: "AUTH_SUCCESS" });
               broadcastSlotStatus();
             } else if (data.type === "PLAYER_ROLLED_DICE") {
               handlePlayerRoll(data.contestant, data.name, data.roll);
@@ -394,12 +383,17 @@
           });
 
           conn.on('close', () => {
-            if (reqContestant) {
-              claimedSlots[reqContestant] = false;
-              if (reqContestant === "goody-contestant-1") { showJake = false; hasLiveJakeStream = false; }
-              if (reqContestant === "goody-contestant-2") { showJune = false; hasLiveJuneStream = false; }
-              broadcastSlotStatus();
+            if (slotJakeOwner === conn.peer) {
+              slotJakeOwner = null;
+              showJake = false;
+              hasLiveJakeStream = false;
             }
+            if (slotJuneOwner === conn.peer) {
+              slotJuneOwner = null;
+              showJune = false;
+              hasLiveJuneStream = false;
+            }
+            broadcastSlotStatus();
             connectedAudiencePeers.delete(conn.peer);
             connectedDataConns = connectedDataConns.filter(c => c.peer !== conn.peer);
             broadcastAudienceCount();
@@ -452,8 +446,9 @@
     }
 
     function speakGoody(text, onComplete) {
+      const timestamp = performance.now();
       connectedDataConns.forEach(c => {
-        if (c.open) c.send({ type: "HOST_SPEAK", text: text });
+        if (c.open) c.send({ type: "HOST_SPEAK", text: text, ts: timestamp });
       });
 
       if (!('speechSynthesis' in window)) { 
@@ -466,22 +461,17 @@
       goodyUtterance.rate = 0.95;
       goodyUtterance.pitch = 1.25;
 
-      goodyUtterance.onstart = () => {
-        isGoodySpeaking = true;
-      };
-
+      goodyUtterance.onstart = () => { isGoodySpeaking = true; };
       goodyUtterance.onboundary = (e) => {
         isGoodySpeaking = true;
         const chunk = text.substring(e.charIndex, e.charIndex + 65);
         currentSubtitle = chunk.length > 55 ? chunk.substring(0, 55) + "..." : chunk;
         playTone(460 + Math.random() * 200, 'triangle', 0.05, 0.02);
       };
-
       goodyUtterance.onend = () => {
         isGoodySpeaking = false;
         if (onComplete) onComplete();
       };
-
       goodyUtterance.onerror = () => {
         isGoodySpeaking = false;
         if (onComplete) onComplete();
