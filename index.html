@@ -258,6 +258,8 @@
 
     let hasLiveJakeStream = false;
     let hasLiveJuneStream = false;
+    let liveJakeMediaStream = null;
+    let liveJuneMediaStream = null;
 
     let gameState = "IDLE";
     let isSoloMode = false;
@@ -271,6 +273,7 @@
     let p2RollVal = null;
     let isDiceRollingP1 = false;
     let isDiceRollingP2 = false;
+    let isAdvancingPawn = false;
 
     let matchTimerSeconds = 20 * 60;
     let matchTimerInterval = null;
@@ -487,10 +490,10 @@
 
       if (isP1) {
         if (videoJake.srcObject) { try { videoJake.srcObject.getTracks().forEach(t => t.stop()); } catch(e){} videoJake.srcObject = null; }
-        hasLiveJakeStream = false; showJake = false; isP1Connected = false; p1PeerId = null;
+        hasLiveJakeStream = false; showJake = false; isP1Connected = false; p1PeerId = null; liveJakeMediaStream = null;
       } else {
         if (videoJune.srcObject) { try { videoJune.srcObject.getTracks().forEach(t => t.stop()); } catch(e){} videoJune.srcObject = null; }
-        hasLiveJuneStream = false; showJune = false; isP2Connected = false; p2PeerId = null;
+        hasLiveJuneStream = false; showJune = false; isP2Connected = false; p2PeerId = null; liveJuneMediaStream = null;
       }
       handleMidGameDropout(slotId);
     }
@@ -909,26 +912,34 @@
         studioPeer.on('open', (id) => console.log("Master Host Registered:", id));
 
         studioPeer.on('call', (call) => {
-          const passcode = call.metadata ? call.metadata.passcode : "";
-          if (passcode !== studioRoomCode) { call.close(); return; }
+          const isAudience = call.metadata && call.metadata.role === 'AUDIENCE';
 
-          const cId = call.metadata ? call.metadata.contestant : null;
-          if (cId === "goody-contestant-1" && isP1Connected && p1PeerId && p1PeerId !== call.peer) { call.close(); return; }
-          if (cId === "goody-contestant-2" && isP2Connected && p2PeerId && p2PeerId !== call.peer) { call.close(); return; }
+          if (!isAudience) {
+            const passcode = call.metadata ? call.metadata.passcode : "";
+            if (passcode !== studioRoomCode) { call.close(); return; }
 
-          const isJune = cId === "goody-contestant-2";
-          const returnStream = isJune ? streamJune : streamJake;
-          call.answer(returnStream);
+            const cId = call.metadata ? call.metadata.contestant : null;
+            if (cId === "goody-contestant-1" && isP1Connected && p1PeerId && p1PeerId !== call.peer) { call.close(); return; }
+            if (cId === "goody-contestant-2" && isP2Connected && p2PeerId && p2PeerId !== call.peer) { call.close(); return; }
 
-          call.on('stream', (remoteStream) => {
-            if (isJune) {
-              videoJune.srcObject = remoteStream; videoJune.muted = false; videoJune.play().catch(console.error);
-              hasLiveJuneStream = true; showJune = true;
-            } else {
-              videoJake.srcObject = remoteStream; videoJake.muted = false; videoJake.play().catch(console.error);
-              hasLiveJakeStream = true; showJake = true;
-            }
-          });
+            const isJune = cId === "goody-contestant-2";
+            const returnStream = isJune ? streamJune : streamJake;
+            call.answer(returnStream);
+
+            call.on('stream', (remoteStream) => {
+              if (isJune) {
+                liveJuneMediaStream = remoteStream;
+                videoJune.srcObject = remoteStream; videoJune.muted = false; videoJune.play().catch(console.error);
+                hasLiveJuneStream = true; showJune = true;
+                forwardMediaToSpectators("goody-contestant-2", remoteStream);
+              } else {
+                liveJakeMediaStream = remoteStream;
+                videoJake.srcObject = remoteStream; videoJake.muted = false; videoJake.play().catch(console.error);
+                hasLiveJakeStream = true; showJake = true;
+                forwardMediaToSpectators("goody-contestant-1", remoteStream);
+              }
+            });
+          }
         });
 
         studioPeer.on('connection', (conn) => {
@@ -985,6 +996,14 @@
                   activeContestantId: activePlayer,
                   activeContestantName: contestantNames[activePlayer]
                 });
+              }
+
+              // Connect spectator to live feeds if already rolling
+              if (liveJakeMediaStream) {
+                try { studioPeer.call(conn.peer, liveJakeMediaStream, { metadata: { contestant: "goody-contestant-1" } }); } catch(e){}
+              }
+              if (liveJuneMediaStream) {
+                try { studioPeer.call(conn.peer, liveJuneMediaStream, { metadata: { contestant: "goody-contestant-2" } }); } catch(e){}
               }
               return;
             }
@@ -1151,6 +1170,14 @@
     }
     initStudioWebRTC();
 
+    function forwardMediaToSpectators(slot, mediaStream) {
+      connectedDataConns.forEach(c => {
+        if (c.open && c.metadata && c.metadata.role === 'AUDIENCE') {
+          try { studioPeer.call(c.peer, mediaStream, { metadata: { contestant: slot } }); } catch(e){}
+        }
+      });
+    }
+
     function broadcastAudienceCount() {
       audienceCount = Math.max(1, connectedAudiencePeers.size + 1);
       audienceCountEl.textContent = audienceCount;
@@ -1208,16 +1235,26 @@
     }
 
     function beginTenSecondDiceDuel() {
-      gameState = "OPENING_DUEL"; renderStageQuestionBoard();
-      diceCountdown = 10; p1RollVal = null; p2RollVal = null;
-      isDiceRollingP1 = true; isDiceRollingP2 = true;
-      broadcastMicState("goody-contestant-1", false); broadcastMicState("goody-contestant-2", false);
+      gameState = "OPENING_DUEL";
+      renderStageQuestionBoard();
+      diceCountdown = 10;
+      p1RollVal = null;
+      p2RollVal = null;
+      isDiceRollingP1 = true;
+      isDiceRollingP2 = true;
+      broadcastMicState("goody-contestant-1", false);
+      broadcastMicState("goody-contestant-2", false);
+
       connectedDataConns.forEach(c => { if (c.open) c.send({ type: "START_DICE_COUNTDOWN" }); });
+
       if (diceInterval) clearInterval(diceInterval);
       diceInterval = setInterval(() => {
         diceCountdown--;
         if (diceCountdown > 0) playTone(440, 'triangle', 0.08, 0.03);
-        else { clearInterval(diceInterval); finalizeDiceDuel(); }
+        else {
+          clearInterval(diceInterval);
+          finalizeDiceDuel();
+        }
       }, 1000);
     }
 
@@ -1242,7 +1279,12 @@
         if (contestant === "goody-contestant-2") { p2RollVal = roll; isDiceRollingP2 = false; }
         else { p1RollVal = roll; isDiceRollingP1 = false; }
         playTone(587, 'sine', 0.15, 0.08);
-        if (p1RollVal !== null && p2RollVal !== null) { clearInterval(diceInterval); finalizeDiceDuel(); }
+
+        // When both contestants have submitted their opening roll, resolve duel
+        if (p1RollVal !== null && p2RollVal !== null) {
+          if (diceInterval) clearInterval(diceInterval);
+          finalizeDiceDuel();
+        }
       } else if (gameState === "IN_PLAY") {
         if (contestant !== activePlayer) return;
         if (diceInterval) clearInterval(diceInterval);
@@ -1275,17 +1317,32 @@
       }, 1000);
     }
 
+    // --- ACCURATE DICE DUEL RESOLUTION (NO FORCED WINNER, RE-ROLL ON DRAW) ---
     function finalizeDiceDuel() {
       if (p1RollVal === null) p1RollVal = Math.floor(Math.random() * 6) + 1;
       if (p2RollVal === null) p2RollVal = Math.floor(Math.random() * 6) + 1;
-      isDiceRollingP1 = false; isDiceRollingP2 = false;
-      if (p1RollVal === p2RollVal) p1RollVal++;
+      isDiceRollingP1 = false;
+      isDiceRollingP2 = false;
+
+      // Handle a tie naturally without incrementing or picking one arbitrarily
+      if (p1RollVal === p2RollVal) {
+        const tieVal = p1RollVal;
+        speakGoody(`We have a tie! Both contestants rolled a ${tieVal}! Let's roll again to see who moves first!`, () => {
+          p1RollVal = null;
+          p2RollVal = null;
+          beginTenSecondDiceDuel();
+        });
+        return;
+      }
 
       const winnerNum = p1RollVal > p2RollVal ? 1 : 2;
       activePlayer = winnerNum === 1 ? "goody-contestant-1" : "goody-contestant-2";
       const winRoll = winnerNum === 1 ? p1RollVal : p2RollVal;
 
-      gameState = "IN_PLAY"; renderStageQuestionBoard(); startTwentyMinuteMatchTimer();
+      gameState = "IN_PLAY";
+      renderStageQuestionBoard();
+      startTwentyMinuteMatchTimer();
+
       speakGoody(`Contestant number ${winnerNum} wins the roll and goes first! The 20-minute show clock has begun! Moving ${winRoll} spaces.`, () => {
         advanceTurnPlayer(activePlayer, winRoll);
       });
@@ -1330,6 +1387,9 @@
     }
 
     function advanceTurnPlayer(playerSlot, roll) {
+      if (isAdvancingPawn) return;
+      isAdvancingPawn = true;
+
       const isP1 = playerSlot === "goody-contestant-1";
       const oldIdx = isP1 ? p1Index : p2Index;
       const targetIdx = Math.min(boardTileCoords.length - 1, oldIdx + roll);
@@ -1339,6 +1399,8 @@
       if (isP1) p1Index = targetIdx; else p2Index = targetIdx;
 
       animatePawnHop(targetPawn, oldIdx, targetIdx, xOffset, () => {
+        isAdvancingPawn = false;
+
         connectedDataConns.forEach(c => {
           if (c.open && c.metadata && c.metadata.role === 'AUDIENCE') {
             c.send({ type: "SYNC_BOARD_STATE", studioPower, p1Index, p2Index, p1Name: contestantNames["goody-contestant-1"], p2Name: contestantNames["goody-contestant-2"] });
@@ -1978,8 +2040,7 @@
         ctx.fillStyle = isGuy ? '#1b2a47' : '#3d1b38'; ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
         const cx = x + width / 2; const cy = y + height * 0.58;
         ctx.fillStyle = isGuy ? '#4a69bd' : '#e84393'; ctx.beginPath(); ctx.ellipse(cx, cy + 25, 26, 32, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#f8c291'; ctx.beginPath(); ctx.arc(cx, cy - 10, 16, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(cx - 5, cy - 10, 2, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(cx + 5, cy - 10, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#f8c291'; ctx.beginPath(); ctx.arc(cx, cy - 10, 16, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(cx - 5, cy - 10, 2, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(cx + 5, cy - 10, 2, 0, Math.PI * 2); ctx.fill();
       }
 
       if (diceCountdown > 0 && !isGoodyHostSlot) {
