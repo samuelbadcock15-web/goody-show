@@ -52,21 +52,19 @@
 <body>
   <div id="crosshair"></div>
   <div id="hud">
-    <div class="hud-title" id="mode-title" style="color: #ffda66;"> BEDROOM WORKSHOP</div>
+    <div class="hud-title" id="mode-title" style="color: #ffda66;">BEDROOM WORKSHOP</div>
     <div class="hud-sub" id="mode-sub">WebRTC Studio Host: ONLINE • FULL GAME LOOP READY</div>
-    <div id="room-code-pill"> CODE: <span id="hud-code-val">----</span></div>
-    <div id="countdown-pill"> BROADCAST STARTS IN: <span id="timer-val" style="color:#ff7675;">10s</span></div>
-    <div id="match-clock-hud"> SHOW CLOCK: <span id="game-clock-val" style="color:#ffda66;">20:00</span></div>
-    <div id="audience-pill"> AUDIENCE WATCHING: <span id="audience-count" style="color:#39ff14;">1</span></div>
+    <div id="room-code-pill">CODE: <span id="hud-code-val">----</span></div>
+    <div id="countdown-pill">BROADCAST STARTS IN: <span id="timer-val" style="color:#ff7675;">10s</span></div>
+    <div id="match-clock-hud">SHOW CLOCK: <span id="game-clock-val" style="color:#ffda66;">20:00</span></div>
+    <div id="audience-pill">AUDIENCE WATCHING: <span id="audience-count" style="color:#39ff14;">1</span></div>
   </div>
 
   <div id="blocker">
     <div id="instructions-card">
       <h1>The Goody Tonight Show</h1>
       <p>Synchronized tiles & 20-minute race to the finish active!</p>
-      
       <div id="entry-code" class="room-code-display">----</div>
-
       <p><strong>Click Anywhere to Enter</strong></p>
       <p><span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> &nbsp;Walk around freely</p>
     </div>
@@ -133,6 +131,11 @@
       "goody-contestant-2": { yaw: 0, pitch: -0.15 }
     };
 
+    // Contestant Connection & Pre-Show Auto-Start Logic
+    let isP1Connected = false;
+    let isP2Connected = false;
+    let timerExpired = false;
+
     let autoStartSeconds = 10;
     let autoStartInterval = setInterval(() => {
       autoStartSeconds--;
@@ -140,11 +143,34 @@
         timerValEl.textContent = `${autoStartSeconds}s`;
       } else {
         clearInterval(autoStartInterval);
-        countdownPill.innerHTML = ` <span style="color:#39ff14;">LIVE ON AIR!</span>`;
-        if (!studioPower) bootStudio();
+        timerExpired = true;
+        checkReadyOrWait();
       }
       renderStageQuestionBoard();
     }, 1000);
+
+    function checkReadyOrWait() {
+      if (isP1Connected && isP2Connected) {
+        countdownPill.innerHTML = ` <span style="color:#39ff14;">LIVE ON AIR!</span>`;
+        if (!studioPower) bootStudio();
+      } else {
+        const missing = [];
+        if (!isP1Connected) missing.push("Jake");
+        if (!isP2Connected) missing.push("June");
+        countdownPill.innerHTML = ` <span style="color:#ff7675;">WAITING FOR ${missing.join(' & ').toUpperCase()}...</span>`;
+      }
+      renderStageQuestionBoard();
+    }
+
+    function checkBothContestantsReady() {
+      if (timerExpired && !studioPower && isP1Connected && isP2Connected) {
+        countdownPill.innerHTML = ` <span style="color:#39ff14;">LIVE ON AIR!</span>`;
+        bootStudio();
+        renderStageQuestionBoard();
+      } else if (timerExpired && !studioPower) {
+        checkReadyOrWait();
+      }
+    }
 
     const INTRO_SPEECH =
       "Hello, good evening, and welcome to The Goody Tonight Show! " +
@@ -306,6 +332,15 @@
             conn.send({ type: "AUTH_SUCCESS" });
             connectedAudiencePeers.add(conn.peer);
             broadcastAudienceCount();
+
+            // Track connected contestants
+            if (conn.metadata && conn.metadata.contestant === "goody-contestant-1") {
+              isP1Connected = true;
+            } else if (conn.metadata && conn.metadata.contestant === "goody-contestant-2") {
+              isP2Connected = true;
+            }
+
+            checkBothContestantsReady();
           });
 
           conn.on('data', (data) => {
@@ -353,6 +388,17 @@
             connectedAudiencePeers.delete(conn.peer);
             connectedDataConns = connectedDataConns.filter(c => c.peer !== conn.peer);
             broadcastAudienceCount();
+
+            // Update contestant disconnection status
+            if (conn.metadata && conn.metadata.contestant === "goody-contestant-1") {
+              isP1Connected = false;
+            } else if (conn.metadata && conn.metadata.contestant === "goody-contestant-2") {
+              isP2Connected = false;
+            }
+
+            if (!studioPower && timerExpired) {
+              checkReadyOrWait();
+            }
           });
         });
 
@@ -575,7 +621,6 @@
       });
     }
 
-    // --- SMOOTH HOPPING ANIMATION SYSTEM ---
     function animatePawnHop(pawn, fromIdx, toIdx, offsetX, onComplete, hopDurationMs = 280) {
       if (fromIdx === toIdx) {
         if (onComplete) onComplete();
@@ -610,7 +655,6 @@
           const elapsed = now - hopStartTime;
           const progress = Math.min(1.0, elapsed / hopDurationMs);
 
-          // Parabolic jump arc: 4 * h * p * (1 - p)
           const jumpArc = 4.0 * 0.35 * progress * (1.0 - progress);
 
           pawn.position.x = startPos.x + (endPos.x - startPos.x) * progress;
@@ -621,9 +665,9 @@
             requestAnimationFrame(stepFrame);
           } else {
             pawn.position.set(endPos.x, 0.52, endPos.z);
-            playTone(220, 'triangle', 0.05, 0.03); // Land thump
+            playTone(220, 'triangle', 0.05, 0.03);
             currentHopIdx = nextHopIdx;
-            setTimeout(hopNextStep, 50); // Pause between tiles
+            setTimeout(hopNextStep, 50);
           }
         }
 
@@ -643,7 +687,6 @@
       if (isP1) p1Index = targetIdx;
       else p2Index = targetIdx;
 
-      // Physically hop along the tiles
       animatePawnHop(targetPawn, oldIdx, targetIdx, xOffset, () => {
         if (p1Index >= boardTileCoords.length - 1 || p2Index >= boardTileCoords.length - 1) {
           triggerFinishLineVictory(isP1 ? "Jake" : "June", isP1 ? "June" : "Jake");
@@ -797,7 +840,6 @@
       if (isP1) p1Index = 0;
       else p2Index = 0;
 
-      // Hop backward rapidly to start (110ms per tile hop)
       animatePawnHop(pawnToMove, startFromIdx, 0, xOffset, onComplete, 110);
     }
 
@@ -1309,21 +1351,39 @@
           qBoardCtx.fillText(trimmed, 64, optY - 2);
         });
       } else {
-        if (!studioPower && autoStartSeconds > 0) {
+        if (!studioPower) {
           qBoardCtx.fillStyle = '#ffda66';
           qBoardCtx.font = 'bold 26px sans-serif';
           qBoardCtx.textAlign = 'center';
-          qBoardCtx.fillText("THE GOODY TONIGHT SHOW", 256, 120);
+          qBoardCtx.fillText("THE GOODY TONIGHT SHOW", 256, 110);
 
-          qBoardCtx.fillStyle = '#ffffff';
-          qBoardCtx.font = 'bold 18px monospace';
-          qBoardCtx.fillText("NEXT SHOW IS IN...", 256, 180);
+          if (autoStartSeconds > 0) {
+            qBoardCtx.fillStyle = '#ffffff';
+            qBoardCtx.font = 'bold 18px monospace';
+            qBoardCtx.fillText("BROADCAST COUNTDOWN", 256, 170);
 
-          qBoardCtx.fillStyle = '#ff7675';
-          qBoardCtx.font = 'bold 54px monospace';
-          const mins = Math.floor(autoStartSeconds / 60).toString().padStart(2, '0');
-          const secs = (autoStartSeconds % 60).toString().padStart(2, '0');
-          qBoardCtx.fillText(`${mins}:${secs}`, 256, 250);
+            qBoardCtx.fillStyle = '#ff7675';
+            qBoardCtx.font = 'bold 54px monospace';
+            const mins = Math.floor(autoStartSeconds / 60).toString().padStart(2, '0');
+            const secs = (autoStartSeconds % 60).toString().padStart(2, '0');
+            qBoardCtx.fillText(`${mins}:${secs}`, 256, 240);
+          } else {
+            qBoardCtx.fillStyle = '#ff7675';
+            qBoardCtx.font = 'bold 22px monospace';
+            qBoardCtx.fillText("STANDBY FOR BROADCAST", 256, 170);
+
+            const missing = [];
+            if (!isP1Connected) missing.push("CONTESTANT 1 (JAKE)");
+            if (!isP2Connected) missing.push("CONTESTANT 2 (JUNE)");
+
+            qBoardCtx.fillStyle = '#ffda66';
+            qBoardCtx.font = 'bold 15px monospace';
+            qBoardCtx.fillText("WAITING FOR CONTESTANTS TO JOIN...", 256, 220);
+
+            qBoardCtx.fillStyle = '#39ff14';
+            qBoardCtx.font = 'bold 14px monospace';
+            qBoardCtx.fillText(`MISSING: ${missing.join(' & ')}`, 256, 260);
+          }
         } else {
           qBoardCtx.fillStyle = '#ffda66';
           qBoardCtx.font = 'bold 24px sans-serif';
@@ -1562,7 +1622,6 @@
     miniGoody.position.set(0, 0, -2.6);
     miniDiorama.add(miniGoody);
 
-    // --- ANIMATED LIP-SYNC FACE RENDERING ---
     function renderGoodyFace(time) {
       fctx.fillStyle = '#030108';
       fctx.fillRect(0, 0, 128, 128);
@@ -1575,7 +1634,6 @@
 
       gAntOrb.material.color.setHex(isGoodySpeaking ? 0x00f0ff : 0x39ff14);
 
-      // Glowing Eyes: ^   ^
       fctx.fillStyle = '#39ff14';
       fctx.strokeStyle = '#39ff14';
       fctx.lineWidth = 4;
@@ -1596,14 +1654,11 @@
       fctx.lineTo(100, 56);
       fctx.stroke();
 
-      // Mouth Section:
       if (isGoodySpeaking) {
-        // Mouth flaps open/shut based on time oscillation
-        const mouthOpen = (Math.sin(time * 0.022) + 1.0) * 0.5; // 0.0 to 1.0
-        const mouthHeight = 6 + (mouthOpen * 20); // 6px to 26px opening
+        const mouthOpen = (Math.sin(time * 0.022) + 1.0) * 0.5;
+        const mouthHeight = 6 + (mouthOpen * 20);
         const mouthWidth = 40 + (mouthOpen * 6);
 
-        // Dark open mouth interior
         fctx.fillStyle = '#220033';
         fctx.strokeStyle = '#39ff14';
         fctx.lineWidth = 3.5;
@@ -1613,11 +1668,9 @@
         fctx.fill();
         fctx.stroke();
 
-        // Little stylized white cyber-teeth inside
         fctx.fillStyle = '#ffffff';
         fctx.fillRect(54, 88 - (mouthHeight / 2) + 2, 20, Math.min(5, mouthHeight / 2));
       } else {
-        // Idle happy smile: '‿'
         fctx.strokeStyle = '#39ff14';
         fctx.lineWidth = 5;
         fctx.beginPath();
