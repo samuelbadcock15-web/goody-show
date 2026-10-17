@@ -32,6 +32,7 @@
     p { color: #ebdcf9; font-size: 0.92rem; line-height: 1.4; margin: 6px 0; }
     .key { background: #391563; padding: 2px 7px; border-radius: 4px; border: 1px solid #9c4dd6; font-weight: bold; color: #ff69b4; }
     
+    /* Director Passcode Box on the overlay */
     #director-card-box {
       margin: 16px 0; padding: 12px 16px; background: #0c0419; border: 2px solid #00f0ff;
       border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px;
@@ -114,14 +115,9 @@
     let showJune = false;
 
     const videoJake = document.createElement('video');
-    videoJake.autoplay = true; videoJake.playsInline = true; videoJake.muted = true;
-    const audioJake = new Audio();
-    audioJake.autoplay = true; audioJake.playsInline = true;
-
+    videoJake.autoplay = true; videoJake.playsInline = true; videoJake.muted = false;
     const videoJune = document.createElement('video');
-    videoJune.autoplay = true; videoJune.playsInline = true; videoJune.muted = true;
-    const audioJune = new Audio();
-    audioJune.autoplay = true; audioJune.playsInline = true;
+    videoJune.autoplay = true; videoJune.playsInline = true; videoJune.muted = false;
 
     let hasLiveJakeStream = false;
     let hasLiveJuneStream = false;
@@ -268,38 +264,8 @@
     const camJake = new THREE.PerspectiveCamera(65, 16 / 9, 0.1, 100);
     const camJune = new THREE.PerspectiveCamera(65, 16 / 9, 0.1, 100);
 
-    const streamJakeVideoOnly = canvasJake.captureStream(30);
-    const streamJuneVideoOnly = canvasJune.captureStream(30);
-
-    // Audio Pipeline - Studio mixes tones, voice & contestants
-    let audioCtx = null;
-    let studioMasterGain = null;
-    let studioAudioDestination = null;
-
-    function initAudio() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        studioMasterGain = audioCtx.createGain();
-        studioMasterGain.gain.setValueAtTime(1.0, audioCtx.currentTime);
-        studioMasterGain.connect(audioCtx.destination);
-        
-        studioAudioDestination = audioCtx.createMediaStreamDestination();
-        studioMasterGain.connect(studioAudioDestination);
-      }
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      if (audioJake.srcObject) audioJake.play().catch(() => {});
-      if (audioJune.srcObject) audioJune.play().catch(() => {});
-    }
-
-    function getCombinedStream(isJune) {
-      const vStream = isJune ? streamJuneVideoOnly : streamJakeVideoOnly;
-      const combined = new MediaStream();
-      vStream.getVideoTracks().forEach(t => combined.addTrack(t));
-      if (studioAudioDestination && studioAudioDestination.stream.getAudioTracks().length > 0) {
-        combined.addTrack(studioAudioDestination.stream.getAudioTracks()[0]);
-      }
-      return combined;
-    }
+    const streamJake = canvasJake.captureStream(30);
+    const streamJune = canvasJune.captureStream(30);
 
     const controls = new THREE.PointerLockControls(camera, document.body);
     const blocker = document.getElementById('blocker');
@@ -331,23 +297,20 @@
             return;
           }
 
-          initAudio();
           const isJune = call.metadata && call.metadata.contestant === "goody-contestant-2";
-          const returnStream = getCombinedStream(isJune);
+          const returnStream = isJune ? streamJune : streamJake;
           call.answer(returnStream);
 
           call.on('stream', (remoteStream) => {
             if (isJune) {
               videoJune.srcObject = remoteStream;
+              videoJune.muted = false;
               videoJune.play().catch(console.error);
-              audioJune.srcObject = remoteStream;
-              audioJune.play().catch(console.error);
               hasLiveJuneStream = true; showJune = true;
             } else {
               videoJake.srcObject = remoteStream;
+              videoJake.muted = false;
               videoJake.play().catch(console.error);
-              audioJake.srcObject = remoteStream;
-              audioJake.play().catch(console.error);
               hasLiveJakeStream = true; showJake = true;
             }
           });
@@ -442,7 +405,15 @@
       });
     }
 
-    function playTone(freq, type, duration, gainVal = 0.08) {
+    let audioCtx = null;
+    let goodyUtterance = null;
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (videoJake.srcObject) videoJake.play();
+      if (videoJune.srcObject) videoJune.play();
+    }
+    function playTone(freq, type, duration, gainVal = 0.05) {
       if (!audioCtx) return;
       try {
         const osc = audioCtx.createOscillator();
@@ -450,67 +421,39 @@
         osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
         g.gain.setValueAtTime(gainVal, audioCtx.currentTime);
         g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-        osc.connect(g); g.connect(studioMasterGain);
+        osc.connect(g); g.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + duration);
       } catch(e) {}
     }
 
-    // --- Goody Studio Robotic Voice Streamer ---
-    // Speaks locally via Web Speech on host PC, and simultaneously generates 
-    // real-time robotic speech formants piped directly into the WebRTC stream 
-    // so phones hear it through their live speaker stream without breaking volume keys!
     function speakGoody(text, onComplete) {
       connectedDataConns.forEach(c => {
         if (c.open) c.send({ type: "HOST_SPEAK", text: text });
       });
 
-      // 1. Play natural speech on the studio host computer
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        u.rate = 0.95;
-        u.pitch = 1.2;
-        window.speechSynthesis.speak(u);
+      if (!('speechSynthesis' in window)) {
+        playTone(523, 'sine', 0.2, 0.1);
+        if (onComplete) setTimeout(onComplete, 2200);
+        return;
       }
-
-      // 2. Stream robotic speech cadence through WebRTC audio to phones
-      if (audioCtx) {
-        const words = text.split(" ");
-        let startTime = audioCtx.currentTime + 0.05;
-        const wordDuration = 0.22;
-
-        words.forEach((w, i) => {
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          const filter = audioCtx.createBiquadFilter();
-
-          filter.type = "bandpass";
-          filter.frequency.setValueAtTime(600 + (w.length % 5) * 150, startTime);
-          filter.Q.setValueAtTime(4.0, startTime);
-
-          osc.type = "sawtooth";
-          const pitch = 140 + ((i % 3) * 15);
-          osc.frequency.setValueAtTime(pitch, startTime);
-
-          gain.gain.setValueAtTime(0.0, startTime);
-          gain.gain.linearRampToValueAtTime(0.09, startTime + 0.03);
-          gain.gain.exponentialRampToValueAtTime(0.0001, startTime + wordDuration);
-
-          osc.connect(filter);
-          filter.connect(gain);
-          gain.connect(studioMasterGain);
-
-          osc.start(startTime);
-          osc.stop(startTime + wordDuration);
-
-          startTime += wordDuration + 0.04;
-        });
-
-        const totalMs = (words.length * (wordDuration + 0.04) * 1000) + 400;
-        if (onComplete) setTimeout(onComplete, Math.max(2500, totalMs));
-      } else {
-        if (onComplete) setTimeout(onComplete, 2500);
-      }
+      window.speechSynthesis.cancel();
+      goodyUtterance = new SpeechSynthesisUtterance(text);
+      goodyUtterance.rate = 0.95;
+      goodyUtterance.pitch = 1.25;
+      goodyUtterance.onboundary = () => {
+        playTone(460 + Math.random() * 200, 'triangle', 0.05, 0.02);
+      };
+      let finished = false;
+      const done = () => {
+        if (!finished) {
+          finished = true;
+          if (onComplete) onComplete();
+        }
+      };
+      goodyUtterance.onend = done;
+      goodyUtterance.onerror = done;
+      window.speechSynthesis.speak(goodyUtterance);
+      setTimeout(done, Math.max(3000, text.length * 75));
     }
 
     function startGoodyMonologue() {
@@ -544,7 +487,7 @@
       diceInterval = setInterval(() => {
         diceCountdown--;
         if (diceCountdown > 0) {
-          playTone(440, 'triangle', 0.08, 0.04);
+          playTone(440, 'triangle', 0.08, 0.03);
         } else {
           clearInterval(diceInterval);
           finalizeDiceDuel();
@@ -561,7 +504,7 @@
       diceInterval = setInterval(() => {
         diceCountdown--;
         if (diceCountdown > 0) {
-          playTone(440, 'triangle', 0.08, 0.04);
+          playTone(440, 'triangle', 0.08, 0.03);
         } else {
           clearInterval(diceInterval);
           const autoVal = Math.floor(Math.random() * 6) + 1;
