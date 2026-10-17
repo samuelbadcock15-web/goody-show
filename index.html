@@ -107,7 +107,7 @@
       <!-- SAM'S PRODUCER OVERRIDE PANEL -->
       <div id="producer-panel">
         <div style="color: #ffda66; font-weight: bold; font-family: monospace;">PRODUCER OVERRIDE: INTERMISSION ACTIVE</div>
-        <p id="producer-status-txt" style="font-size: 0.8rem; margin: 4px 0;">Looking for replacement contestant...</p>
+        <p id="producer-status-txt" style="font-size: 0.8rem; margin: 4px 0;">Looking for contestant...</p>
         <div class="producer-btn-row">
           <button id="btn-force-solo" class="btn-producer btn-producer-solo" onclick="event.stopPropagation(); triggerOnePlayerMode();">
             Force 1-Player Solo
@@ -209,6 +209,9 @@
 
     let timerExpired = false;
     let droppedOutContestant = null;
+    let droppedOutName = "";
+    let droppedOutCity = "";
+
     let savedTurnPlayer = null;
     let intermissionTimeout = null;
     let savedActiveCountry = null;
@@ -280,20 +283,22 @@
 
       gameState = "INTERMISSION";
       droppedOutContestant = contestantId;
-      const droppedName = contestantNames[contestantId];
-      const droppedNum = contestantId === "goody-contestant-1" ? `1 (${droppedName})` : `2 (${droppedName})`;
+      droppedOutName = contestantNames[contestantId] || "";
+      droppedOutCity = contestantCities[contestantId] || "";
+
+      const droppedNum = contestantId === "goody-contestant-1" ? `1 (${droppedOutName})` : `2 (${droppedOutName})`;
 
       producerPanel.style.display = "block";
-      producerStatusTxt.textContent = `Contestant ${droppedNum} disconnected. Searching for replacement...`;
+      producerStatusTxt.textContent = `Contestant ${droppedNum} disconnected. Waiting for reconnect...`;
 
-      countdownPill.innerHTML = ` <span style="color:#ff7675;">INTERMISSION: WAITING FOR REPLACEMENT...</span>`;
+      countdownPill.innerHTML = ` <span style="color:#ff7675;">INTERMISSION: WAITING FOR RECONNECT...</span>`;
       renderStageQuestionBoard();
 
       connectedDataConns.forEach(c => {
         if (c.open) c.send({ type: "INTERMISSION_PAUSE", droppedContestant: contestantId });
       });
 
-      const speech = `Ladies and gentlemen, it appears contestant number ${droppedNum} has lost connection! We are now taking a short intermission while our studio crew works to find a replacement! Please stay tuned!`;
+      const speech = `Ladies and gentlemen, it appears contestant number ${droppedNum} has lost connection! We are now taking a short intermission while our studio crew gets them back online! Please stay tuned!`;
       speakGoody(speech);
 
       if (intermissionTimeout) clearTimeout(intermissionTimeout);
@@ -304,44 +309,67 @@
       }, 90000);
     }
 
-    // --- RESUME 1: HUMAN REPLACEMENT JOINS VIA CODE ---
+    // --- RESUME 1: HUMAN RECONNECT / REPLACEMENT HANDLER ---
     function handleReplacementJoined(contestantId, newName, newCity) {
       if (gameState !== "INTERMISSION" || contestantId !== droppedOutContestant) return;
 
       if (intermissionTimeout) clearTimeout(intermissionTimeout);
       producerPanel.style.display = "none";
-      contestantNames[contestantId] = newName;
-      if (newCity) contestantCities[contestantId] = newCity;
-      droppedOutContestant = null;
 
       const numStr = contestantId === "goody-contestant-1" ? "1" : "2";
+
+      // Detect whether it's the exact same player reconnecting or a brand new replacement
+      const isSamePerson = droppedOutName.toLowerCase().trim() === newName.toLowerCase().trim() &&
+                           (!newCity || !droppedOutCity || droppedOutCity.toLowerCase().trim() === newCity.toLowerCase().trim());
+
+      contestantNames[contestantId] = newName;
+      if (newCity) contestantCities[contestantId] = newCity;
+
+      droppedOutContestant = null;
+      droppedOutName = "";
+      droppedOutCity = "";
+
       countdownPill.innerHTML = ` <span style="color:#39ff14;">LIVE ON AIR!</span>`;
 
+      // Branch A: Dropped during opening monologue or standby
       if (savedGameState === "INTRO_SPEECH" || savedGameState === "IDLE") {
         gameState = "INTRO_SPEECH";
         renderStageQuestionBoard();
-        const speech = `Welcome back to The Goody Tonight Show! We have our replacement! Stepping into the studio as contestant number ${numStr} is ${newName} from ${contestantCities[contestantId]}! Now, where was I? Ah, yes! Welcome to the show! We need to determine who moves first! Contestants, you both have 10 seconds to roll your dice!`;
+
+        const speech = isSamePerson
+          ? `Welcome back, ${newName}! Glad we got your connection restored! Now, where was I? Ah, yes! Welcome to the show! We need to determine who moves first! Contestants, you both have 10 seconds to roll your dice!`
+          : `Welcome back to The Goody Tonight Show! We have our replacement! Stepping into the studio as contestant number ${numStr} is ${newName} from ${contestantCities[contestantId]}! Now, where was I? Ah, yes! Welcome to the show! We need to determine who moves first! Contestants, you both have 10 seconds to roll your dice!`;
+
         speakGoody(speech, () => {
           beginTenSecondDiceDuel();
         });
         return;
       }
 
+      // Branch B: Dropped during the opening dice duel
       if (savedGameState === "OPENING_DUEL") {
         gameState = "OPENING_DUEL";
         renderStageQuestionBoard();
-        const speech = `Welcome back to the show! ${newName} from ${contestantCities[contestantId]} has joined us as contestant number ${numStr}! Now, where were we? Ah yes, we were about to roll to see who takes the first turn! Both contestants, get ready to roll!`;
+
+        const speech = isSamePerson
+          ? `Welcome back, ${newName}! Audio and video back online! Now, where were we? Ah yes, we were about to roll to see who takes the first turn! Both contestants, get ready to roll!`
+          : `Welcome back to the show! ${newName} from ${contestantCities[contestantId]} has joined us as contestant number ${numStr}! Now, where were we? Ah yes, we were about to roll to see who takes the first turn! Both contestants, get ready to roll!`;
+
         speakGoody(speech, () => {
           beginTenSecondDiceDuel();
         });
         return;
       }
 
+      // Branch C: Dropped mid-game (IN_PLAY)
       gameState = "IN_PLAY";
       renderStageQuestionBoard();
       startTwentyMinuteMatchTimer();
 
-      const speech = `Welcome back to The Goody Tonight Show! Joining us in the hot seat is ${newName} from ${contestantCities[contestantId]}, taking over contestant number ${numStr}'s spot on the board! Let's resume the race!`;
+      const speech = isSamePerson
+        ? `Welcome back, ${newName}! Great to have you back in the game! Let's resume the race!`
+        : `Welcome back to The Goody Tonight Show! Joining us in the hot seat is ${newName} from ${contestantCities[contestantId]}, taking over contestant number ${numStr}'s spot on the board! Let's resume the race!`;
+
       speakGoody(speech, () => {
         if (savedActiveCountry) {
           const countryToAsk = savedActiveCountry;
@@ -373,7 +401,7 @@
 
       startTwentyMinuteMatchTimer();
 
-      const speech = `Welcome back to the show! We have been unable to find a replacement contestant, but not to worry! Contestant number ${soloNum}, ${soloName}, will now race the board alone to see if they can reach the end before the 20-minute show clock expires! If they reach tile 32, they take home the prize. If time runs out, tonight's prize rolls over to next week and we will invite ${soloName} back! Let's play!`;
+      const speech = `Welcome back to the show! We have been unable to reconnect our missing contestant, but not to worry! Contestant number ${soloNum}, ${soloName}, will now race the board alone to see if they can reach the end before the 20-minute show clock expires! If they reach tile 32, they take home the prize. If time runs out, tonight's prize rolls over to next week and we will invite ${soloName} back! Let's play!`;
       speakGoody(speech, () => {
         if (savedActiveCountry && savedTurnPlayer === soloPlayerId) {
           const countryToAsk = savedActiveCountry;
@@ -786,14 +814,18 @@
             if (cId === "goody-contestant-1") {
               isP1Connected = true;
               p1PeerId = conn.peer;
-              contestantNames["goody-contestant-1"] = clientName;
-              contestantCities["goody-contestant-1"] = clientCity;
+              if (gameState !== "INTERMISSION") {
+                contestantNames["goody-contestant-1"] = clientName;
+                contestantCities["goody-contestant-1"] = clientCity;
+              }
             }
             if (cId === "goody-contestant-2") {
               isP2Connected = true;
               p2PeerId = conn.peer;
-              contestantNames["goody-contestant-2"] = clientName;
-              contestantCities["goody-contestant-2"] = clientCity;
+              if (gameState !== "INTERMISSION") {
+                contestantNames["goody-contestant-2"] = clientName;
+                contestantCities["goody-contestant-2"] = clientCity;
+              }
             }
 
             conn.send({ type: "AUTH_SUCCESS" });
@@ -1820,7 +1852,7 @@
 
         qBoardCtx.fillStyle = '#ffffff';
         qBoardCtx.font = '16px sans-serif';
-        qBoardCtx.fillText("SEARCHING FOR REPLACEMENT CONTESTANT...", 256, 195);
+        qBoardCtx.fillText("WAITING FOR CONTESTANT TO REJOIN...", 256, 195);
         qBoardCtx.fillText("PLEASE STAND BY AS WE RESOLVE TECHNICAL ISSUES.", 256, 235);
 
         qBoardCtx.fillStyle = '#39ff14';
