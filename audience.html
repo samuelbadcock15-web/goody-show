@@ -6,287 +6,119 @@
   <title>Goody Tonight Show - Live Audience</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
-    
     html, body {
-      width: 100%;
-      height: 100%;
-      height: 100dvh;
-      overflow: hidden;
-      background: #06020c;
-      color: #fff;
+      width: 100%; height: 100%; height: 100dvh;
+      overflow: hidden; background: #06020c; color: #fff;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
+    #canvas3d { width: 100%; height: 100%; display: block; position: absolute; top: 0; left: 0; z-index: 1; }
 
-    #canvas3d {
-      width: 100%;
-      height: 100%;
-      display: block;
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 1;
-    }
-
-    /* ENTRY OVERLAY */
+    /* ENTRY MODAL */
     #entry-modal {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(6, 2, 14, 0.94);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 100;
-      padding: 16px;
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(6, 2, 14, 0.94); display: flex; flex-direction: column;
+      justify-content: center; align-items: center; z-index: 100; padding: 16px;
     }
-
     .entry-card {
-      background: #19082f;
-      border: 2px solid #a29bfe;
-      border-radius: 16px;
-      padding: 24px;
-      width: 100%;
-      max-width: 380px;
-      text-align: center;
+      background: #19082f; border: 2px solid #a29bfe; border-radius: 16px;
+      padding: 24px; width: 100%; max-width: 380px; text-align: center;
       box-shadow: 0 0 25px rgba(162, 155, 254, 0.35);
     }
-
     .badge-audience {
-      display: inline-block;
-      padding: 4px 12px;
-      background: #6c5ce7;
-      color: #fff;
-      font-family: monospace;
-      font-weight: 900;
-      font-size: 0.8rem;
-      border-radius: 6px;
-      margin-bottom: 12px;
-      letter-spacing: 1px;
+      display: inline-block; padding: 4px 12px; background: #6c5ce7; color: #fff;
+      font-family: monospace; font-weight: 900; font-size: 0.8rem; border-radius: 6px;
+      margin-bottom: 12px; letter-spacing: 1px;
     }
-
     .text-field {
-      width: 100%;
-      padding: 12px;
-      font-size: 1rem;
-      font-weight: bold;
-      background: #090314;
-      color: #00f0ff;
-      border: 2px solid #a29bfe;
-      border-radius: 10px;
-      outline: none;
-      margin-bottom: 14px;
-      text-align: center;
+      width: 100%; padding: 12px; font-size: 1rem; font-weight: bold; background: #090314;
+      color: #00f0ff; border: 2px solid #a29bfe; border-radius: 10px; outline: none;
+      margin-bottom: 14px; text-align: center;
     }
     .text-field:focus { border-color: #00f0ff; }
-
     .btn-join {
-      width: 100%;
-      padding: 14px;
-      border-radius: 12px;
-      border: none;
-      font-size: 1.05rem;
-      font-weight: 900;
-      text-transform: uppercase;
-      cursor: pointer;
-      color: #fff;
-      background: linear-gradient(180deg, #6c5ce7, #4834d4);
-      box-shadow: 0 3px 0 #2e1e77;
+      width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 1.05rem;
+      font-weight: 900; text-transform: uppercase; cursor: pointer; color: #fff;
+      background: linear-gradient(180deg, #6c5ce7, #4834d4); box-shadow: 0 3px 0 #2e1e77;
     }
     .btn-join:active { transform: scale(0.98); }
 
-    /* SPECTATOR HUD */
+    /* HUD */
     #spectator-ui {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: none;
-      flex-direction: column;
-      justify-content: space-between;
-      pointer-events: none;
-      z-index: 10;
-      padding: 8px;
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: none; flex-direction: column; justify-content: space-between;
+      pointer-events: none; z-index: 10; padding: 8px;
     }
-
     .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: rgba(18, 7, 36, 0.85);
-      border: 1.5px solid #a29bfe;
-      border-radius: 8px;
-      padding: 6px 10px;
-      font-family: monospace;
-      font-size: 0.78rem;
-      pointer-events: auto;
+      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(18, 7, 36, 0.85); border: 1.5px solid #a29bfe; border-radius: 8px;
+      padding: 6px 10px; font-family: monospace; font-size: 0.78rem; pointer-events: auto;
     }
-
-    /* QUESTION / SHOW NOTIFICATION BANNER */
     #stage-synced-banner {
-      background: rgba(22, 9, 44, 0.92);
-      border: 2px solid #00f0ff;
-      border-radius: 10px;
-      padding: 8px 12px;
-      margin: 6px auto;
-      width: 100%;
-      max-width: 440px;
-      text-align: center;
-      display: none;
-      pointer-events: auto;
+      background: rgba(22, 9, 44, 0.92); border: 2px solid #00f0ff; border-radius: 10px;
+      padding: 8px 12px; margin: 6px auto; width: 100%; max-width: 440px; text-align: center;
+      display: none; pointer-events: auto;
     }
     #stage-q-title { font-size: 0.75rem; color: #ffda66; font-weight: bold; font-family: monospace; }
     #stage-q-text { font-size: 0.84rem; color: #ffffff; margin-top: 3px; font-weight: 600; line-height: 1.3; }
 
-    /* CHAT DRAWER */
+    /* CHAT */
     #chat-container {
-      width: 100%;
-      max-width: 400px;
-      background: rgba(13, 5, 26, 0.88);
-      border: 1.5px solid #ff79b0;
-      border-radius: 10px;
-      display: flex;
-      flex-direction: column;
-      pointer-events: auto;
-      margin-bottom: 6px;
-      backdrop-filter: blur(4px);
+      width: 100%; max-width: 400px; background: rgba(13, 5, 26, 0.88);
+      border: 1.5px solid #ff79b0; border-radius: 10px; display: flex; flex-direction: column;
+      pointer-events: auto; margin-bottom: 6px; backdrop-filter: blur(4px);
     }
-
     #chat-header {
-      padding: 6px 10px;
-      background: #230a42;
-      border-top-left-radius: 8px;
-      border-top-right-radius: 8px;
-      font-size: 0.75rem;
-      font-weight: bold;
-      color: #ffda66;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
+      padding: 6px 10px; background: #230a42; border-top-left-radius: 8px; border-top-right-radius: 8px;
+      font-size: 0.75rem; font-weight: bold; color: #ffda66; display: flex; justify-content: space-between;
+      align-items: center; cursor: pointer;
     }
-
     #chat-messages {
-      height: 110px;
-      overflow-y: auto;
-      padding: 6px 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      font-size: 0.78rem;
+      height: 110px; overflow-y: auto; padding: 6px 8px; display: flex; flex-direction: column;
+      gap: 4px; font-size: 0.78rem;
     }
-
-    .chat-msg {
-      word-break: break-word;
-      line-height: 1.25;
-    }
-    .chat-author {
-      font-weight: bold;
-      color: #39ff14;
-      font-family: monospace;
-    }
+    .chat-msg { word-break: break-word; line-height: 1.25; }
+    .chat-author { font-weight: bold; color: #39ff14; font-family: monospace; }
     .chat-author.is-self { color: #00f0ff; }
     .chat-author.is-host { color: #ff7675; }
-
-    .chat-input-row {
-      display: flex;
-      border-top: 1px solid #442266;
-      padding: 4px;
-      gap: 4px;
-    }
+    .chat-input-row { display: flex; border-top: 1px solid #442266; padding: 4px; gap: 4px; }
     #chat-text-input {
-      flex: 1;
-      background: #080313;
-      border: 1px solid #a29bfe;
-      border-radius: 6px;
-      color: #fff;
-      padding: 6px 8px;
-      font-size: 0.82rem;
-      outline: none;
+      flex: 1; background: #080313; border: 1px solid #a29bfe; border-radius: 6px;
+      color: #fff; padding: 6px 8px; font-size: 0.82rem; outline: none;
     }
     #btn-send-chat {
-      background: #ff79b0;
-      border: none;
-      border-radius: 6px;
-      color: #fff;
-      font-weight: bold;
-      font-size: 0.75rem;
-      padding: 0 12px;
-      cursor: pointer;
-    }
-    #btn-send-chat:active { transform: scale(0.96); }
-
-    /* CONTROLS AREA */
-    .controls-wrapper {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      width: 100%;
-      pointer-events: none;
+      background: #ff79b0; border: none; border-radius: 6px; color: #fff; font-weight: bold;
+      font-size: 0.75rem; padding: 0 12px; cursor: pointer;
     }
 
-    .dpad-section {
-      background: rgba(20, 7, 40, 0.85);
-      border: 1.5px solid #a29bfe;
-      border-radius: 10px;
-      padding: 4px;
-      pointer-events: auto;
-    }
-    .dpad-grid {
-      display: grid;
-      grid-template-columns: 44px 44px 44px;
-      grid-template-rows: 32px 32px;
-      gap: 4px;
-    }
+    /* CONTROLS */
+    .controls-wrapper { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; pointer-events: none; }
+    .dpad-section { background: rgba(20, 7, 40, 0.85); border: 1.5px solid #a29bfe; border-radius: 10px; padding: 4px; pointer-events: auto; }
+    .dpad-grid { display: grid; grid-template-columns: 44px 44px 44px; grid-template-rows: 32px 32px; gap: 4px; }
     .dpad-btn {
-      background: #2b1154;
-      border: 1.5px solid #ff79b0;
-      border-radius: 6px;
-      color: #fff;
-      font-size: 1rem;
-      font-weight: bold;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
+      background: #2b1154; border: 1.5px solid #ff79b0; border-radius: 6px; color: #fff;
+      font-size: 1rem; font-weight: bold; display: flex; justify-content: center; align-items: center; cursor: pointer;
     }
-
     .touch-look-hint {
-      background: rgba(0, 0, 0, 0.65);
-      border: 1px dashed #00f0ff;
-      border-radius: 6px;
-      padding: 4px 8px;
-      color: #00f0ff;
-      font-size: 0.68rem;
-      font-family: monospace;
-      pointer-events: none;
-      margin-bottom: 4px;
+      background: rgba(0, 0, 0, 0.65); border: 1px dashed #00f0ff; border-radius: 6px;
+      padding: 4px 8px; color: #00f0ff; font-size: 0.68rem; font-family: monospace; pointer-events: none; margin-bottom: 4px;
     }
   </style>
 </head>
 <body>
-
-  <!-- 3D CANVAS FOR SCENE + PERSONAL PLUSHIE -->
   <canvas id="canvas3d"></canvas>
 
-  <!-- OPEN DOOR SPECTATOR ENTRANCE -->
   <div id="entry-modal">
     <div class="entry-card">
       <div class="badge-audience">SPECTATOR PASS</div>
       <h2 style="color: #ffda66; font-size: 1.3rem; margin-bottom: 8px;">The Goody Tonight Show</h2>
       <p style="color: #ebdcf9; font-size: 0.85rem; margin-bottom: 16px;">
-        Join the live audience, roam the studio in plushie form, and take in tonight's broadcast!
+        Join the live audience, roam the full studio in plushie form, and watch the show in real time!
       </p>
-      
       <input type="text" id="audience-name-input" class="text-field" maxlength="14" placeholder="Your Nickname (Optional)" autocomplete="off" />
       <button class="btn-join" id="btn-join-studio">Enter Studio</button>
     </div>
   </div>
 
-  <!-- IN-STUDIO SPECTATOR OVERLAY -->
   <main id="spectator-ui">
     <div class="top-bar">
       <span id="user-display-name" style="color:#00f0ff;">SPECTATOR</span>
@@ -294,16 +126,12 @@
       <span style="color:#39ff14;">LIVE IN AUDIENCE</span>
     </div>
 
-    <!-- STAGE TRIVIA & STATUS TICKER -->
     <div id="stage-synced-banner">
       <div id="stage-q-title">CURRENT QUESTION</div>
       <div id="stage-q-text">Standby for next question...</div>
     </div>
 
-    <!-- BOTTOM CONTROLS & CHAT DOCK -->
     <div style="display:flex; flex-direction:column; align-items:center; width:100%;">
-      
-      <!-- COMMUNAL AUDIENCE LIVE CHAT -->
       <div id="chat-container">
         <div id="chat-header">
           <span>LIVE AUDIENCE CHAT</span>
@@ -313,7 +141,7 @@
           <div class="chat-msg" style="color:#aaa; font-style:italic;">Welcome to the studio! Keep messages friendly.</div>
         </div>
         <div class="chat-input-row">
-          <input type="text" id="chat-text-input" maxlength="120" placeholder="Say something to the crowd..." autocomplete="off" />
+          <input type="text" id="chat-text-input" maxlength="120" placeholder="Say something..." autocomplete="off" />
           <button id="btn-send-chat">SEND</button>
         </div>
       </div>
@@ -329,12 +157,8 @@
             <button class="dpad-btn" id="dpad-right">▶</button>
           </div>
         </div>
-
-        <div class="touch-look-hint">
-          Drag screen to look around
-        </div>
+        <div class="touch-look-hint">Drag screen to look around</div>
       </div>
-
     </div>
   </main>
 
@@ -342,28 +166,20 @@
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
   <script>
-    // --- 1. HARDWARE FINGERPRINTING & PERSISTENT SPECTATOR IDENTIFIERS ---
     function generateDeviceFingerprint() {
       try {
-        const canvas = document.createElement('canvas');
-        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-        const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
-        const renderer = debugInfo && gl ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'unknown_gpu';
-
-        const screenDetails = `${window.screen.width}x${window.screen.height}x${window.screen.colorDepth}`;
-        const rawString = `${renderer}|${screenDetails}|${navigator.hardwareConcurrency || 4}|${navigator.platform}`;
-
-        let hash = 0;
-        for (let i = 0; i < rawString.length; i++) {
-          hash = ((hash << 5) - hash) + rawString.charCodeAt(i);
-          hash |= 0;
-        }
-        return 'hw_' + Math.abs(hash).toString(16);
+        const c = document.createElement('canvas');
+        const gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+        const d = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
+        const rend = d && gl ? gl.getParameter(d.UNMASKED_RENDERER_WEBGL) : 'gpu';
+        const str = `${rend}|${window.screen.width}x${window.screen.height}|${navigator.hardwareConcurrency || 4}`;
+        let h = 0;
+        for (let i = 0; i < str.length; i++) { h = ((h << 5) - h) + str.charCodeAt(i); h |= 0; }
+        return 'hw_' + Math.abs(h).toString(16);
       } catch (e) {
-        return 'hw_fallback_' + Math.random().toString(36).substring(2, 9);
+        return 'hw_' + Math.random().toString(36).substring(2, 9);
       }
     }
-
     const deviceHardwareId = generateDeviceFingerprint();
 
     let spectatorSessionToken = localStorage.getItem('goody_audience_token');
@@ -372,7 +188,6 @@
       localStorage.setItem('goody_audience_token', spectatorSessionToken);
     }
 
-    // --- 2. UI ELEMENTS ---
     const entryModal = document.getElementById('entry-modal');
     const audienceNameInput = document.getElementById('audience-name-input');
     const btnJoinStudio = document.getElementById('btn-join-studio');
@@ -392,24 +207,19 @@
     let audienceNickname = "Guest " + Math.floor(100 + Math.random() * 900);
     let peer = null;
     let dataConn = null;
-    let isConnected = false;
     let lastMessageSentTime = 0;
 
-    // --- 3. PEERJS WEBRTC CONNECTION TO MASTER STUDIO ---
     btnJoinStudio.addEventListener('click', () => {
       const entered = audienceNameInput.value.trim();
       if (entered.length > 0) audienceNickname = entered;
-
       userDisplayName.textContent = audienceNickname.toUpperCase();
       entryModal.style.display = 'none';
       spectatorUi.style.display = 'flex';
-
       connectToStudio();
     });
 
     function connectToStudio() {
       peer = new Peer();
-
       peer.on('open', () => {
         dataConn = peer.connect('goody-main-studio', {
           metadata: {
@@ -421,13 +231,19 @@
         });
 
         dataConn.on('open', () => {
-          isConnected = true;
           addChatMessage('System', 'Connected to live studio stream!', 'is-host');
         });
 
         dataConn.on('data', (data) => {
           if (data.type === 'SYNC_MATCH_TIMER') {
             showClockPill.textContent = `SHOW: ${data.timeStr}`;
+            renderWallClockTexture(data.timeStr);
+          } else if (data.type === 'SYNC_BOARD_STATE') {
+            updateStudioPowerVisuals(data.studioPower);
+            if (data.p1Name) updatePawnNameBadge(pawn1, data.p1Name);
+            if (data.p2Name) updatePawnNameBadge(pawn2, data.p2Name);
+            setPawnTilePosition(pawn1, data.p1Index || 0, -0.08);
+            setPawnTilePosition(pawn2, data.p2Index || 0, 0.08);
           } else if (data.type === 'SHOW_QUESTION_LOCKED') {
             stageSyncedBanner.style.display = 'block';
             stageQTitle.textContent = `${data.question.country.toUpperCase()} [${data.activeContestantName.toUpperCase()}]`;
@@ -437,7 +253,6 @@
             stageQTitle.textContent = `WHAT WE LEARNED (${data.country})`;
             stageQText.textContent = data.recap;
           } else if (data.type === 'AUDIENCE_CHAT_BROADCAST') {
-            // Receive verified message broadcast from the host
             addChatMessage(data.author, data.text, data.isHost ? 'is-host' : '');
           } else if (data.type === 'GAME_OVER') {
             stageSyncedBanner.style.display = 'block';
@@ -447,29 +262,22 @@
         });
 
         dataConn.on('close', () => {
-          isConnected = false;
           addChatMessage('System', 'Disconnected from studio. Reconnecting...', 'is-host');
           setTimeout(connectToStudio, 4000);
         });
       });
 
-      peer.on('error', () => {
-        setTimeout(connectToStudio, 4000);
-      });
+      peer.on('error', () => setTimeout(connectToStudio, 4000));
     }
 
-    // --- 4. COMMUNAL CHAT & SHADOWBAN CLIENT BEHAVIOR ---
     function addChatMessage(author, text, customClass = '') {
       const msgEl = document.createElement('div');
       msgEl.className = 'chat-msg';
-
       const authorSpan = document.createElement('span');
       authorSpan.className = `chat-author ${customClass}`;
       authorSpan.textContent = author + ': ';
-
       const textSpan = document.createElement('span');
       textSpan.textContent = text;
-
       msgEl.appendChild(authorSpan);
       msgEl.appendChild(textSpan);
       chatMessages.appendChild(msgEl);
@@ -479,15 +287,10 @@
     function sendChatMessage() {
       const text = chatTextInput.value.trim();
       if (!text) return;
-
       const now = performance.now();
-      // 2.5-second anti-spam delay
-      if (now - lastMessageSentTime < 2500) {
-        return;
-      }
+      if (now - lastMessageSentTime < 2500) return;
       lastMessageSentTime = now;
 
-      // Always display user's own message locally (ensures shadowbanned trolls stay trapped)
       addChatMessage(audienceNickname, text, 'is-self');
       chatTextInput.value = '';
 
@@ -501,28 +304,20 @@
         });
       }
     }
-
     btnSendChat.addEventListener('click', sendChatMessage);
-    chatTextInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') sendChatMessage();
-    });
+    chatTextInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
 
     chatHeader.addEventListener('click', () => {
-      if (chatMessages.style.display === 'none') {
-        chatMessages.style.display = 'flex';
-        document.querySelector('.chat-input-row').style.display = 'flex';
-        document.getElementById('chat-toggle-icon').textContent = '▼';
-      } else {
-        chatMessages.style.display = 'none';
-        document.querySelector('.chat-input-row').style.display = 'none';
-        document.getElementById('chat-toggle-icon').textContent = '▲';
-      }
+      const hidden = chatMessages.style.display === 'none';
+      chatMessages.style.display = hidden ? 'flex' : 'none';
+      document.querySelector('.chat-input-row').style.display = hidden ? 'flex' : 'none';
+      document.getElementById('chat-toggle-icon').textContent = hidden ? '▼' : '▲';
     });
 
-    // --- 5. LOCAL 3D SCENE & SPECTATOR PLUSHIE RENDERING ---
+    // --- COMPLETE 3D STUDIO SCENE ---
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x040208);
-    scene.fog = new THREE.FogExp2(0x040208, 0.02);
+    scene.fog = new THREE.FogExp2(0x040208, 0.015);
 
     const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 100);
     const canvas = document.getElementById('canvas3d');
@@ -530,181 +325,226 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
 
-    const ambientLight = new THREE.AmbientLight(0x281545, 1.2);
-    scene.add(ambientLight);
-    const topLight = new THREE.PointLight(0xffecd2, 1.5, 30);
-    topLight.position.set(0, 8, -4);
-    scene.add(topLight);
+    const ambientLight = new THREE.AmbientLight(0x181026, 0.9); scene.add(ambientLight);
+    const ceilingLight = new THREE.PointLight(0xffecd2, 1.0, 50); ceilingLight.position.set(0, 13.5, 0); scene.add(ceilingLight);
+    const studioSpot = new THREE.SpotLight(0x00f0ff, 4.0, 25, Math.PI / 3, 0.4); studioSpot.position.set(0, 9, -2); scene.add(studioSpot);
 
-    // Studio diorama base
-    const feltCarpet = new THREE.Mesh(
-      new THREE.CylinderGeometry(7.0, 7.0, 0.1, 48),
-      new THREE.MeshStandardMaterial({ color: 0x271147 })
-    );
-    feltCarpet.position.set(0, -0.05, 0);
-    scene.add(feltCarpet);
+    const bedroomGroup = new THREE.Group();
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(36, 36), new THREE.MeshStandardMaterial({ color: 0x1f140e }));
+    floor.rotation.x = -Math.PI / 2; bedroomGroup.add(floor);
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x180f26 });
+    const backWall = new THREE.Mesh(new THREE.PlaneGeometry(36, 16), wallMat); backWall.position.set(0, 8, -18); bedroomGroup.add(backWall);
+    const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(36, 16), wallMat); leftWall.position.set(-18, 8, 0); leftWall.rotation.y = Math.PI / 2; bedroomGroup.add(leftWall);
+    const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(36, 16), wallMat); rightWall.position.set(18, 8, 0); rightWall.rotation.y = -Math.PI / 2; bedroomGroup.add(rightWall);
+    const deskTop = new THREE.Mesh(new THREE.BoxGeometry(22, 1.0, 16), new THREE.MeshStandardMaterial({ color: 0x331c0e }));
+    deskTop.position.set(0, 3.4, -9); bedroomGroup.add(deskTop);
+    scene.add(bedroomGroup);
 
-    const backWall = new THREE.Mesh(
-      new THREE.CylinderGeometry(7.0, 7.0, 4.5, 32, 1, true, -Math.PI / 2, Math.PI),
-      new THREE.MeshStandardMaterial({ color: 0x15092a, side: THREE.BackSide })
-    );
-    backWall.position.y = 2.2;
-    scene.add(backWall);
+    const miniDiorama = new THREE.Group(); miniDiorama.position.set(0, 3.95, -9);
+    const feltCarpet = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 0.08, 48), new THREE.MeshStandardMaterial({ color: 0x271147 }));
+    feltCarpet.position.y = 0.44; miniDiorama.add(feltCarpet);
 
-    // Host Goody Robot in center-stage
-    const goodyGroup = new THREE.Group();
-    const gBody = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.4), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9 }));
-    gBody.position.y = 1.2;
-    goodyGroup.add(gBody);
-    const gHead = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.35, 0.35), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9 }));
-    gHead.position.y = 1.65;
-    goodyGroup.add(gHead);
-    goodyGroup.position.set(0, 0, -2.6);
-    scene.add(goodyGroup);
+    const miniWall = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 4.5, 32, 1, true, -Math.PI / 2, Math.PI), new THREE.MeshStandardMaterial({ color: 0x15092a, side: THREE.BackSide }));
+    miniWall.position.y = 2.65; miniDiorama.add(miniWall);
 
-    // --- CUTE PLUSHIE GENERATOR (SPECTATOR AVATAR) ---
-    function createSpectatorPlushie() {
-      const pGroup = new THREE.Group();
-      const pMat = new THREE.MeshStandardMaterial({ color: 0xff7675, roughness: 0.9 });
-      const pBody = new THREE.Mesh(new THREE.SphereGeometry(0.28, 14, 14), pMat);
-      pBody.position.y = 0.28;
-      pGroup.add(pBody);
+    // Wall Clock
+    const wallClockCanvas = document.createElement('canvas'); wallClockCanvas.width = 256; wallClockCanvas.height = 128;
+    const wallClockCtx = wallClockCanvas.getContext('2d');
+    const wallClockTex = new THREE.CanvasTexture(wallClockCanvas);
+    function renderWallClockTexture(str) {
+      wallClockCtx.fillStyle = '#06020f'; wallClockCtx.fillRect(0, 0, 256, 128);
+      wallClockCtx.strokeStyle = '#00f0ff'; wallClockCtx.lineWidth = 4; wallClockCtx.strokeRect(4, 4, 248, 120);
+      wallClockCtx.fillStyle = '#ffda66'; wallClockCtx.font = 'bold 18px monospace'; wallClockCtx.textAlign = 'center';
+      wallClockCtx.fillText("20-MIN SHOW CLOCK", 128, 36);
+      wallClockCtx.fillStyle = '#ff7675'; wallClockCtx.font = 'bold 50px monospace';
+      wallClockCtx.fillText(str, 128, 95);
+      wallClockTex.needsUpdate = true;
+    }
+    renderWallClockTexture("20:00");
+    const wallClockMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.2), new THREE.MeshBasicMaterial({ map: wallClockTex }));
+    wallClockMesh.position.set(0, 6.2, -4.4); miniDiorama.add(wallClockMesh);
 
-      const pHead = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 14), pMat);
-      pHead.position.y = 0.58;
-      pGroup.add(pHead);
-
-      const earMat = new THREE.MeshStandardMaterial({ color: 0xff69b4 });
-      const ear1 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), earMat);
-      ear1.position.set(-0.14, 0.74, 0);
-      const ear2 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), earMat);
-      ear2.position.set(0.14, 0.74, 0);
-      pGroup.add(ear1, ear2);
-
-      const eyeMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
-      const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), eyeMat);
-      eyeL.position.set(-0.07, 0.60, 0.19);
-      const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), eyeMat);
-      eyeR.position.set(0.07, 0.60, 0.19);
-      pGroup.add(eyeL, eyeR);
-
-      return pGroup;
+    // Flag Tiles
+    const COUNTRIES = ["France", "Netherlands", "Canada", "Sweden", "Italy", "Denmark", "Brazil", "Australia", "Spain", "Germany", "UK", "Nigeria", "United States", "Belgium"];
+    function createCountryFlagTexture(name) {
+      const c = document.createElement('canvas'); c.width = 256; c.height = 256;
+      const ctx = c.getContext('2d'); const w = 256; const h = 256;
+      ctx.fillStyle = '#1e1035'; ctx.fillRect(0, 0, w, h);
+      ctx.save(); ctx.beginPath(); ctx.arc(128, 128, 124, 0, Math.PI * 2); ctx.clip();
+      ctx.fillStyle = '#22143b'; ctx.fillRect(0, 0, w, h);
+      switch(name) {
+        case "France": ctx.fillStyle = '#002654'; ctx.fillRect(0, 0, w/3, h); ctx.fillStyle = '#FFF'; ctx.fillRect(w/3, 0, w/3, h); ctx.fillStyle = '#ED2939'; ctx.fillRect(2*w/3, 0, w/3, h); break;
+        case "Canada": ctx.fillStyle = '#FFF'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#F00'; ctx.fillRect(0, 0, w*0.28, h); ctx.fillRect(w*0.72, 0, w*0.28, h); ctx.beginPath(); ctx.arc(128, 128, 36, 0, Math.PI*2); ctx.fill(); break;
+        case "UK": ctx.fillStyle = '#012169'; ctx.fillRect(0, 0, w, h); ctx.strokeStyle = '#FFF'; ctx.lineWidth = 34; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(w,h); ctx.moveTo(w,0); ctx.lineTo(0,h); ctx.stroke(); ctx.fillStyle = '#FFF'; ctx.fillRect(100, 0, 56, h); ctx.fillRect(0, 100, w, 56); ctx.fillStyle = '#C8102E'; ctx.fillRect(112, 0, 32, h); ctx.fillRect(0, 112, w, 32); break;
+        default: ctx.fillStyle = '#a29bfe'; ctx.fillRect(0, 0, w, h);
+      }
+      ctx.restore();
+      ctx.strokeStyle = '#e6c875'; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(128, 128, 123, 0, Math.PI * 2); ctx.stroke();
+      const tex = new THREE.CanvasTexture(c); tex.needsUpdate = true; return tex;
+    }
+    const flagTextures = COUNTRIES.map(c => createCountryFlagTexture(c));
+    const boardTileCoords = [];
+    const totalTiles = 32;
+    for (let i = 0; i < totalTiles; i++) {
+      const angle = i * 0.48;
+      const radius = 0.7 + (i * 0.135);
+      const x = Math.cos(angle) * radius;
+      const z = 1.8 + (Math.sin(angle) * (radius * 0.88));
+      boardTileCoords.push({ x, z, country: COUNTRIES[i % COUNTRIES.length] });
+      const tile = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.28, 0.30, 0.08, 24),
+        [new THREE.MeshStandardMaterial({ color: 0x241e33 }), new THREE.MeshBasicMaterial({ map: flagTextures[i % flagTextures.length] }), new THREE.MeshBasicMaterial({ color: 0x110d1c })]
+      );
+      tile.position.set(x, 0.48, z); miniDiorama.add(tile);
     }
 
-    // Spectator's personal plushie sitting directly in their space
-    const myPlushie = createSpectatorPlushie();
+    // Dynamic Pawns
+    function updatePawnNameBadge(pawnGroup, displayName) {
+      if (!pawnGroup || !pawnGroup.userData || !pawnGroup.userData.badgeCanvas) return;
+      const c = pawnGroup.userData.badgeCanvas; const ctx = c.getContext('2d');
+      const w = c.width; const h = c.height;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = '#0a0314'; ctx.strokeStyle = pawnGroup.userData.tagColor; ctx.lineWidth = 8;
+      ctx.beginPath(); ctx.roundRect ? ctx.roundRect(4, 4, w - 8, h - 8, 24) : ctx.rect(4, 4, w - 8, h - 8); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = 'bold 36px sans-serif'; ctx.fillText((displayName || "PLAYER").toUpperCase(), w / 2, h / 2 + 2);
+      pawnGroup.userData.badgeTexture.needsUpdate = true;
+    }
+
+    function createPlayerPawn(colorHex, initialName) {
+      const pawn = new THREE.Group();
+      const baseMat = new THREE.MeshStandardMaterial({ color: colorHex, metalness: 0.6, roughness: 0.25 });
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.10, 0.04, 16), baseMat); base.position.y = 0.02; pawn.add(base);
+      const body = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.16, 16), baseMat); body.position.y = 0.12; pawn.add(body);
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.055, 16, 16), baseMat); head.position.y = 0.22; pawn.add(head);
+
+      const bCanvas = document.createElement('canvas'); bCanvas.width = 256; bCanvas.height = 96;
+      const bTex = new THREE.CanvasTexture(bCanvas);
+      const badgeMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.13), new THREE.MeshBasicMaterial({ map: bTex, transparent: true, side: THREE.DoubleSide }));
+      badgeMesh.position.set(0, 0.35, 0); pawn.add(badgeMesh);
+      pawn.userData = { badgeCanvas: bCanvas, badgeTexture: bTex, badgeMesh: badgeMesh, tagColor: '#' + colorHex.toString(16).padStart(6, '0') };
+      updatePawnNameBadge(pawn, initialName);
+      return pawn;
+    }
+    const pawn1 = createPlayerPawn(0x00d2d3, "Jake");
+    const pawn2 = createPlayerPawn(0xff3838, "June");
+    miniDiorama.add(pawn1); miniDiorama.add(pawn2);
+
+    function setPawnTilePosition(pawn, tileIdx, offsetX) {
+      const idx = Math.max(0, Math.min(boardTileCoords.length - 1, tileIdx));
+      pawn.position.set(boardTileCoords[idx].x + offsetX, 0.52, boardTileCoords[idx].z);
+    }
+    setPawnTilePosition(pawn1, 0, -0.08); setPawnTilePosition(pawn2, 0, 0.08);
+
+    // Host Robot Goody
+    const miniGoody = new THREE.Group();
+    const silverMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, roughness: 0.2 });
+    const gPodium = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 0.6, 20), new THREE.MeshStandardMaterial({ color: 0x2b154a })); gPodium.position.y = 0.74; miniGoody.add(gPodium);
+    const gBody = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.4), silverMat); gBody.position.y = 1.34; miniGoody.add(gBody);
+    const gHead = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.35, 0.35), silverMat); gHead.position.y = 1.82; miniGoody.add(gHead);
+    miniGoody.position.set(0, 0, -2.6); miniDiorama.add(miniGoody);
+
+    // Audience Stands Plushies
+    function createCutePlushie3D(color) {
+      const p = new THREE.Group();
+      const m = new THREE.MeshStandardMaterial({ color: color, roughness: 0.9 });
+      const b = new THREE.Mesh(new THREE.SphereGeometry(0.28, 12, 12), m); b.position.y = 0.28; p.add(b);
+      const h = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 12), m); h.position.y = 0.58; p.add(h);
+      return p;
+    }
+    const audienceGroup = new THREE.Group();
+    [5.7, 6.4].forEach((radius, rIdx) => {
+      for (let i = 0; i < 16; i++) {
+        const theta = -Math.PI * 0.65 + (i / 15) * (Math.PI * 1.30);
+        const p = createCutePlushie3D(0x74b9ff);
+        p.position.set(Math.sin(theta) * radius, 0.46 + rIdx * 0.25, Math.cos(theta) * (radius * 0.95) + 0.8);
+        p.lookAt(0, 1.8, -2.6); audienceGroup.add(p);
+      }
+    });
+    miniDiorama.add(audienceGroup);
+    scene.add(miniDiorama);
+
+    function updateStudioPowerVisuals(isPower) {
+      studioSpot.intensity = isPower ? 5.0 : 1.0;
+    }
+
+    // --- SPECTATOR PERSONAL PLUSHIE & CAMERA (FORWARD ORIENTED) ---
+    const myPlushie = createCutePlushie3D(0xff7675);
+    // Face directly toward the stage (center stage is -Z)
     scene.add(myPlushie);
 
-    // Spectator position and orientation state
-    let playerPos = { x: 0, y: 0.0, z: 4.5 };
-    let playerYaw = 0;
+    // Start in audience stands, looking forward toward Goody & stage
+    let playerPos = { x: 0, y: 4.41, z: -4.5 };
+    let playerYaw = Math.PI; // Face forward toward stage (-Z)
     let playerPitch = -0.15;
 
-    // --- 6. TOUCH TO LOOK AROUND ---
-    let touchStartX = 0;
-    let touchStartY = 0;
-
+    let touchStartX = 0; let touchStartY = 0;
     window.addEventListener('touchstart', (e) => {
-      if (e.target.closest('#chat-container') || e.target.closest('.dpad-section') || e.target.closest('#entry-modal')) {
-        return;
-      }
-      if (e.touches.length === 1) {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-      }
+      if (e.target.closest('#chat-container') || e.target.closest('.dpad-section') || e.target.closest('#entry-modal')) return;
+      if (e.touches.length === 1) { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }
     }, { passive: true });
 
     window.addEventListener('touchmove', (e) => {
-      if (e.target.closest('#chat-container') || e.target.closest('.dpad-section') || e.target.closest('#entry-modal')) {
-        return;
-      }
+      if (e.target.closest('#chat-container') || e.target.closest('.dpad-section') || e.target.closest('#entry-modal')) return;
       if (e.touches.length === 1) {
-        const deltaX = e.touches[0].clientX - touchStartX;
-        const deltaY = e.touches[0].clientY - touchStartY;
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-
-        playerYaw -= deltaX * 0.006;
-        playerPitch = Math.max(-0.6, Math.min(0.5, playerPitch - deltaY * 0.005));
+        const dx = e.touches[0].clientX - touchStartX; const dy = e.touches[0].clientY - touchStartY;
+        touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY;
+        playerYaw -= dx * 0.006;
+        playerPitch = Math.max(-0.6, Math.min(0.5, playerPitch - dy * 0.005));
       }
     }, { passive: true });
 
-    // --- 7. NAVIGATION D-PAD ---
     let moveInterval = null;
-    function moveStep(direction) {
-      const step = 0.22;
-      const fwdX = -Math.sin(playerYaw);
-      const fwdZ = -Math.cos(playerYaw);
-      const rightX = Math.cos(playerYaw);
-      const rightZ = -Math.sin(playerYaw);
-
-      if (direction === 'FORWARD') {
-        playerPos.x += fwdX * step;
-        playerPos.z += fwdZ * step;
-      }
-      if (direction === 'BACK') {
-        playerPos.x -= fwdX * step;
-        playerPos.z -= fwdZ * step;
-      }
-      if (direction === 'LEFT') {
-        playerPos.x -= rightX * step;
-        playerPos.z -= rightZ * step;
-      }
-      if (direction === 'RIGHT') {
-        playerPos.x += rightX * step;
-        playerPos.z += rightZ * step;
-      }
-
-      // Keep spectator inside the studio diorama
-      playerPos.x = Math.max(-6.5, Math.min(6.5, playerPos.x));
-      playerPos.z = Math.max(-6.5, Math.min(6.5, playerPos.z));
+    function moveStep(dir) {
+      const step = 0.24;
+      const fwdX = -Math.sin(playerYaw); const fwdZ = -Math.cos(playerYaw);
+      const rightX = Math.cos(playerYaw); const rightZ = -Math.sin(playerYaw);
+      if (dir === 'FORWARD') { playerPos.x += fwdX * step; playerPos.z += fwdZ * step; }
+      if (dir === 'BACK') { playerPos.x -= fwdX * step; playerPos.z -= fwdZ * step; }
+      if (dir === 'LEFT') { playerPos.x -= rightX * step; playerPos.z -= rightZ * step; }
+      if (dir === 'RIGHT') { playerPos.x += rightX * step; playerPos.z += rightZ * step; }
+      playerPos.x = Math.max(-7.0, Math.min(7.0, playerPos.x));
+      playerPos.z = Math.max(-12.0, Math.min(0.0, playerPos.z));
     }
-
-    const bindDpad = (btnId, dir) => {
-      const el = document.getElementById(btnId);
+    const bindDpad = (id, dir) => {
+      const el = document.getElementById(id);
       const start = (e) => { e.preventDefault(); moveStep(dir); if (moveInterval) clearInterval(moveInterval); moveInterval = setInterval(() => moveStep(dir), 90); };
       const stop = () => { if (moveInterval) { clearInterval(moveInterval); moveInterval = null; } };
-      el.addEventListener('touchstart', start);
-      el.addEventListener('touchend', stop);
-      el.addEventListener('mousedown', start);
-      el.addEventListener('mouseup', stop);
-      el.addEventListener('mouseleave', stop);
+      el.addEventListener('touchstart', start); el.addEventListener('touchend', stop);
+      el.addEventListener('mousedown', start); el.addEventListener('mouseup', stop); el.addEventListener('mouseleave', stop);
     };
-
-    bindDpad('dpad-fwd', 'FORWARD');
-    bindDpad('dpad-back', 'BACK');
-    bindDpad('dpad-left', 'LEFT');
-    bindDpad('dpad-right', 'RIGHT');
+    bindDpad('dpad-fwd', 'FORWARD'); bindDpad('dpad-back', 'BACK'); bindDpad('dpad-left', 'LEFT'); bindDpad('dpad-right', 'RIGHT');
 
     window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
+      camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // --- 8. ANIMATION LOOP ---
     function animate() {
       requestAnimationFrame(animate);
 
-      // Position plushie directly in front of the spectator camera
-      myPlushie.position.set(playerPos.x, 0.46, playerPos.z);
+      // Keep pawn badges facing the active viewing camera
+      if (pawn1 && pawn1.userData && pawn1.userData.badgeMesh) pawn1.userData.badgeMesh.quaternion.copy(camera.quaternion);
+      if (pawn2 && pawn2.userData && pawn2.userData.badgeMesh) pawn2.userData.badgeMesh.quaternion.copy(camera.quaternion);
+
+      // Update personal plushie facing & place camera behind it looking forward
+      myPlushie.position.set(playerPos.x, playerPos.y, playerPos.z);
       myPlushie.rotation.y = playerYaw;
 
-      // Position camera in comfortable third-person behind plushie
-      const camDist = 1.4;
-      const camHeight = 0.9;
+      const camDist = 1.35;
+      const camHeight = 0.85;
       camera.position.set(
         playerPos.x + Math.sin(playerYaw) * camDist,
-        0.46 + camHeight,
+        playerPos.y + camHeight,
         playerPos.z + Math.cos(playerYaw) * camDist
       );
 
-      const targetLook = new THREE.Vector3(
-        playerPos.x - Math.sin(playerYaw) * 3.5,
-        0.46 + camHeight + playerPitch * 2.5,
-        playerPos.z - Math.cos(playerYaw) * 3.5
+      const lookTarget = new THREE.Vector3(
+        playerPos.x - Math.sin(playerYaw) * 4.0,
+        playerPos.y + camHeight + playerPitch * 3.0,
+        playerPos.z - Math.cos(playerYaw) * 4.0
       );
-      camera.lookAt(targetLook);
+      camera.lookAt(lookTarget);
 
       renderer.render(scene, camera);
     }
