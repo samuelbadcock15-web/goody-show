@@ -202,7 +202,7 @@
 
     <div class="screens-container" id="interactive-viewport">
       <div class="swipe-hint"> Drag to look</div>
-      <video id="studio-stream-video" autoplay playsinline></video>
+      <video id="studio-stream-video" autoplay playsinline muted></video>
       <video id="local-selfie-pip" autoplay playsinline muted></video>
     </div>
 
@@ -261,14 +261,10 @@
     let isTieBreaker = false;
     let heartbeatInterval = null;
 
-    function playHostSpeechLocally(text) {
-      if (!('speechSynthesis' in window)) return;
-      window.speechSynthesis.cancel();
-      const utt = new SpeechSynthesisUtterance(text);
-      utt.rate = 0.95;
-      utt.pitch = 1.25;
-      window.speechSynthesis.speak(utt);
-    }
+    // Dedicated audio element that forces iOS/Android to route call audio directly to the speaker
+    const liveStudioAudio = new Audio();
+    liveStudioAudio.autoplay = true;
+    liveStudioAudio.playsInline = true;
 
     const setupCard = document.getElementById('setup-card');
     const inputPasscode = document.getElementById('input-passcode');
@@ -306,13 +302,8 @@
       }
       contestantPasscode = code;
 
-      // Prime SpeechSynthesis on user click so mobile doesn't block Goody's voice
-      if ('speechSynthesis' in window) {
-        const prime = new SpeechSynthesisUtterance('');
-        prime.volume = 0;
-        window.speechSynthesis.speak(prime);
-      }
-
+      // Unlock mobile audio element on direct touch gesture
+      liveStudioAudio.play().catch(() => {});
       joinGame(id, name);
     }
 
@@ -331,14 +322,18 @@
       roleTag.textContent = `${name.toUpperCase()} (CONTESTANT)`;
 
       try {
-        // AUDIO IS FALSE: Keeps the phone in Media Volume mode so hardware rocker buttons work
+        // AUDIO AND VIDEO ARE BOTH ACTIVE
         localStream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
-          audio: false
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
         });
         localSelfiePip.srcObject = localStream;
       } catch (err) {
-        console.warn("Camera access fallback:", err);
+        console.warn("Media fallback:", err);
         const blankCanvas = document.createElement('canvas');
         blankCanvas.width = 320; blankCanvas.height = 240;
         const bctx = blankCanvas.getContext('2d');
@@ -379,9 +374,13 @@
 
       if (currentCall) {
         currentCall.on('stream', (returnStudioStream) => {
+          // Render video visuals (muted to prevent feedback)
           studioStreamVideo.srcObject = returnStudioStream;
-          studioStreamVideo.muted = false;
           studioStreamVideo.play().catch(console.error);
+
+          // Route incoming stream audio to the dedicated audio element so volume buttons control it
+          liveStudioAudio.srcObject = returnStudioStream;
+          liveStudioAudio.play().catch(console.error);
         });
       }
 
@@ -404,8 +403,6 @@
           return;
         } else if (data.type === "AUTH_SUCCESS") {
           statusPill.textContent = "Code Verified! Standby for broadcast...";
-        } else if (data.type === "HOST_SPEAK") {
-          playHostSpeechLocally(data.text);
         } else if (data.type === "START_DICE_COUNTDOWN") {
           startTenSecondRoll();
         } else if (data.type === "SYNC_MATCH_TIMER") {
