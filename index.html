@@ -17,39 +17,51 @@
       box-shadow: 0 0 8px #00f0ff; transition: transform 0.15s; z-index: 10;
     }
     #crosshair.hover-active { transform: translate(-50%, -50%) scale(2.2); background: #ff69b4; }
+    
     #blocker {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(8, 4, 16, 0.9); display: flex; flex-direction: column;
+      background: rgba(8, 4, 16, 0.92); display: flex; flex-direction: column;
       justify-content: center; align-items: center; color: #fff; z-index: 100; text-align: center;
     }
     #instructions-card {
       background: #1c0a32; border: 3px solid #ff79b0; border-radius: 18px;
-      padding: 28px 40px; box-shadow: 0 0 35px rgba(255, 121, 176, 0.35); max-width: 560px; cursor: pointer;
+      padding: 24px 36px; box-shadow: 0 0 35px rgba(255, 121, 176, 0.35); max-width: 520px;
+      cursor: default;
     }
-    h1 { color: #ffda66; margin-top: 0; font-size: 1.6rem; letter-spacing: 1.5px; }
-    p { color: #ebdcf9; font-size: 0.92rem; line-height: 1.5; margin: 8px 0; }
+    h1 { color: #ffda66; margin-top: 0; font-size: 1.6rem; letter-spacing: 1.5px; margin-bottom: 8px; }
+    p { color: #ebdcf9; font-size: 0.92rem; line-height: 1.4; margin: 6px 0; }
     .key { background: #391563; padding: 2px 7px; border-radius: 4px; border: 1px solid #9c4dd6; font-weight: bold; color: #ff69b4; }
+    
+    /* Director Passcode Box on the overlay */
+    #director-card-box {
+      margin: 16px 0; padding: 12px 16px; background: #0c0419; border: 2px solid #00f0ff;
+      border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+    .pass-title { font-size: 0.78rem; font-family: monospace; color: #ffda66; font-weight: bold; }
+    .pass-val { font-size: 1.4rem; font-family: monospace; color: #39ff14; font-weight: 900; letter-spacing: 3px; }
+    .btn-pass-gen {
+      background: #6c5ce7; border: 1.5px solid #a29bfe; color: #fff; border-radius: 8px;
+      padding: 6px 14px; font-size: 0.8rem; font-family: monospace; font-weight: bold; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-pass-gen:hover { background: #5644d8; }
+
+    #btn-enter-studio {
+      width: 100%; margin-top: 10px; padding: 12px 16px; background: linear-gradient(180deg, #fdcb6e, #e17055);
+      border: 2px solid #ffeaa7; border-radius: 10px; color: #2d3436; font-size: 1.05rem;
+      font-weight: 900; text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
+      box-shadow: 0 3px 0 #b3392b, 0 0 12px rgba(253, 203, 110, 0.4);
+    }
+    #btn-enter-studio:hover { filter: brightness(1.08); }
+
     #hud {
       position: absolute; top: 18px; left: 20px; background: rgba(22, 9, 44, 0.88);
       border: 2px solid #ff79b0; border-radius: 12px; padding: 12px 18px; color: #fff;
-      font-family: monospace; font-size: 0.85rem; pointer-events: auto; z-index: 20;
+      font-family: monospace; font-size: 0.85rem; pointer-events: none; z-index: 20;
     }
     #countdown-pill { margin-top: 6px; font-weight: bold; color: #ffda66; font-size: 0.95rem; }
     #match-clock-hud { margin-top: 4px; font-weight: bold; color: #00f0ff; font-size: 0.95rem; }
     #audience-pill { margin-top: 4px; font-weight: bold; color: #39ff14; }
-    
-    /* Director Passcode Widget */
-    #passcode-box {
-      margin-top: 10px; padding: 8px 10px; background: #130624; border: 1.5px solid #00f0ff;
-      border-radius: 8px; display: flex; flex-direction: column; gap: 5px;
-    }
-    .passcode-header { font-size: 0.72rem; color: #ffda66; font-weight: bold; }
-    .passcode-value { font-size: 1.05rem; color: #39ff14; font-weight: 900; letter-spacing: 2px; }
-    .btn-gen {
-      background: #6c5ce7; border: 1px solid #a29bfe; color: #fff; border-radius: 4px;
-      padding: 4px 6px; font-size: 0.7rem; font-family: monospace; font-weight: bold; cursor: pointer;
-    }
-    .btn-gen:hover { background: #5644d8; }
   </style>
 </head>
 <body>
@@ -60,20 +72,21 @@
     <div id="countdown-pill">BROADCAST STARTS IN: <span id="timer-val" style="color:#ff7675;">10s</span></div>
     <div id="match-clock-hud">SHOW CLOCK: <span id="game-clock-val" style="color:#ffda66;">20:00</span></div>
     <div id="audience-pill">AUDIENCE WATCHING: <span id="audience-count" style="color:#39ff14;">1</span></div>
-
-    <div id="passcode-box">
-      <div class="passcode-header">DIRECTOR CONTESTANT CODE:</div>
-      <div class="passcode-value" id="current-passcode-display">SHOW-8392</div>
-      <button class="btn-gen" id="btn-generate-code" onclick="generateNewPasscode()">GENERATE NEW CODE</button>
-    </div>
   </div>
 
   <div id="blocker">
     <div id="instructions-card">
       <h1>The Goody Tonight Show</h1>
       <p>Synchronized tiles & 20-minute race to the finish active!</p>
-      <p><strong>Click Anywhere to Enter</strong></p>
-      <p><span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> &nbsp;Walk around freely</p>
+      
+      <div id="director-card-box">
+        <div class="pass-title">ACTIVE CONTESTANT PASSCODE:</div>
+        <div class="pass-val" id="current-passcode-display">SHOW-8392</div>
+        <button class="btn-pass-gen" id="btn-generate-code" type="button">GENERATE NEW CODE</button>
+      </div>
+
+      <button id="btn-enter-studio" type="button">CLICK TO ENTER STUDIO</button>
+      <p style="margin-top: 10px;"><span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> &nbsp;Walk around freely &nbsp;•&nbsp; <span class="key">ESC</span> to pause & check code</p>
     </div>
   </div>
 
@@ -88,10 +101,13 @@
     const passDisplayEl = document.getElementById('current-passcode-display');
     if (passDisplayEl) passDisplayEl.textContent = activeShowPasscode;
 
-    function generateNewPasscode() {
-      activeShowPasscode = "SHOW-" + Math.floor(1000 + Math.random() * 9000);
-      if (passDisplayEl) passDisplayEl.textContent = activeShowPasscode;
-      console.log("New Active Show Passcode:", activeShowPasscode);
+    const btnGenCode = document.getElementById('btn-generate-code');
+    if (btnGenCode) {
+      btnGenCode.addEventListener('click', (e) => {
+        e.stopPropagation();
+        activeShowPasscode = "SHOW-" + Math.floor(1000 + Math.random() * 9000);
+        passDisplayEl.textContent = activeShowPasscode;
+      });
     }
 
     let studioPower = false;
@@ -253,8 +269,13 @@
 
     const controls = new THREE.PointerLockControls(camera, document.body);
     const blocker = document.getElementById('blocker');
+    const btnEnter = document.getElementById('btn-enter-studio');
 
-    blocker.addEventListener('click', () => { initAudio(); controls.lock(); });
+    btnEnter.addEventListener('click', () => {
+      initAudio();
+      controls.lock();
+    });
+
     controls.addEventListener('lock', () => { blocker.style.display = 'none'; });
     controls.addEventListener('unlock', () => { blocker.style.display = 'flex'; });
 
@@ -1575,7 +1596,7 @@
     function createStudioRoboticCamera(x, z) {
       const camRig = new THREE.Group(); camRig.position.set(x, 0.44, z);
       const darkMat = new THREE.MeshStandardMaterial({ color: 0x1f1f26 });
-      const basePlate = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.42, 0.08, 16), basePlateMat = darkMat); basePlate.position.y = 0.04; camRig.add(basePlate);
+      const basePlate = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.42, 0.08, 16), darkMat); basePlate.position.y = 0.04; camRig.add(basePlate);
       const outerCol = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.13, 0.55, 16), darkMat); outerCol.position.y = 0.35; camRig.add(outerCol);
       const headPivot = new THREE.Group(); headPivot.position.y = 1.0;
       const cameraBox = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.24, 0.42), darkMat); headPivot.add(cameraBox);
