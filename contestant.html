@@ -54,17 +54,9 @@
     .btn-select {
       width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: none;
       font-size: 0.95rem; font-weight: bold; text-transform: uppercase; cursor: pointer; color: #fff;
-      transition: all 0.2s;
     }
     .btn-jake { background: #0984e3; }
     .btn-june { background: #d63031; }
-    .btn-disabled {
-      background: #2a1b38 !important;
-      color: #6d5b80 !important;
-      border: 2px dashed #4e3566 !important;
-      cursor: not-allowed !important;
-      opacity: 0.6;
-    }
 
     #live-stage-portal {
       width: 100%;
@@ -279,8 +271,6 @@
 
     const passcodeInput = document.getElementById('passcode-input');
     const setupCard = document.getElementById('setup-card');
-    const btnJake = document.getElementById('btn-jake');
-    const btnJune = document.getElementById('btn-june');
     const liveStagePortal = document.getElementById('live-stage-portal');
     const localSelfiePip = document.getElementById('local-selfie-pip');
     const studioStreamVideo = document.getElementById('studio-stream-video');
@@ -306,56 +296,23 @@
     const recapHeader = document.getElementById('recap-header');
     const recapBody = document.getElementById('recap-body');
 
-    // Direct room monitor connection that operates as soon as page loads
-    const initialMonitorPeer = new Peer();
-    initialMonitorPeer.on('open', () => {
-      const conn = initialMonitorPeer.connect("goody-main-studio");
-      conn.on('data', (data) => {
-        if (data.type === "SLOTS_UPDATE") {
-          applySlotState(data.slots);
-        }
-      });
-    });
-
-    function applySlotState(slots) {
-      if (!slots) return;
-      if (slots.jake) {
-        btnJake.disabled = true;
-        btnJake.classList.add('btn-disabled');
-        btnJake.textContent = "Contestant 1 (Jake) - TAKEN";
-      } else {
-        btnJake.disabled = false;
-        btnJake.classList.remove('btn-disabled');
-        btnJake.textContent = "I am Contestant 1 (Jake)";
-      }
-
-      if (slots.june) {
-        btnJune.disabled = true;
-        btnJune.classList.add('btn-disabled');
-        btnJune.textContent = "Contestant 2 (June) - TAKEN";
-      } else {
-        btnJune.disabled = false;
-        btnJune.classList.remove('btn-disabled');
-        btnJune.textContent = "I am Contestant 2 (June)";
-      }
-    }
-
     function unlockMobileAudio() {
       if (mobileAudioUnlocked) return;
       mobileAudioUnlocked = true;
 
+      // Unmute incoming stream video element
       studioStreamVideo.muted = false;
 
+      // Prime SpeechSynthesis so mobile iOS/Android does not block speech
       if ('speechSynthesis' in window) {
-        const prime = new SpeechSynthesisUtterance('');
-        prime.volume = 0;
-        window.speechSynthesis.speak(prime);
+        const primeUtterance = new SpeechSynthesisUtterance('');
+        primeUtterance.volume = 0;
+        window.speechSynthesis.speak(primeUtterance);
       }
     }
 
     function playHostSpeechLocally(text) {
       if (!('speechSynthesis' in window)) return;
-      // Immediately cancel any trailing buffer to stop delayed audio
       window.speechSynthesis.cancel();
       const utt = new SpeechSynthesisUtterance(text);
       utt.rate = 0.95;
@@ -363,7 +320,7 @@
       window.speechSynthesis.speak(utt);
     }
 
-    btnJake.addEventListener('click', () => {
+    document.getElementById('btn-jake').addEventListener('click', () => {
       const code = passcodeInput.value.trim();
       if (!/^\d{4}$/.test(code)) {
         alert("Please enter the 4-digit code shown on the host screen.");
@@ -374,7 +331,7 @@
       joinGame("goody-contestant-1", "Jake", code);
     });
 
-    btnJune.addEventListener('click', () => {
+    document.getElementById('btn-june').addEventListener('click', () => {
       const code = passcodeInput.value.trim();
       if (!/^\d{4}$/.test(code)) {
         alert("Please enter the 4-digit code shown on the host screen.");
@@ -386,10 +343,6 @@
     });
 
     async function joinGame(id, name, enteredCode) {
-      if (initialMonitorPeer) {
-        try { initialMonitorPeer.destroy(); } catch(e){}
-      }
-
       contestantId = id;
       contestantName = name;
       setupCard.style.display = 'none';
@@ -416,15 +369,12 @@
             studioStreamVideo.play().catch(console.error);
           });
 
-          dataConn = peer.connect("goody-main-studio");
+          dataConn = peer.connect("goody-main-studio", {
+            metadata: { contestant: contestantId, name: contestantName, passcode: enteredCode }
+          });
 
           dataConn.on('open', () => {
-            statusPill.textContent = "Verifying room code with host...";
-            dataConn.send({
-              type: "REQUEST_JOIN",
-              requestedSlot: contestantId,
-              passcode: enteredCode
-            });
+            statusPill.textContent = "Verifying code with host...";
           });
 
           dataConn.on('data', (data) => {
@@ -432,14 +382,8 @@
               alert("Incorrect 4-digit code! Please check the host screen and try again.");
               location.reload();
               return;
-            } else if (data.type === "SLOT_TAKEN") {
-              alert(`Contestant ${data.slot} has already been taken by someone else!`);
-              location.reload();
-              return;
             } else if (data.type === "AUTH_SUCCESS") {
               statusPill.textContent = "Connected! Standby for host...";
-            } else if (data.type === "SLOTS_UPDATE") {
-              applySlotState(data.slots);
             } else if (data.type === "HOST_SPEAK") {
               playHostSpeechLocally(data.text);
             } else if (data.type === "START_DICE_COUNTDOWN") {
