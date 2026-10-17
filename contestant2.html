@@ -315,7 +315,7 @@
   <main id="live-stage-portal">
     <div class="badge-bar">
       <span id="role-tag" style="color: #00f0ff;">CONNECTING...</span>
-      <span id="mic-status-badge">🎙️ MIC LIVE (ON AIR)</span>
+      <span id="mic-status-badge"> MIC LIVE (ON AIR)</span>
       <span id="match-timer-badge" style="color: #ffda66;"> 20:00</span>
       <span style="color: #39ff14;"> LIVE</span>
     </div>
@@ -373,7 +373,6 @@
 
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script>
-    // AUTOMATIC SESSION TOKEN FAIL-SAFE
     let playerSessionToken = sessionStorage.getItem("goody_session_token_c2");
     if (!playerSessionToken) {
       playerSessionToken = "s2_" + Math.random().toString(36).substring(2, 9);
@@ -508,7 +507,6 @@
             audio: { echoCancellation: true, noiseSuppression: true }
           });
           localSelfiePip.srcObject = localStream;
-          // DEFAULT: Mic is muted on connect until explicitly commanded by host
           setLocalMicEnabled(false);
         }
 
@@ -563,10 +561,9 @@
               roleTag.textContent = `${contestantName.toUpperCase()} (CONTESTANT 2)`;
               statusPill.textContent = "Connected! Standby for host...";
             } else if (data.type === "SET_MIC_STATE") {
-              // Direct gated microphone command from the studio host
               setLocalMicEnabled(Boolean(data.enabled));
               if (data.enabled) {
-                statusPill.textContent = data.promptText || "🎙️ Your microphone is LIVE!";
+                statusPill.textContent = data.promptText || " Your microphone is LIVE!";
               } else {
                 statusPill.textContent = "Microphone muted.";
               }
@@ -632,7 +629,6 @@
             } else if (data.type === "UNLOCK_QUESTION_INPUT") {
               if (data.activeContestantId === CONTESTANT_ID) {
                 unlockQuestionInput();
-                // Contestant 2 deliberates out loud! Unmute mic for the 30s question window
                 setLocalMicEnabled(true);
               }
             } else if (data.type === "START_TIE_BREAKER") {
@@ -807,7 +803,7 @@
         } else {
           clearInterval(questionTimer);
           qTimer.textContent = "TIME OUT!";
-          setLocalMicEnabled(false); // Cut mic on timeout
+          setLocalMicEnabled(false);
           optButtons.forEach(b => b.disabled = true);
           if (dataConn && dataConn.open) {
             dataConn.send({ type: "PLAYER_TIMEOUT", contestant: CONTESTANT_ID });
@@ -838,7 +834,6 @@
         selectedOptionIndex = idx;
         if (questionTimer) clearInterval(questionTimer);
 
-        // INSTANT AUTOMATIC MIC MUTE UPON LOCKING IN ANSWER
         setLocalMicEnabled(false);
 
         optButtons.forEach(b => {
