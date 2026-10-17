@@ -117,6 +117,22 @@
           </button>
         </div>
       </div>
+
+      <!-- HOST LIVE KICK / EJECT CONTROLS -->
+      <div id="host-eject-panel" style="margin-top: 14px; padding: 10px; background: #0a0314; border: 1.5px solid #ff7675; border-radius: 10px;">
+        <div style="font-size: 0.75rem; font-family: monospace; color: #ff7675; font-weight: bold; text-transform: uppercase; margin-bottom: 6px;">
+          Studio Director: Live Kick Controls
+        </div>
+        <div style="display: flex; gap: 8px; justify-content: center;">
+          <button id="btn-kick-p1" class="btn-producer" style="background: #c0392b; border-color: #e74c3c; font-size: 0.75rem; padding: 6px 12px;" onclick="event.stopPropagation(); ejectContestant('goody-contestant-1');">
+            Kick Contestant 1
+          </button>
+          <button id="btn-kick-p2" class="btn-producer" style="background: #c0392b; border-color: #e74c3c; font-size: 0.75rem; padding: 6px 12px;" onclick="event.stopPropagation(); ejectContestant('goody-contestant-2');">
+            Kick Contestant 2
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -316,6 +332,55 @@
       }, 90000);
     }
 
+    // --- DIRECTOR LIVE EJECT FUNCTION ---
+    function ejectContestant(slotId) {
+      const isP1 = slotId === "goody-contestant-1";
+      const isConnected = isP1 ? isP1Connected : isP2Connected;
+      const targetPeerId = isP1 ? p1PeerId : p2PeerId;
+      const playerName = contestantNames[slotId] || (isP1 ? "Contestant 1" : "Contestant 2");
+
+      if (!isConnected && gameState !== "INTERMISSION") {
+        alert(`${playerName} is not currently connected.`);
+        return;
+      }
+
+      const confirmKick = confirm(`Are you sure you want to eject ${playerName} from the broadcast?`);
+      if (!confirmKick) return;
+
+      connectedDataConns.forEach(conn => {
+        if (conn.peer === targetPeerId) {
+          if (conn.open) {
+            conn.send({ type: "HOST_EJECTED_PLAYER", message: "You were disconnected by the studio director." });
+          }
+          setTimeout(() => {
+            try { conn.close(); } catch(e) {}
+          }, 200);
+        }
+      });
+
+      if (isP1) {
+        if (videoJake.srcObject) {
+          try { videoJake.srcObject.getTracks().forEach(t => t.stop()); } catch(e){}
+          videoJake.srcObject = null;
+        }
+        hasLiveJakeStream = false;
+        showJake = false;
+        isP1Connected = false;
+        p1PeerId = null;
+      } else {
+        if (videoJune.srcObject) {
+          try { videoJune.srcObject.getTracks().forEach(t => t.stop()); } catch(e){}
+          videoJune.srcObject = null;
+        }
+        hasLiveJuneStream = false;
+        showJune = false;
+        isP2Connected = false;
+        p2PeerId = null;
+      }
+
+      handleMidGameDropout(slotId);
+    }
+
     // --- RESUME 1: HUMAN RECONNECT / REPLACEMENT HANDLER ---
     function handleReplacementJoined(contestantId, newName, newCity, newSessionToken) {
       if (gameState !== "INTERMISSION" || contestantId !== droppedOutContestant) return;
@@ -325,7 +390,7 @@
 
       const numStr = contestantId === "goody-contestant-1" ? "1" : "2";
 
-      // 100% Guaranteed mathematically via secret session token
+      // Mathematical token match check
       const isSamePerson = (Boolean(droppedOutSessionToken) && droppedOutSessionToken === newSessionToken) ||
         (droppedOutName.toLowerCase().trim() === newName.toLowerCase().trim() &&
          (!newCity || !droppedOutCity || droppedOutCity.toLowerCase().trim() === newCity.toLowerCase().trim()));
