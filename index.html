@@ -91,7 +91,7 @@
       <p><strong>Click Anywhere to Enter Control Mode</strong></p>
       <p><span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> &nbsp;Walk around freely</p>
 
-      <!-- SAM'S PRODUCER OVERRIDE PANEL -->
+      <!-- PRODUCER OVERRIDE PANEL -->
       <div id="producer-panel">
         <div style="color: #ffda66; font-weight: bold; font-family: monospace;">PRODUCER OVERRIDE: INTERMISSION ACTIVE</div>
         <p id="producer-status-txt" style="font-size: 0.8rem; margin: 4px 0;">Looking for replacement contestant...</p>
@@ -167,7 +167,6 @@
       "goody-contestant-2": { yaw: 0, pitch: -0.15 }
     };
 
-    // Names map (updated if hot-swapped)
     const contestantNames = {
       "goody-contestant-1": "Jake",
       "goody-contestant-2": "June"
@@ -180,6 +179,7 @@
     let droppedOutContestant = null;
     let savedTurnPlayer = null;
     let intermissionTimeout = null;
+    let savedActiveCountry = null; // Stores country if dropout occurs mid-question
 
     let autoStartSeconds = 10;
     let autoStartInterval = setInterval(() => {
@@ -221,15 +221,21 @@
     function handleMidGameDropout(contestantId) {
       if (gameState === "GAME_OVER" || gameState === "INTERMISSION") return;
 
-      // Stop speech and timers immediately
       window.speechSynthesis.cancel();
       isGoodySpeaking = false;
       if (diceInterval) clearInterval(diceInterval);
       if (questionInterval) clearInterval(questionInterval);
       if (matchTimerInterval) clearInterval(matchTimerInterval);
 
-      // Save turn context
       savedTurnPlayer = activePlayer;
+
+      // Retain country if drop happens during a question
+      if (activeQuestion) {
+        savedActiveCountry = activeQuestion.country;
+      } else {
+        savedActiveCountry = null;
+      }
+
       activeQuestion = null;
       activeRecap = null;
       stageSelectedOption = null;
@@ -238,16 +244,13 @@
       gameState = "INTERMISSION";
       droppedOutContestant = contestantId;
       const droppedNum = contestantId === "goody-contestant-1" ? "1 (Jake)" : "2 (June)";
-      const remainingNum = contestantId === "goody-contestant-1" ? "2 (June)" : "1 (Jake)";
 
-      // Update Producer UI
       producerPanel.style.display = "block";
       producerStatusTxt.textContent = `Contestant ${droppedNum} disconnected. Searching for replacement...`;
 
       countdownPill.innerHTML = ` <span style="color:#ff7675;">INTERMISSION: WAITING FOR REPLACEMENT...</span>`;
       renderStageQuestionBoard();
 
-      // Broadcast pause to connected peers
       connectedDataConns.forEach(c => {
         if (c.open) c.send({ type: "INTERMISSION_PAUSE", droppedContestant: contestantId });
       });
@@ -255,7 +258,6 @@
       const speech = `Ladies and gentlemen, it appears contestant number ${droppedNum} has lost connection! We are now taking a short intermission while our studio crew works to find a replacement! Please stay tuned!`;
       speakGoody(speech);
 
-      // Auto-fallback to solo mode if replacement isn't found within 90 seconds
       if (intermissionTimeout) clearTimeout(intermissionTimeout);
       intermissionTimeout = setTimeout(() => {
         if (gameState === "INTERMISSION") {
@@ -277,17 +279,21 @@
       countdownPill.innerHTML = ` <span style="color:#39ff14;">LIVE ON AIR!</span>`;
       gameState = "IN_PLAY";
 
-      // Restart match clock
       startTwentyMinuteMatchTimer();
 
-      const speech = `Welcome back to The Goody Tonight Show! We have found a replacement! Joining us in the hot seat is ${newName}, taking over contestant number ${numStr}'s spot on the board! Let's resume the race!`;
+      const speech = `Welcome back to The Goody Tonight Show! We have found a replacement! Joining us in the hot seat is ${newName}, taking over contestant number ${numStr}'s spot on the board! Let's resume!`;
       speakGoody(speech, () => {
-        // Fresh start on current turn
-        startTurnCleanly(savedTurnPlayer);
+        if (savedActiveCountry) {
+          const countryToAsk = savedActiveCountry;
+          savedActiveCountry = null;
+          resumeWithFreshQuestion(savedTurnPlayer, countryToAsk);
+        } else {
+          startTurnCleanly(savedTurnPlayer);
+        }
       });
     }
 
-    // --- RESUME PATH 2: SAM (OR TIMEOUT) CHOOSES 1-PLAYER SOLO ---
+    // --- RESUME PATH 2: PRODUCER (OR TIMEOUT) CHOOSES 1-PLAYER SOLO ---
     function triggerOnePlayerMode() {
       if (gameState !== "INTERMISSION") return;
 
@@ -295,7 +301,6 @@
       producerPanel.style.display = "none";
       isSoloMode = true;
 
-      // Identify who is still connected
       soloPlayerId = isP1Connected ? "goody-contestant-1" : "goody-contestant-2";
       const soloNum = soloPlayerId === "goody-contestant-1" ? "1" : "2";
       const soloName = contestantNames[soloPlayerId];
@@ -309,7 +314,59 @@
 
       const speech = `Welcome back to the show! We have been unable to find a replacement contestant, but not to worry! Contestant number ${soloNum}, ${soloName}, will now race the board alone to see if they can reach the end before the 20-minute show clock expires! If they reach tile 32, they take home the prize. If time runs out, tonight's prize rolls over to next week and we will invite ${soloName} back! Let's play!`;
       speakGoody(speech, () => {
-        startTurnCleanly(soloPlayerId);
+        if (savedActiveCountry && savedTurnPlayer === soloPlayerId) {
+          const countryToAsk = savedActiveCountry;
+          savedActiveCountry = null;
+          resumeWithFreshQuestion(soloPlayerId, countryToAsk);
+        } else {
+          savedActiveCountry = null;
+          startTurnCleanly(soloPlayerId);
+        }
+      });
+    }
+
+    function resumeWithFreshQuestion(turnPlayer, country) {
+      activePlayer = turnPlayer;
+      const pName = contestantNames[activePlayer];
+      activeRecap = null;
+      stageSelectedOption = null;
+      stageOptionStatus = null;
+      p1RollVal = null;
+      p2RollVal = null;
+
+      const qPool = COUNTRY_QUESTIONS[country] || COUNTRY_QUESTIONS["UK"];
+      const rawQ = qPool[Math.floor(Math.random() * qPool.length)];
+
+      activeQuestion = {
+        country: country,
+        text: rawQ.q,
+        q: rawQ.q,
+        options: rawQ.options,
+        ans: rawQ.ans,
+        recap: rawQ.recap
+      };
+
+      connectedDataConns.forEach(c => {
+        if (c.open) c.send({
+          type: "SHOW_QUESTION_LOCKED",
+          question: activeQuestion,
+          activeContestantId: activePlayer,
+          activeContestantName: pName
+        });
+      });
+      renderStageQuestionBoard();
+
+      const speech = `Resuming on ${country} for ${pName}! Here is your fresh question: ${activeQuestion.q}... You have 30 seconds to lock in!`;
+      speakGoody(speech, () => {
+        if (gameState === "INTERMISSION") return;
+        connectedDataConns.forEach(c => {
+          if (c.open) c.send({
+            type: "UNLOCK_QUESTION_INPUT",
+            activeContestantId: activePlayer,
+            activeContestantName: pName
+          });
+        });
+        startQuestionCountdown();
       });
     }
 
@@ -503,7 +560,6 @@
             if (cId === "goody-contestant-1") isP1Connected = true;
             if (cId === "goody-contestant-2") isP2Connected = true;
 
-            // Handle pre-game vs mid-game reconnection
             if (!studioPower) {
               checkBothContestantsReady();
             } else if (gameState === "INTERMISSION" && cId === droppedOutContestant) {
@@ -1060,7 +1116,6 @@
       if (diceInterval) clearInterval(diceInterval);
       if (questionInterval) clearInterval(questionInterval);
 
-      // Solo mode timer expiration check
       if (isSoloMode) {
         gameState = "GAME_OVER";
         const soloName = contestantNames[soloPlayerId];
@@ -1463,12 +1518,13 @@
 
         qBoardCtx.fillStyle = '#ffffff';
         qBoardCtx.font = '16px sans-serif';
-        qBoardCtx.fillText("SEARCHING FOR REPLACEMENT CONTESTANT...", 256, 190);
-        qBoardCtx.fillText("ENTER STUDIO CODE ON PHONE TO HOT-SWAP IN!", 256, 230);
+        qBoardCtx.fillText("SEARCHING FOR REPLACEMENT CONTESTANT...", 256, 195);
+        qBoardCtx.fillText("PLEASE STAND BY AS WE RESOLVE TECHNICAL ISSUES.", 256, 235);
 
+        // Room passcode intentionally omitted from board
         qBoardCtx.fillStyle = '#39ff14';
-        qBoardCtx.font = 'bold 28px monospace';
-        qBoardCtx.fillText(`CODE: ${studioRoomCode}`, 256, 290);
+        qBoardCtx.font = 'bold 16px monospace';
+        qBoardCtx.fillText("BROADCAST WILL RESUME SHORTLY", 256, 290);
       } else if (activeRecap) {
         qBoardCtx.fillStyle = activeRecap.isCorrect ? '#00b894' : '#ff7675';
         qBoardCtx.font = 'bold 22px sans-serif';
