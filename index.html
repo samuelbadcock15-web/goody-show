@@ -197,6 +197,11 @@
       "goody-contestant-2": "Nottingham"
     };
 
+    const contestantTokens = {
+      "goody-contestant-1": null,
+      "goody-contestant-2": null
+    };
+
     const playerStats = {
       asked: 0,
       correct: 0
@@ -211,6 +216,7 @@
     let droppedOutContestant = null;
     let droppedOutName = "";
     let droppedOutCity = "";
+    let droppedOutSessionToken = null;
 
     let savedTurnPlayer = null;
     let intermissionTimeout = null;
@@ -285,6 +291,7 @@
       droppedOutContestant = contestantId;
       droppedOutName = contestantNames[contestantId] || "";
       droppedOutCity = contestantCities[contestantId] || "";
+      droppedOutSessionToken = contestantTokens[contestantId] || null;
 
       const droppedNum = contestantId === "goody-contestant-1" ? `1 (${droppedOutName})` : `2 (${droppedOutName})`;
 
@@ -310,7 +317,7 @@
     }
 
     // --- RESUME 1: HUMAN RECONNECT / REPLACEMENT HANDLER ---
-    function handleReplacementJoined(contestantId, newName, newCity) {
+    function handleReplacementJoined(contestantId, newName, newCity, newSessionToken) {
       if (gameState !== "INTERMISSION" || contestantId !== droppedOutContestant) return;
 
       if (intermissionTimeout) clearTimeout(intermissionTimeout);
@@ -318,16 +325,19 @@
 
       const numStr = contestantId === "goody-contestant-1" ? "1" : "2";
 
-      // Detect whether it's the exact same player reconnecting or a brand new replacement
-      const isSamePerson = droppedOutName.toLowerCase().trim() === newName.toLowerCase().trim() &&
-                           (!newCity || !droppedOutCity || droppedOutCity.toLowerCase().trim() === newCity.toLowerCase().trim());
+      // 100% Guaranteed mathematically via secret session token
+      const isSamePerson = (Boolean(droppedOutSessionToken) && droppedOutSessionToken === newSessionToken) ||
+        (droppedOutName.toLowerCase().trim() === newName.toLowerCase().trim() &&
+         (!newCity || !droppedOutCity || droppedOutCity.toLowerCase().trim() === newCity.toLowerCase().trim()));
 
       contestantNames[contestantId] = newName;
       if (newCity) contestantCities[contestantId] = newCity;
+      if (newSessionToken) contestantTokens[contestantId] = newSessionToken;
 
       droppedOutContestant = null;
       droppedOutName = "";
       droppedOutCity = "";
+      droppedOutSessionToken = null;
 
       countdownPill.innerHTML = ` <span style="color:#39ff14;">LIVE ON AIR!</span>`;
 
@@ -810,10 +820,12 @@
           conn.on('open', () => {
             const clientName = (conn.metadata && conn.metadata.name) ? conn.metadata.name.trim() : (cId === "goody-contestant-2" ? "June" : "Jake");
             const clientCity = (conn.metadata && conn.metadata.city) ? conn.metadata.city.trim() : (cId === "goody-contestant-2" ? "Nottingham" : "London");
+            const clientToken = conn.metadata ? conn.metadata.sessionToken : null;
 
             if (cId === "goody-contestant-1") {
               isP1Connected = true;
               p1PeerId = conn.peer;
+              if (clientToken) contestantTokens["goody-contestant-1"] = clientToken;
               if (gameState !== "INTERMISSION") {
                 contestantNames["goody-contestant-1"] = clientName;
                 contestantCities["goody-contestant-1"] = clientCity;
@@ -822,6 +834,7 @@
             if (cId === "goody-contestant-2") {
               isP2Connected = true;
               p2PeerId = conn.peer;
+              if (clientToken) contestantTokens["goody-contestant-2"] = clientToken;
               if (gameState !== "INTERMISSION") {
                 contestantNames["goody-contestant-2"] = clientName;
                 contestantCities["goody-contestant-2"] = clientCity;
@@ -835,7 +848,7 @@
             if (!studioPower) {
               checkBothContestantsReady();
             } else if (gameState === "INTERMISSION" && cId === droppedOutContestant) {
-              handleReplacementJoined(cId, clientName, clientCity);
+              handleReplacementJoined(cId, clientName, clientCity, clientToken);
             }
           });
 
@@ -2402,121 +2415,4 @@
     }
     scene.add(miniDiorama);
 
-    const move = { forward: false, backward: false, left: false, right: false };
-    const velocity = new THREE.Vector3();
-    document.addEventListener('keydown', (e) => {
-      if (e.code === 'KeyW') move.forward = true; if (e.code === 'KeyS') move.backward = true;
-      if (e.code === 'KeyA') move.left = true; if (e.code === 'KeyD') move.right = true;
-    });
-    document.addEventListener('keyup', (e) => {
-      if (e.code === 'KeyW') move.forward = false; if (e.code === 'KeyS') move.backward = false;
-      if (e.code === 'KeyA') move.left = false; if (e.code === 'KeyD') move.right = false;
-    });
-
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-
-    function syncContestantCameras() {
-      const dist = 1.8;
-      const height = 1.2;
-
-      if (playerPlushie1) {
-        const rot = contestantRotations["goody-contestant-1"];
-        playerPlushie1.rotation.y = rot.yaw;
-
-        const worldX = playerPlushie1.position.x;
-        const worldY = playerPlushie1.position.y + 3.95;
-        const worldZ = playerPlushie1.position.z - 9.0;
-
-        camJake.position.set(
-          worldX + Math.sin(rot.yaw) * dist,
-          worldY + height,
-          worldZ + Math.cos(rot.yaw) * dist
-        );
-
-        const lookTarget = new THREE.Vector3(
-          worldX - Math.sin(rot.yaw) * 4.0,
-          worldY + 0.5 + rot.pitch * 3.0,
-          worldZ - Math.cos(rot.yaw) * 4.0
-        );
-        camJake.lookAt(lookTarget);
-      }
-
-      if (playerPlushie2) {
-        const rot = contestantRotations["goody-contestant-2"];
-        playerPlushie2.rotation.y = rot.yaw;
-
-        const worldX = playerPlushie2.position.x;
-        const worldY = playerPlushie2.position.y + 3.95;
-        const worldZ = playerPlushie2.position.z - 9.0;
-
-        camJune.position.set(
-          worldX + Math.sin(rot.yaw) * dist,
-          worldY + height,
-          worldZ + Math.cos(rot.yaw) * dist
-        );
-
-        const lookTarget = new THREE.Vector3(
-          worldX - Math.sin(rot.yaw) * 4.0,
-          worldY + 0.5 + rot.pitch * 3.0,
-          worldZ - Math.cos(rot.yaw) * 4.0
-        );
-        camJune.lookAt(lookTarget);
-      }
-    }
-
-    let prevTime = performance.now();
-    function animate() {
-      requestAnimationFrame(animate);
-      const time = performance.now();
-      const delta = Math.min((time - prevTime) / 1000, 0.1);
-
-      renderBackstageScreens();
-      renderGoodyFace(time);
-
-      if (studioPower) {
-        updateCameraAlignment();
-        fixtureCyan.target.position.x = -1.2 + Math.sin(time * 0.003) * 1.5;
-        fixtureMagenta.target.position.x = 1.2 + Math.cos(time * 0.003) * 1.5;
-
-        miniAudience.children.forEach((p) => {
-          if (p !== playerPlushie1 && p !== playerPlushie2) {
-            p.position.y = p.userData.initialY + Math.sin(time * 0.006 + p.userData.phase) * 0.04;
-          }
-        });
-      }
-
-      if (controls.isLocked) {
-        velocity.x -= velocity.x * 10.0 * delta; velocity.z -= velocity.z * 10.0 * delta;
-        const speed = 45.0;
-        if (move.forward || move.backward) velocity.z -= (Number(move.forward) - Number(move.backward)) * speed * delta;
-        if (move.left || move.right) velocity.x -= (Number(move.right) - Number(move.left)) * speed * delta;
-        controls.moveRight(-velocity.x * delta); controls.moveForward(-velocity.z * delta);
-      }
-
-      prevTime = time;
-
-      syncContestantCameras();
-
-      if (playerPlushie1) playerPlushie1.visible = false;
-      if (playerPlushie2) playerPlushie2.visible = false;
-      renderer.render(scene, camera);
-
-      if (showJake) {
-        if (playerPlushie1) playerPlushie1.visible = true;
-        rendererJake.render(scene, camJake);
-        if (playerPlushie1) playerPlushie1.visible = false;
-      }
-
-      if (showJune) {
-        if (playerPlushie2) playerPlushie2.visible = true;
-        rendererJune.render(scene, camJune);
-        if (playerPlushie2) playerPlushie2.visible = false;
-      }
-    }
-    animate();
-  </script>
-</body>
-</html>
+    const move
