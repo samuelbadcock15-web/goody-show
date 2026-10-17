@@ -19,12 +19,12 @@
     #crosshair.hover-active { transform: translate(-50%, -50%) scale(2.2); background: #ff69b4; }
     #blocker {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(8, 4, 16, 0.9); display: flex; flex-direction: column;
+      background: rgba(8, 4, 16, 0.92); display: flex; flex-direction: column;
       justify-content: center; align-items: center; color: #fff; z-index: 100; text-align: center;
     }
     #instructions-card {
       background: #1c0a32; border: 3px solid #ff79b0; border-radius: 18px;
-      padding: 28px 40px; box-shadow: 0 0 35px rgba(255, 121, 176, 0.35); max-width: 560px; cursor: pointer;
+      padding: 24px 36px; box-shadow: 0 0 35px rgba(255, 121, 176, 0.35); max-width: 580px; cursor: pointer;
     }
     h1 { color: #ffda66; margin-top: 0; font-size: 1.6rem; letter-spacing: 1.5px; }
     p { color: #ebdcf9; font-size: 0.92rem; line-height: 1.5; margin: 8px 0; }
@@ -35,9 +35,32 @@
       letter-spacing: 12px;
       color: #39ff14;
       font-family: monospace;
-      margin: 14px 0 6px 0;
+      margin: 12px 0 6px 0;
       text-shadow: 0 0 16px rgba(57, 255, 20, 0.6);
     }
+    #producer-panel {
+      margin-top: 14px;
+      padding: 12px;
+      background: #0d041a;
+      border: 2px dashed #00f0ff;
+      border-radius: 12px;
+      display: none;
+    }
+    .btn-producer {
+      background: #d63031;
+      border: 2px solid #ff7675;
+      color: #fff;
+      font-family: monospace;
+      font-weight: bold;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      margin-top: 8px;
+      transition: background 0.2s;
+    }
+    .btn-producer:hover { background: #e17055; }
     #hud {
       position: absolute; top: 18px; left: 20px; background: rgba(22, 9, 44, 0.88);
       border: 2px solid #ff79b0; border-radius: 12px; padding: 12px 18px; color: #fff;
@@ -65,8 +88,17 @@
       <h1>The Goody Tonight Show</h1>
       <p>Synchronized tiles & 20-minute race to the finish active!</p>
       <div id="entry-code" class="room-code-display">----</div>
-      <p><strong>Click Anywhere to Enter</strong></p>
+      <p><strong>Click Anywhere to Enter Control Mode</strong></p>
       <p><span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> &nbsp;Walk around freely</p>
+
+      <!-- SAM'S PRODUCER OVERRIDE PANEL -->
+      <div id="producer-panel">
+        <div style="color: #ffda66; font-weight: bold; font-family: monospace;">PRODUCER OVERRIDE: INTERMISSION ACTIVE</div>
+        <p id="producer-status-txt" style="font-size: 0.8rem; margin: 4px 0;">Looking for replacement contestant...</p>
+        <button id="btn-force-solo" class="btn-producer" onclick="event.stopPropagation(); triggerOnePlayerMode();">
+          Continue as 1-Player Solo Race
+        </button>
+      </div>
     </div>
   </div>
 
@@ -77,7 +109,6 @@
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
   <script>
-    // 4-Digit Room Code Generation
     const studioRoomCode = Math.floor(1000 + Math.random() * 9000).toString();
     document.getElementById('entry-code').textContent = studioRoomCode;
     document.getElementById('hud-code-val').textContent = studioRoomCode;
@@ -98,6 +129,9 @@
     let hasLiveJuneStream = false;
 
     let gameState = "IDLE";
+    let isSoloMode = false;
+    let soloPlayerId = null;
+
     let diceCountdown = 0;
     let diceInterval = null;
     let p1RollVal = null;
@@ -125,16 +159,27 @@
     const audienceCountEl = document.getElementById('audience-count');
     const countdownPill = document.getElementById('countdown-pill');
     const timerValEl = document.getElementById('timer-val');
+    const producerPanel = document.getElementById('producer-panel');
+    const producerStatusTxt = document.getElementById('producer-status-txt');
 
     const contestantRotations = {
       "goody-contestant-1": { yaw: 0, pitch: -0.15 },
       "goody-contestant-2": { yaw: 0, pitch: -0.15 }
     };
 
-    // Contestant Connection & Pre-Show Auto-Start Logic
+    // Names map (updated if hot-swapped)
+    const contestantNames = {
+      "goody-contestant-1": "Jake",
+      "goody-contestant-2": "June"
+    };
+
+    // Dropout & State Persistence Tracking
     let isP1Connected = false;
     let isP2Connected = false;
     let timerExpired = false;
+    let droppedOutContestant = null;
+    let savedTurnPlayer = null;
+    let intermissionTimeout = null;
 
     let autoStartSeconds = 10;
     let autoStartInterval = setInterval(() => {
@@ -170,6 +215,125 @@
       } else if (timerExpired && !studioPower) {
         checkReadyOrWait();
       }
+    }
+
+    // --- INTERMISSION & DISCONNECT HANDLER ---
+    function handleMidGameDropout(contestantId) {
+      if (gameState === "GAME_OVER" || gameState === "INTERMISSION") return;
+
+      // Stop speech and timers immediately
+      window.speechSynthesis.cancel();
+      isGoodySpeaking = false;
+      if (diceInterval) clearInterval(diceInterval);
+      if (questionInterval) clearInterval(questionInterval);
+      if (matchTimerInterval) clearInterval(matchTimerInterval);
+
+      // Save turn context
+      savedTurnPlayer = activePlayer;
+      activeQuestion = null;
+      activeRecap = null;
+      stageSelectedOption = null;
+      stageOptionStatus = null;
+
+      gameState = "INTERMISSION";
+      droppedOutContestant = contestantId;
+      const droppedNum = contestantId === "goody-contestant-1" ? "1 (Jake)" : "2 (June)";
+      const remainingNum = contestantId === "goody-contestant-1" ? "2 (June)" : "1 (Jake)";
+
+      // Update Producer UI
+      producerPanel.style.display = "block";
+      producerStatusTxt.textContent = `Contestant ${droppedNum} disconnected. Searching for replacement...`;
+
+      countdownPill.innerHTML = ` <span style="color:#ff7675;">INTERMISSION: WAITING FOR REPLACEMENT...</span>`;
+      renderStageQuestionBoard();
+
+      // Broadcast pause to connected peers
+      connectedDataConns.forEach(c => {
+        if (c.open) c.send({ type: "INTERMISSION_PAUSE", droppedContestant: contestantId });
+      });
+
+      const speech = `Ladies and gentlemen, it appears contestant number ${droppedNum} has lost connection! We are now taking a short intermission while our studio crew works to find a replacement! Please stay tuned!`;
+      speakGoody(speech);
+
+      // Auto-fallback to solo mode if replacement isn't found within 90 seconds
+      if (intermissionTimeout) clearTimeout(intermissionTimeout);
+      intermissionTimeout = setTimeout(() => {
+        if (gameState === "INTERMISSION") {
+          triggerOnePlayerMode();
+        }
+      }, 90000);
+    }
+
+    // --- RESUME PATH 1: HOT-SWAP REPLACEMENT JOINS ---
+    function handleReplacementJoined(contestantId, newName) {
+      if (gameState !== "INTERMISSION" || contestantId !== droppedOutContestant) return;
+
+      if (intermissionTimeout) clearTimeout(intermissionTimeout);
+      producerPanel.style.display = "none";
+      contestantNames[contestantId] = newName;
+      droppedOutContestant = null;
+
+      const numStr = contestantId === "goody-contestant-1" ? "1" : "2";
+      countdownPill.innerHTML = ` <span style="color:#39ff14;">LIVE ON AIR!</span>`;
+      gameState = "IN_PLAY";
+
+      // Restart match clock
+      startTwentyMinuteMatchTimer();
+
+      const speech = `Welcome back to The Goody Tonight Show! We have found a replacement! Joining us in the hot seat is ${newName}, taking over contestant number ${numStr}'s spot on the board! Let's resume the race!`;
+      speakGoody(speech, () => {
+        // Fresh start on current turn
+        startTurnCleanly(savedTurnPlayer);
+      });
+    }
+
+    // --- RESUME PATH 2: SAM (OR TIMEOUT) CHOOSES 1-PLAYER SOLO ---
+    function triggerOnePlayerMode() {
+      if (gameState !== "INTERMISSION") return;
+
+      if (intermissionTimeout) clearTimeout(intermissionTimeout);
+      producerPanel.style.display = "none";
+      isSoloMode = true;
+
+      // Identify who is still connected
+      soloPlayerId = isP1Connected ? "goody-contestant-1" : "goody-contestant-2";
+      const soloNum = soloPlayerId === "goody-contestant-1" ? "1" : "2";
+      const soloName = contestantNames[soloPlayerId];
+      activePlayer = soloPlayerId;
+
+      countdownPill.innerHTML = ` <span style="color:#39ff14;">SOLO RACE ACTIVE!</span>`;
+      gameState = "IN_PLAY";
+      renderStageQuestionBoard();
+
+      startTwentyMinuteMatchTimer();
+
+      const speech = `Welcome back to the show! We have been unable to find a replacement contestant, but not to worry! Contestant number ${soloNum}, ${soloName}, will now race the board alone to see if they can reach the end before the 20-minute show clock expires! If they reach tile 32, they take home the prize. If time runs out, tonight's prize rolls over to next week and we will invite ${soloName} back! Let's play!`;
+      speakGoody(speech, () => {
+        startTurnCleanly(soloPlayerId);
+      });
+    }
+
+    function startTurnCleanly(turnPlayer) {
+      activePlayer = turnPlayer;
+      const pName = contestantNames[activePlayer];
+      activeQuestion = null;
+      activeRecap = null;
+      stageSelectedOption = null;
+      stageOptionStatus = null;
+      p1RollVal = null;
+      p2RollVal = null;
+      renderStageQuestionBoard();
+
+      speakGoody(`It is now ${pName}'s turn! You have 10 seconds to roll your dice!`, () => {
+        startTurnDiceCountdown(activePlayer, pName);
+        connectedDataConns.forEach(c => {
+          if (c.open) c.send({
+            type: "ENABLE_TURN_ROLL",
+            activeContestantId: activePlayer,
+            activeContestantName: pName
+          });
+        });
+      });
     }
 
     const INTRO_SPEECH =
@@ -333,17 +497,23 @@
             connectedAudiencePeers.add(conn.peer);
             broadcastAudienceCount();
 
-            // Track connected contestants
-            if (conn.metadata && conn.metadata.contestant === "goody-contestant-1") {
-              isP1Connected = true;
-            } else if (conn.metadata && conn.metadata.contestant === "goody-contestant-2") {
-              isP2Connected = true;
-            }
+            const cId = conn.metadata ? conn.metadata.contestant : null;
+            const cName = (conn.metadata && conn.metadata.name) ? conn.metadata.name : (cId === "goody-contestant-2" ? "June" : "Jake");
 
-            checkBothContestantsReady();
+            if (cId === "goody-contestant-1") isP1Connected = true;
+            if (cId === "goody-contestant-2") isP2Connected = true;
+
+            // Handle pre-game vs mid-game reconnection
+            if (!studioPower) {
+              checkBothContestantsReady();
+            } else if (gameState === "INTERMISSION" && cId === droppedOutContestant) {
+              handleReplacementJoined(cId, cName);
+            }
           });
 
           conn.on('data', (data) => {
+            if (gameState === "INTERMISSION") return;
+
             if (data.type === "PLAYER_ROLLED_DICE") {
               handlePlayerRoll(data.contestant, data.name, data.roll);
             } else if (data.type === "PLAYER_ANSWERED") {
@@ -389,15 +559,16 @@
             connectedDataConns = connectedDataConns.filter(c => c.peer !== conn.peer);
             broadcastAudienceCount();
 
-            // Update contestant disconnection status
-            if (conn.metadata && conn.metadata.contestant === "goody-contestant-1") {
-              isP1Connected = false;
-            } else if (conn.metadata && conn.metadata.contestant === "goody-contestant-2") {
-              isP2Connected = false;
-            }
+            const cId = conn.metadata ? conn.metadata.contestant : null;
+            if (cId === "goody-contestant-1") isP1Connected = false;
+            if (cId === "goody-contestant-2") isP2Connected = false;
 
             if (!studioPower && timerExpired) {
               checkReadyOrWait();
+            } else if (studioPower && gameState === "IN_PLAY" && !isSoloMode) {
+              if (cId === "goody-contestant-1" || cId === "goody-contestant-2") {
+                handleMidGameDropout(cId);
+              }
             }
           });
         });
@@ -631,6 +802,8 @@
       let currentHopIdx = fromIdx;
 
       function hopNextStep() {
+        if (gameState === "INTERMISSION") return;
+
         if (currentHopIdx === toIdx) {
           if (onComplete) onComplete();
           return;
@@ -652,6 +825,8 @@
         playTone(320 + Math.random() * 80, 'sine', 0.06, 0.04);
 
         function stepFrame(now) {
+          if (gameState === "INTERMISSION") return;
+
           const elapsed = now - hopStartTime;
           const progress = Math.min(1.0, elapsed / hopDurationMs);
 
@@ -689,7 +864,9 @@
 
       animatePawnHop(targetPawn, oldIdx, targetIdx, xOffset, () => {
         if (p1Index >= boardTileCoords.length - 1 || p2Index >= boardTileCoords.length - 1) {
-          triggerFinishLineVictory(isP1 ? "Jake" : "June", isP1 ? "June" : "Jake");
+          const winName = isP1 ? contestantNames["goody-contestant-1"] : contestantNames["goody-contestant-2"];
+          const loseName = isP1 ? contestantNames["goody-contestant-2"] : contestantNames["goody-contestant-1"];
+          triggerFinishLineVictory(winName, loseName);
           return;
         }
 
@@ -711,7 +888,7 @@
         stageSelectedOption = null;
         stageOptionStatus = null;
 
-        const activeName = activePlayer === "goody-contestant-1" ? "Jake" : "June";
+        const activeName = contestantNames[activePlayer];
 
         connectedDataConns.forEach(c => {
           if (c.open) c.send({
@@ -725,6 +902,7 @@
 
         const speech = `${activeName} landed on ${landedCountry}! Here is your question: ${activeQuestion.q}... You have 30 seconds to lock in!`;
         speakGoody(speech, () => {
+          if (gameState === "INTERMISSION") return;
           connectedDataConns.forEach(c => {
             if (c.open) c.send({
               type: "UNLOCK_QUESTION_INPUT",
@@ -741,6 +919,10 @@
       questionTimer = 30;
       if (questionInterval) clearInterval(questionInterval);
       questionInterval = setInterval(() => {
+        if (gameState === "INTERMISSION") {
+          clearInterval(questionInterval);
+          return;
+        }
         questionTimer--;
         renderStageQuestionBoard();
         if (questionTimer <= 0) {
@@ -846,8 +1028,13 @@
     function nextTurn() {
       if (gameState !== "IN_PLAY") return;
 
-      activePlayer = activePlayer === "goody-contestant-1" ? "goody-contestant-2" : "goody-contestant-1";
-      const pName = activePlayer === "goody-contestant-1" ? "Jake" : "June";
+      if (isSoloMode) {
+        activePlayer = soloPlayerId;
+      } else {
+        activePlayer = activePlayer === "goody-contestant-1" ? "goody-contestant-2" : "goody-contestant-1";
+      }
+
+      const pName = contestantNames[activePlayer];
 
       activeQuestion = null;
       activeRecap = null;
@@ -873,6 +1060,16 @@
       if (diceInterval) clearInterval(diceInterval);
       if (questionInterval) clearInterval(questionInterval);
 
+      // Solo mode timer expiration check
+      if (isSoloMode) {
+        gameState = "GAME_OVER";
+        const soloName = contestantNames[soloPlayerId];
+        const speech = `The 20-minute timer has expired! Unfortunately, ${soloName} was unable to complete the board in time! Tonight's prize rolls over, and we will invite ${soloName} back to our next show! Shows are at 9 PM most days! Goodnight everyone!`;
+        speakGoody(speech);
+        broadcastGameOver("NOBODY", "SOLO_TIME_EXPIRED");
+        return;
+      }
+
       if (p1Index === 0 && p2Index === 0) {
         gameState = "GAME_OVER";
         const speech = "The 20-minute show timer has run out, and both contestants are still on the starting square! Nobody wins tonight, so the prize rolls over to our next game! Thank you for watching The Goody Tonight Show. Shows are at 9 PM most days. Goodnight everyone!";
@@ -887,8 +1084,8 @@
       }
 
       gameState = "GAME_OVER";
-      const winner = p1Index > p2Index ? "Jake" : "June";
-      const loser = p1Index > p2Index ? "June" : "Jake";
+      const winner = p1Index > p2Index ? contestantNames["goody-contestant-1"] : contestantNames["goody-contestant-2"];
+      const loser = p1Index > p2Index ? contestantNames["goody-contestant-2"] : contestantNames["goody-contestant-1"];
 
       const speech = `The 20-minute timer is over! Well done to our winner ${winner}, and commiserations to ${loser}! Thanks for watching, come again next show, shows are at 9 PM most days! Goodnight!`;
       speakGoody(speech);
@@ -930,8 +1127,8 @@
       isTieBreakerActive = false;
 
       const isJake = contestant === "goody-contestant-1";
-      const answeringName = isJake ? "Jake" : "June";
-      const opponentName = isJake ? "June" : "Jake";
+      const answeringName = isJake ? contestantNames["goody-contestant-1"] : contestantNames["goody-contestant-2"];
+      const opponentName = isJake ? contestantNames["goody-contestant-2"] : contestantNames["goody-contestant-1"];
       const isCorrect = chosen === activeQuestion.ans;
 
       stageSelectedOption = chosen;
@@ -967,7 +1164,10 @@
       if (questionInterval) clearInterval(questionInterval);
       if (diceInterval) clearInterval(diceInterval);
 
-      const speech = `Unbelievable! ${winnerName} has reached the final square and completed the floor! Well done to our winner ${winnerName}, and commiserations to ${loserName}! Thanks for watching, come again next show, shows are at 9 PM most days! Goodnight!`;
+      const speech = isSoloMode
+        ? `Unbelievable! ${winnerName} has reached the final square and completed the solo challenge! Well done to our champion ${winnerName}! Thanks for watching, shows are at 9 PM most days! Goodnight!`
+        : `Unbelievable! ${winnerName} has reached the final square and completed the floor! Well done to our winner ${winnerName}, and commiserations to ${loserName}! Thanks for watching, come again next show, shows are at 9 PM most days! Goodnight!`;
+
       speakGoody(speech);
       broadcastGameOver(winnerName, "REACHED_THE_END");
     }
@@ -1247,7 +1447,29 @@
       qBoardCtx.lineWidth = 6;
       qBoardCtx.strokeRect(3, 3, 506, 378);
 
-      if (activeRecap) {
+      if (gameState === "INTERMISSION") {
+        qBoardCtx.fillStyle = '#ff7675';
+        qBoardCtx.font = 'bold 24px sans-serif';
+        qBoardCtx.textAlign = 'center';
+        qBoardCtx.fillText("STUDIO INTERMISSION", 256, 70);
+
+        qBoardCtx.fillStyle = '#00f0ff';
+        qBoardCtx.fillRect(36, 88, 440, 2);
+
+        qBoardCtx.fillStyle = '#ffda66';
+        qBoardCtx.font = 'bold 18px monospace';
+        const missingNum = droppedOutContestant === "goody-contestant-1" ? "1 (JAKE)" : "2 (JUNE)";
+        qBoardCtx.fillText(`LOST CONNECTION TO CONTESTANT ${missingNum}`, 256, 140);
+
+        qBoardCtx.fillStyle = '#ffffff';
+        qBoardCtx.font = '16px sans-serif';
+        qBoardCtx.fillText("SEARCHING FOR REPLACEMENT CONTESTANT...", 256, 190);
+        qBoardCtx.fillText("ENTER STUDIO CODE ON PHONE TO HOT-SWAP IN!", 256, 230);
+
+        qBoardCtx.fillStyle = '#39ff14';
+        qBoardCtx.font = 'bold 28px monospace';
+        qBoardCtx.fillText(`CODE: ${studioRoomCode}`, 256, 290);
+      } else if (activeRecap) {
         qBoardCtx.fillStyle = activeRecap.isCorrect ? '#00b894' : '#ff7675';
         qBoardCtx.font = 'bold 22px sans-serif';
         qBoardCtx.textAlign = 'center';
@@ -1284,7 +1506,7 @@
         qBoardCtx.font = '14px monospace';
         qBoardCtx.fillText("RETURNING TO RULES BEFORE NEXT ROLL...", 256, 342);
       } else if (activeQuestion) {
-        const pName = isTieBreakerActive ? "SUDDEN DEATH TIE-BREAKER" : (activePlayer === "goody-contestant-1" ? "JAKE'S TURN" : "JUNE'S TURN");
+        const pName = isTieBreakerActive ? "SUDDEN DEATH TIE-BREAKER" : `${contestantNames[activePlayer].toUpperCase()}'S TURN`;
         qBoardCtx.fillStyle = '#ffda66';
         qBoardCtx.font = 'bold 18px monospace';
         qBoardCtx.textAlign = 'left';
@@ -1388,12 +1610,19 @@
           qBoardCtx.fillStyle = '#ffda66';
           qBoardCtx.font = 'bold 24px sans-serif';
           qBoardCtx.textAlign = 'center';
-          qBoardCtx.fillText(" OFFICIAL GAME RULES ", 256, 44);
+          qBoardCtx.fillText(isSoloMode ? " SOLO RACE ACTIVE " : " OFFICIAL GAME RULES ", 256, 44);
 
           qBoardCtx.fillStyle = '#00f0ff';
           qBoardCtx.fillRect(36, 56, 440, 2);
 
-          const rules = [
+          const rules = isSoloMode ? [
+            " 1. Contestant plays solo against the 20-minute clock.",
+            " 2. You have 10 seconds to roll your dice every turn.",
+            " 3. Land on a tile to trigger that country's trivia.",
+            " 4. Correct answer secures your position on the tile.",
+            " 5. Incorrect answer sends you straight back to START!",
+            " 6. Reach tile 32 before 20:00 to WIN THE SHOW PRIZE!"
+          ] : [
             " 1. You have 10 seconds to roll your dice when active.",
             " 2. Land on a tile to trigger that country's trivia.",
             " 3. You have 30 seconds to lock in your final answer.",
@@ -1571,19 +1800,19 @@
     function renderBackstageScreens() {
       sScreenCtx.fillStyle = '#060210'; sScreenCtx.fillRect(0, 0, 512, 256);
       if (studioPower) {
-        if (showJake) drawScreenFeed(sScreenCtx, 15, 20, 225, 215, "Jake", "London", hasLiveJakeStream, videoJake, true, p1RollVal, isDiceRollingP1);
+        if (showJake) drawScreenFeed(sScreenCtx, 15, 20, 225, 215, contestantNames["goody-contestant-1"], "London", hasLiveJakeStream, videoJake, true, p1RollVal, isDiceRollingP1);
         else {
           sScreenCtx.strokeStyle = '#ffb300'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(15, 20, 225, 215);
           sScreenCtx.fillStyle = '#ffda66'; sScreenCtx.font = 'bold 22px sans-serif'; sScreenCtx.textAlign = 'center';
-          sScreenCtx.fillText("CONTESTANT 1", 127, 120);
-          sScreenCtx.fillStyle = '#39ff14'; sScreenCtx.font = '14px monospace'; sScreenCtx.fillText("STANDBY...", 127, 150);
+          sScreenCtx.fillText(isSoloMode && soloPlayerId !== "goody-contestant-1" ? "WITHDRAWN" : "CONTESTANT 1", 127, 120);
+          sScreenCtx.fillStyle = '#39ff14'; sScreenCtx.font = '14px monospace'; sScreenCtx.fillText(gameState === "INTERMISSION" ? "DISCONNECTED" : "STANDBY...", 127, 150);
         }
-        if (showJune) drawScreenFeed(sScreenCtx, 272, 20, 225, 215, "June", "Nottingham", hasLiveJuneStream, videoJune, false, p2RollVal, isDiceRollingP2);
+        if (showJune) drawScreenFeed(sScreenCtx, 272, 20, 225, 215, contestantNames["goody-contestant-2"], "Nottingham", hasLiveJuneStream, videoJune, false, p2RollVal, isDiceRollingP2);
         else {
           sScreenCtx.strokeStyle = '#ffb300'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(272, 20, 225, 215);
           sScreenCtx.fillStyle = '#ffda66'; sScreenCtx.font = 'bold 22px sans-serif'; sScreenCtx.textAlign = 'center';
-          sScreenCtx.fillText("CONTESTANT 2", 384, 120);
-          sScreenCtx.fillStyle = '#39ff14'; sScreenCtx.font = '14px monospace'; sScreenCtx.fillText("STANDBY...", 384, 150);
+          sScreenCtx.fillText(isSoloMode && soloPlayerId !== "goody-contestant-2" ? "WITHDRAWN" : "CONTESTANT 2", 384, 120);
+          sScreenCtx.fillStyle = '#39ff14'; sScreenCtx.font = '14px monospace'; sScreenCtx.fillText(gameState === "INTERMISSION" ? "DISCONNECTED" : "STANDBY...", 384, 150);
         }
       }
       studioScreenTex.needsUpdate = true;
