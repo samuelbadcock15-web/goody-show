@@ -555,61 +555,122 @@
       });
     }
 
-    function advanceTurnPlayer(playerSlot, roll) {
-      const isP1 = playerSlot === "goody-contestant-1";
-      if (isP1) {
-        p1Index = Math.min(boardTileCoords.length - 1, p1Index + roll);
-        pawn1.position.set(boardTileCoords[p1Index].x - 0.08, 0.52, boardTileCoords[p1Index].z);
-      } else {
-        p2Index = Math.min(boardTileCoords.length - 1, p2Index + roll);
-        pawn2.position.set(boardTileCoords[p2Index].x + 0.08, 0.52, boardTileCoords[p2Index].z);
-      }
-
-      if (p1Index >= boardTileCoords.length - 1 || p2Index >= boardTileCoords.length - 1) {
-        triggerFinishLineVictory(isP1 ? "Jake" : "June", isP1 ? "June" : "Jake");
+    // --- SMOOTH HOPPING ANIMATION SYSTEM ---
+    function animatePawnHop(pawn, fromIdx, toIdx, offsetX, onComplete, hopDurationMs = 280) {
+      if (fromIdx === toIdx) {
+        if (onComplete) onComplete();
         return;
       }
 
-      const currentTileIdx = isP1 ? p1Index : p2Index;
-      const landedCountry = boardTileCoords[currentTileIdx].country;
-      const qPool = COUNTRY_QUESTIONS[landedCountry] || COUNTRY_QUESTIONS["UK"];
-      const rawQ = qPool[Math.floor(Math.random() * qPool.length)];
-      
-      activeQuestion = {
-        country: landedCountry,
-        text: rawQ.q,
-        q: rawQ.q,
-        options: rawQ.options,
-        ans: rawQ.ans,
-        recap: rawQ.recap
-      };
-      activeRecap = null;
+      const stepDirection = toIdx > fromIdx ? 1 : -1;
+      let currentHopIdx = fromIdx;
 
-      stageSelectedOption = null;
-      stageOptionStatus = null;
+      function hopNextStep() {
+        if (currentHopIdx === toIdx) {
+          if (onComplete) onComplete();
+          return;
+        }
 
-      const activeName = activePlayer === "goody-contestant-1" ? "Jake" : "June";
+        const nextHopIdx = currentHopIdx + stepDirection;
+        const startPos = {
+          x: boardTileCoords[currentHopIdx].x + offsetX,
+          y: 0.52,
+          z: boardTileCoords[currentHopIdx].z
+        };
+        const endPos = {
+          x: boardTileCoords[nextHopIdx].x + offsetX,
+          y: 0.52,
+          z: boardTileCoords[nextHopIdx].z
+        };
 
-      connectedDataConns.forEach(c => {
-        if (c.open) c.send({
-          type: "SHOW_QUESTION_LOCKED",
-          question: activeQuestion,
-          activeContestantId: activePlayer,
-          activeContestantName: activeName
-        });
-      });
-      renderStageQuestionBoard();
+        const hopStartTime = performance.now();
+        playTone(320 + Math.random() * 80, 'sine', 0.06, 0.04);
 
-      const speech = `${activeName} landed on ${landedCountry}! Here is your question: ${activeQuestion.q}... You have 30 seconds to lock in!`;
-      speakGoody(speech, () => {
+        function stepFrame(now) {
+          const elapsed = now - hopStartTime;
+          const progress = Math.min(1.0, elapsed / hopDurationMs);
+
+          // Parabolic jump trajectory: 4 * h * p * (1 - p)
+          const jumpArc = 4.0 * 0.35 * progress * (1.0 - progress);
+
+          pawn.position.x = startPos.x + (endPos.x - startPos.x) * progress;
+          pawn.position.y = 0.52 + jumpArc;
+          pawn.position.z = startPos.z + (endPos.z - startPos.z) * progress;
+
+          if (progress < 1.0) {
+            requestAnimationFrame(stepFrame);
+          } else {
+            pawn.position.set(endPos.x, 0.52, endPos.z);
+            playTone(220, 'triangle', 0.05, 0.03); // Land thump
+            currentHopIdx = nextHopIdx;
+            setTimeout(hopNextStep, 50); // Small pause between hops
+          }
+        }
+
+        requestAnimationFrame(stepFrame);
+      }
+
+      hopNextStep();
+    }
+
+    function advanceTurnPlayer(playerSlot, roll) {
+      const isP1 = playerSlot === "goody-contestant-1";
+      const oldIdx = isP1 ? p1Index : p2Index;
+      const targetIdx = Math.min(boardTileCoords.length - 1, oldIdx + roll);
+      const targetPawn = isP1 ? pawn1 : pawn2;
+      const xOffset = isP1 ? -0.08 : 0.08;
+
+      if (isP1) p1Index = targetIdx;
+      else p2Index = targetIdx;
+
+      // Animate hop tile-by-tile
+      animatePawnHop(targetPawn, oldIdx, targetIdx, xOffset, () => {
+        if (p1Index >= boardTileCoords.length - 1 || p2Index >= boardTileCoords.length - 1) {
+          triggerFinishLineVictory(isP1 ? "Jake" : "June", isP1 ? "June" : "Jake");
+          return;
+        }
+
+        const currentTileIdx = isP1 ? p1Index : p2Index;
+        const landedCountry = boardTileCoords[currentTileIdx].country;
+        const qPool = COUNTRY_QUESTIONS[landedCountry] || COUNTRY_QUESTIONS["UK"];
+        const rawQ = qPool[Math.floor(Math.random() * qPool.length)];
+        
+        activeQuestion = {
+          country: landedCountry,
+          text: rawQ.q,
+          q: rawQ.q,
+          options: rawQ.options,
+          ans: rawQ.ans,
+          recap: rawQ.recap
+        };
+        activeRecap = null;
+
+        stageSelectedOption = null;
+        stageOptionStatus = null;
+
+        const activeName = activePlayer === "goody-contestant-1" ? "Jake" : "June";
+
         connectedDataConns.forEach(c => {
           if (c.open) c.send({
-            type: "UNLOCK_QUESTION_INPUT",
+            type: "SHOW_QUESTION_LOCKED",
+            question: activeQuestion,
             activeContestantId: activePlayer,
             activeContestantName: activeName
           });
         });
-        startQuestionCountdown();
+        renderStageQuestionBoard();
+
+        const speech = `${activeName} landed on ${landedCountry}! Here is your question: ${activeQuestion.q}... You have 30 seconds to lock in!`;
+        speakGoody(speech, () => {
+          connectedDataConns.forEach(c => {
+            if (c.open) c.send({
+              type: "UNLOCK_QUESTION_INPUT",
+              activeContestantId: activePlayer,
+              activeContestantName: activeName
+            });
+          });
+          startQuestionCountdown();
+        });
       });
     }
 
@@ -656,8 +717,9 @@
         });
       } else {
         speakGoody(`Unlucky, that's incorrect. You must go back to the start! Here is what we learned: ${activeQuestion.recap}`, () => {
-          resetPlayerToStart(contestant);
-          transitionToRulesAndNextTurn();
+          resetPlayerToStart(contestant, () => {
+            transitionToRulesAndNextTurn();
+          });
         });
       }
     }
@@ -685,8 +747,9 @@
       }, 1400);
 
       speakGoody(`I'm sorry, you ran out of time! You must go back to the start! Here is what we learned: ${activeQuestion.recap}`, () => {
-        resetPlayerToStart(contestant);
-        transitionToRulesAndNextTurn();
+        resetPlayerToStart(contestant, () => {
+          transitionToRulesAndNextTurn();
+        });
       });
     }
 
@@ -705,14 +768,17 @@
       }, 3000);
     }
 
-    function resetPlayerToStart(contestant) {
-      if (contestant === "goody-contestant-1") {
-        p1Index = 0;
-        pawn1.position.set(boardTileCoords[0].x - 0.08, 0.52, boardTileCoords[0].z);
-      } else {
-        p2Index = 0;
-        pawn2.position.set(boardTileCoords[0].x + 0.08, 0.52, boardTileCoords[0].z);
-      }
+    function resetPlayerToStart(contestant, onComplete) {
+      const isP1 = contestant === "goody-contestant-1";
+      const startFromIdx = isP1 ? p1Index : p2Index;
+      const pawnToMove = isP1 ? pawn1 : pawn2;
+      const xOffset = isP1 ? -0.08 : 0.08;
+
+      if (isP1) p1Index = 0;
+      else p2Index = 0;
+
+      // Hop backward rapidly to start (100ms per tile hop)
+      animatePawnHop(pawnToMove, startFromIdx, 0, xOffset, onComplete, 110);
     }
 
     function nextTurn() {
