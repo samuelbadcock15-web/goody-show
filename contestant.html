@@ -104,59 +104,6 @@
       color: #00f0ff; font-family: monospace; pointer-events: none; z-index: 6;
     }
 
-    /* Volume Slider Bar */
-    .volume-control-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: #150826;
-      border: 1px solid #a29bfe;
-      border-radius: 6px;
-      padding: 4px 8px;
-      flex-shrink: 0;
-    }
-    .volume-icon {
-      font-size: 0.8rem;
-      color: #ffda66;
-    }
-    #volume-slider {
-      flex: 1;
-      height: 6px;
-      -webkit-appearance: none;
-      appearance: none;
-      background: #391563;
-      border-radius: 4px;
-      outline: none;
-      cursor: pointer;
-    }
-    #volume-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: #00f0ff;
-      border: 2px solid #fff;
-      cursor: pointer;
-      box-shadow: 0 0 6px #00f0ff;
-    }
-    #volume-slider::-moz-range-thumb {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: #00f0ff;
-      border: 2px solid #fff;
-      cursor: pointer;
-      box-shadow: 0 0 6px #00f0ff;
-    }
-    #volume-display {
-      font-family: monospace;
-      font-size: 0.72rem;
-      color: #00f0ff;
-      min-width: 38px;
-      text-align: right;
-    }
-
     #turn-banner {
       width: 100%; padding: 5px 8px; border-radius: 6px; text-align: center;
       font-weight: 900; font-size: 0.75rem; font-family: monospace; text-transform: uppercase;
@@ -275,13 +222,6 @@
       <video id="local-selfie-pip" autoplay playsinline muted></video>
     </div>
 
-    <!-- Volume Adjuster Bar -->
-    <div class="volume-control-bar">
-      <span class="volume-icon">🔊</span>
-      <input type="range" id="volume-slider" min="0" max="100" value="100" />
-      <span id="volume-display">100%</span>
-    </div>
-
     <div id="turn-banner"></div>
 
     <div id="status-pill">Waiting for host...</div>
@@ -334,7 +274,6 @@
     let selectedOptionIndex = null;
     let isTieBreaker = false;
     let mobileAudioUnlocked = false;
-    let currentVolumeLevel = 1.0;
 
     const setupCard = document.getElementById('setup-card');
     const liveStagePortal = document.getElementById('live-stage-portal');
@@ -349,9 +288,6 @@
 
     const pinCodeInput = document.getElementById('pin-code-input');
     const pinError = document.getElementById('pin-error');
-
-    const volumeSlider = document.getElementById('volume-slider');
-    const volumeDisplay = document.getElementById('volume-display');
 
     const triviaCard = document.getElementById('trivia-card');
     const qCountryTag = document.getElementById('q-country-tag');
@@ -368,25 +304,11 @@
     const recapHeader = document.getElementById('recap-header');
     const recapBody = document.getElementById('recap-body');
 
-    // Volume change event listener
-    volumeSlider.addEventListener('input', (e) => {
-      const val = parseInt(e.target.value, 10);
-      currentVolumeLevel = val / 100;
-      volumeDisplay.textContent = `${val}%`;
-
-      // Update incoming WebRTC video stream audio
-      if (studioStreamVideo) {
-        studioStreamVideo.volume = currentVolumeLevel;
-        studioStreamVideo.muted = (currentVolumeLevel === 0);
-      }
-    });
-
     function unlockMobileAudio() {
       if (mobileAudioUnlocked) return;
       mobileAudioUnlocked = true;
 
       studioStreamVideo.muted = false;
-      studioStreamVideo.volume = currentVolumeLevel;
 
       if ('speechSynthesis' in window) {
         const primeUtterance = new SpeechSynthesisUtterance('');
@@ -401,7 +323,6 @@
       const utt = new SpeechSynthesisUtterance(text);
       utt.rate = 0.95;
       utt.pitch = 1.25;
-      utt.volume = currentVolumeLevel;
       window.speechSynthesis.speak(utt);
     }
 
@@ -447,14 +368,14 @@
         peer = new Peer(contestantId);
 
         peer.on('open', () => {
+          // Pass the 4-digit PIN in peer metadata
           const call = peer.call("goody-main-studio", localStream, {
             metadata: { contestant: contestantId, name: contestantName, pin: enteredPin }
           });
 
           call.on('stream', (returnStudioStream) => {
             studioStreamVideo.srcObject = returnStudioStream;
-            studioStreamVideo.muted = (currentVolumeLevel === 0);
-            studioStreamVideo.volume = currentVolumeLevel;
+            studioStreamVideo.muted = false;
             studioStreamVideo.play().catch(console.error);
           });
 
