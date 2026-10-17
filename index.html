@@ -104,7 +104,7 @@
       <p><strong>Click Anywhere to Enter Control Mode</strong></p>
       <p><span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> &nbsp;Walk around freely</p>
 
-      <!-- SAM'S PRODUCER OVERRIDE PANEL -->
+      <!-- PRODUCER OVERRIDE PANEL -->
       <div id="producer-panel">
         <div style="color: #ffda66; font-weight: bold; font-family: monospace;">PRODUCER OVERRIDE: INTERMISSION ACTIVE</div>
         <p id="producer-status-txt" style="font-size: 0.8rem; margin: 4px 0;">Looking for contestant...</p>
@@ -118,7 +118,7 @@
         </div>
       </div>
 
-      <!-- HOST LIVE KICK / EJECT CONTROLS -->
+      <!-- DIRECTOR LIVE EJECT CONTROLS -->
       <div id="host-eject-panel" style="margin-top: 14px; padding: 10px; background: #0a0314; border: 1.5px solid #ff7675; border-radius: 10px;">
         <div style="font-size: 0.75rem; font-family: monospace; color: #ff7675; font-weight: bold; text-transform: uppercase; margin-bottom: 6px;">
           Studio Director: Live Kick Controls
@@ -286,6 +286,10 @@
       window.speechSynthesis.cancel();
       isGoodySpeaking = false;
 
+      // Ensure all contestant mics are muted immediately upon pause
+      broadcastMicState("goody-contestant-1", false);
+      broadcastMicState("goody-contestant-2", false);
+
       if (diceInterval) clearInterval(diceInterval);
       if (questionInterval) clearInterval(questionInterval);
       if (matchTimerInterval) clearInterval(matchTimerInterval);
@@ -390,7 +394,6 @@
 
       const numStr = contestantId === "goody-contestant-1" ? "1" : "2";
 
-      // Mathematical token match check
       const isSamePerson = (Boolean(droppedOutSessionToken) && droppedOutSessionToken === newSessionToken) ||
         (droppedOutName.toLowerCase().trim() === newName.toLowerCase().trim() &&
          (!newCity || !droppedOutCity || droppedOutCity.toLowerCase().trim() === newCity.toLowerCase().trim()));
@@ -596,6 +599,7 @@
               activeContestantName: pName
             });
           });
+          broadcastMicState(activePlayer, true, "🎙️ Thinking out loud? Your mic is LIVE!");
           startQuestionCountdown();
         }
       });
@@ -611,6 +615,9 @@
       p1RollVal = null;
       p2RollVal = null;
       renderStageQuestionBoard();
+
+      broadcastMicState("goody-contestant-1", false);
+      broadcastMicState("goody-contestant-2", false);
 
       if (activePlayer === goodyPlayerSlot) {
         speakGoody(`It is my turn! Goody is rolling the dice!`, () => {
@@ -693,20 +700,137 @@
       }, 2500);
     }
 
-    function generateDynamicIntroSpeech() {
-      const p1 = contestantNames["goody-contestant-1"] || "Jake";
+    // --- GATED MIC DISPATCHER ---
+    function broadcastMicState(targetSlot, enabled, promptText = "") {
+      connectedDataConns.forEach(c => {
+        if (c.open && c.metadata && c.metadata.contestant === targetSlot) {
+          c.send({
+            type: "SET_MIC_STATE",
+            enabled: enabled,
+            promptText: promptText
+          });
+        }
+      });
+    }
+
+    // --- SPEECH RECOGNITION & CONVERSATIONAL BANTER ENGINE ---
+    let speechRecognizer = null;
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      speechRecognizer = new SR();
+      speechRecognizer.continuous = false;
+      speechRecognizer.interimResults = false;
+      speechRecognizer.lang = 'en-GB';
+    }
+
+    function listenToContestantVoice(durationSeconds, onResult) {
+      if (!speechRecognizer) {
+        setTimeout(() => onResult(""), durationSeconds * 1000);
+        return;
+      }
+
+      let capturedText = "";
+      let hasEnded = false;
+
+      speechRecognizer.onresult = (event) => {
+        if (event.results.length > 0) {
+          capturedText = event.results[0][0].transcript;
+        }
+      };
+
+      speechRecognizer.onerror = () => {};
+      speechRecognizer.onend = () => {};
+
+      try { speechRecognizer.start(); } catch(e) {}
+
+      setTimeout(() => {
+        if (hasEnded) return;
+        hasEnded = true;
+        try { speechRecognizer.stop(); } catch(e) {}
+        onResult(capturedText.trim());
+      }, durationSeconds * 1000);
+    }
+
+    function generateHostBanter(name, city, userSpeech, onComplete) {
+      playTone(880, 'sine', 0.08, 0.04);
+      setTimeout(() => playTone(1200, 'sine', 0.08, 0.04), 100);
+
+      const cleaned = userSpeech.toLowerCase();
+
+      // Guardrail fallback
+      if (!cleaned || cleaned.length < 2) {
+        const fallbacks = [
+          `Speechless already, ${name}? I don't blame you, my studio lights are dazzling!`,
+          `Saving your vocal cords for the board, ${name}? A true strategist!`,
+          `Quiet confidence from ${city}! Let's see if the dice agree with you, ${name}!`
+        ];
+        onComplete(fallbacks[Math.floor(Math.random() * fallbacks.length)]);
+        return;
+      }
+
+      // Contextual banter
+      if (cleaned.includes("ready") || cleaned.includes("win") || cleaned.includes("yes") || cleaned.includes("yeah") || cleaned.includes("good")) {
+        onComplete(`I love that winning spirit, ${name}! Let's find out if ${city} is taking home tonight's prize!`);
+        return;
+      }
+      if (cleaned.includes("nervous") || cleaned.includes("scared") || cleaned.includes("worried") || cleaned.includes("no")) {
+        onComplete(`Don't let the circuits intimidate you, ${name}! Deep breaths, ${city} is cheering you on!`);
+        return;
+      }
+
+      onComplete(`Well said, ${name}! My processors love that energy from ${city}!`);
+    }
+
+    // --- INTERACTIVE INTRO STAGE BANTER SEQUENCE ---
+    function startGoodyMonologue() {
+      const p1 = contestantNames["goody-contestant-1"] || "Contestant 1";
       const c1 = contestantCities["goody-contestant-1"] || "London";
-      const p2 = contestantNames["goody-contestant-2"] || "June";
+      const p2 = contestantNames["goody-contestant-2"] || "Contestant 2";
       const c2 = contestantCities["goody-contestant-2"] || "Nottingham";
 
-      return "Hello, good evening, and welcome to The Goody Tonight Show! " +
+      const part1 = "Hello, good evening, and welcome to The Goody Tonight Show! " +
         "I'm your host, Goody! " +
         "You are now part of the world's first and only televised self-exclusion game show! " +
         "Now, let's meet tonight's contestants! " +
         `Contestant number 1! This is ${p1} from ${c1}! ` +
-        `And let's meet contestant number 2! This is ${p2} from ${c2}! ` +
-        "Now we need to determine who moves first! " +
-        "Contestants, you both have 10 seconds to roll your dice!";
+        `${p1}, your microphone is live for 6 seconds! Give a shout-out and tell us how you're feeling tonight!`;
+
+      speakGoody(part1, () => {
+        if (gameState !== "INTRO_SPEECH") return;
+
+        broadcastMicState("goody-contestant-1", true, "🎙️ ON AIR: Shout out to Goody now!");
+
+        listenToContestantVoice(6, (p1Words) => {
+          broadcastMicState("goody-contestant-1", false);
+          if (gameState !== "INTRO_SPEECH") return;
+
+          generateHostBanter(p1, c1, p1Words, (banter1) => {
+            const part2 = `${banter1} And now, let's meet contestant number 2! ` +
+              `This is ${p2} from ${c2}! ` +
+              `${p2}, your microphone is live for 6 seconds! Say hello to everyone watching at home!`;
+
+            speakGoody(part2, () => {
+              if (gameState !== "INTRO_SPEECH") return;
+
+              broadcastMicState("goody-contestant-2", true, "🎙️ ON AIR: Shout out to Goody now!");
+
+              listenToContestantVoice(6, (p2Words) => {
+                broadcastMicState("goody-contestant-2", false);
+                if (gameState !== "INTRO_SPEECH") return;
+
+                generateHostBanter(p2, c2, p2Words, (banter2) => {
+                  const part3 = `${banter2} Now we need to determine who moves first! ` +
+                    `Contestants, you both have 10 seconds to roll your dice!`;
+
+                  speakGoody(part3, () => {
+                    beginTenSecondDiceDuel();
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
     }
 
     let currentSubtitle = "STUDIO STANDBY - POWER OFF";
@@ -930,6 +1054,9 @@
             } else if (data.type === "PLAYER_ROLLED_DICE") {
               handlePlayerRoll(data.contestant, data.name, data.roll);
             } else if (data.type === "PLAYER_ANSWERED") {
+              // Lock in answer: Mute mic immediately
+              broadcastMicState(data.contestant, false);
+
               if (isTieBreakerActive) {
                 handleTieBreakerAnswer(data.contestant, data.chosenAnswer);
                 return;
@@ -952,6 +1079,7 @@
                 evaluateAnswer(data.contestant, data.chosenAnswer);
               }, 1200);
             } else if (data.type === "PLAYER_TIMEOUT") {
+              broadcastMicState(data.contestant, false);
               if (isTieBreakerActive) return;
               handleQuestionTimeout(data.contestant);
             } else if (data.type === "PLUSHIE_MOVE") {
@@ -1076,13 +1204,6 @@
       window.speechSynthesis.speak(goodyUtterance);
     }
 
-    function startGoodyMonologue() {
-      const speech = generateDynamicIntroSpeech();
-      speakGoody(speech, () => {
-        beginTenSecondDiceDuel();
-      });
-    }
-
     function bootStudio() {
       studioPower = true;
       gameState = "INTRO_SPEECH";
@@ -1100,6 +1221,9 @@
       p2RollVal = null;
       isDiceRollingP1 = true;
       isDiceRollingP2 = true;
+
+      broadcastMicState("goody-contestant-1", false);
+      broadcastMicState("goody-contestant-2", false);
 
       connectedDataConns.forEach(c => {
         if (c.open) c.send({ type: "START_DICE_COUNTDOWN" });
@@ -1121,6 +1245,9 @@
       diceCountdown = 10;
       if (turnPlayer === "goody-contestant-2") isDiceRollingP2 = true;
       else isDiceRollingP1 = true;
+
+      broadcastMicState("goody-contestant-1", false);
+      broadcastMicState("goody-contestant-2", false);
 
       if (diceInterval) clearInterval(diceInterval);
       diceInterval = setInterval(() => {
@@ -1344,6 +1471,8 @@
                 activeContestantName: activeName
               });
             });
+            // Open mic for active contestant to deliberate out loud
+            broadcastMicState(activePlayer, true, "🎙️ Thinking out loud? Your mic is LIVE!");
             startQuestionCountdown();
           }
         });
@@ -1362,6 +1491,7 @@
         renderStageQuestionBoard();
         if (questionTimer <= 0) {
           clearInterval(questionInterval);
+          broadcastMicState(activePlayer, false);
           handleQuestionTimeout(activePlayer);
         }
       }, 1000);
@@ -1369,6 +1499,7 @@
 
     function evaluateAnswer(contestant, chosen) {
       if (questionInterval) clearInterval(questionInterval);
+      broadcastMicState(contestant, false);
       const isCorrect = chosen === activeQuestion.ans;
 
       if (contestant !== goodyPlayerSlot) {
@@ -1420,6 +1551,8 @@
 
     function handleQuestionTimeout(contestant) {
       if (questionInterval) clearInterval(questionInterval);
+      broadcastMicState(contestant, false);
+
       if (contestant !== goodyPlayerSlot) {
         playerStats.asked++;
       }
@@ -1518,6 +1651,8 @@
     function evaluateFinalShowdown() {
       if (diceInterval) clearInterval(diceInterval);
       if (questionInterval) clearInterval(questionInterval);
+      broadcastMicState("goody-contestant-1", false);
+      broadcastMicState("goody-contestant-2", false);
 
       if (isSoloMode) {
         gameState = "GAME_OVER";
@@ -1629,6 +1764,8 @@
       if (matchTimerInterval) clearInterval(matchTimerInterval);
       if (questionInterval) clearInterval(questionInterval);
       if (diceInterval) clearInterval(diceInterval);
+      broadcastMicState("goody-contestant-1", false);
+      broadcastMicState("goody-contestant-2", false);
 
       const speech = isSoloMode
         ? `Unbelievable! ${winnerName} has reached the final square and completed the solo challenge! Well done to our champion ${winnerName}! Thanks for watching, shows are at 9 PM most days! Goodnight!`
