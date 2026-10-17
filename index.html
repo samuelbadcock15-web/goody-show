@@ -79,6 +79,7 @@
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
   <script>
+    // 4-Digit Room Code Generation
     const studioRoomCode = Math.floor(1000 + Math.random() * 9000).toString();
     document.getElementById('entry-code').textContent = studioRoomCode;
     document.getElementById('hud-code-val').textContent = studioRoomCode;
@@ -86,10 +87,6 @@
     let currentMode = 'BEDROOM';
     let studioPower = false;
     let isGoodySpeaking = false;
-
-    // Slot state
-    let slotJakeOwner = null;
-    let slotJuneOwner = null;
 
     let showJake = false;
     let showJune = false;
@@ -260,19 +257,6 @@
     let connectedDataConns = [];
     const connectedAudiencePeers = new Set();
 
-    function broadcastSlotStatus() {
-      const payload = {
-        type: "SLOTS_UPDATE",
-        slots: {
-          jake: !!slotJakeOwner,
-          june: !!slotJuneOwner
-        }
-      };
-      connectedDataConns.forEach(c => {
-        if (c.open) c.send(payload);
-      });
-    }
-
     function initStudioWebRTC() {
       try {
         studioPeer = new Peer("goody-main-studio");
@@ -282,12 +266,12 @@
         studioPeer.on('call', (call) => {
           const passcode = call.metadata ? call.metadata.passcode : "";
           if (passcode !== studioRoomCode) {
+            console.warn("Call rejected: Invalid passcode from", call.peer);
             call.close();
             return;
           }
 
-          const contestantKey = call.metadata ? call.metadata.contestant : null;
-          const isJune = contestantKey === "goody-contestant-2";
+          const isJune = call.metadata && call.metadata.contestant === "goody-contestant-2";
           const returnStream = isJune ? streamJune : streamJake;
           call.answer(returnStream);
 
@@ -307,42 +291,25 @@
         });
 
         studioPeer.on('connection', (conn) => {
+          const passcode = conn.metadata ? conn.metadata.passcode : "";
+          if (passcode !== studioRoomCode) {
+            conn.on('open', () => {
+              conn.send({ type: "AUTH_FAILED", message: "Invalid 4-digit code." });
+              setTimeout(() => conn.close(), 500);
+            });
+            return;
+          }
+
           connectedDataConns.push(conn);
 
           conn.on('open', () => {
-            // Send initial slot status regardless of whether contestant is selected yet
-            conn.send({
-              type: "SLOTS_UPDATE",
-              slots: { jake: !!slotJakeOwner, june: !!slotJuneOwner }
-            });
+            conn.send({ type: "AUTH_SUCCESS" });
             connectedAudiencePeers.add(conn.peer);
             broadcastAudienceCount();
           });
 
           conn.on('data', (data) => {
-            if (data.type === "REQUEST_JOIN") {
-              if (data.passcode !== studioRoomCode) {
-                conn.send({ type: "AUTH_FAILED" });
-                return;
-              }
-
-              if (data.requestedSlot === "goody-contestant-1") {
-                if (slotJakeOwner && slotJakeOwner !== conn.peer) {
-                  conn.send({ type: "SLOT_TAKEN", slot: "Jake" });
-                  return;
-                }
-                slotJakeOwner = conn.peer;
-              } else if (data.requestedSlot === "goody-contestant-2") {
-                if (slotJuneOwner && slotJuneOwner !== conn.peer) {
-                  conn.send({ type: "SLOT_TAKEN", slot: "June" });
-                  return;
-                }
-                slotJuneOwner = conn.peer;
-              }
-
-              conn.send({ type: "AUTH_SUCCESS" });
-              broadcastSlotStatus();
-            } else if (data.type === "PLAYER_ROLLED_DICE") {
+            if (data.type === "PLAYER_ROLLED_DICE") {
               handlePlayerRoll(data.contestant, data.name, data.roll);
             } else if (data.type === "PLAYER_ANSWERED") {
               if (isTieBreakerActive) {
@@ -383,17 +350,6 @@
           });
 
           conn.on('close', () => {
-            if (slotJakeOwner === conn.peer) {
-              slotJakeOwner = null;
-              showJake = false;
-              hasLiveJakeStream = false;
-            }
-            if (slotJuneOwner === conn.peer) {
-              slotJuneOwner = null;
-              showJune = false;
-              hasLiveJuneStream = false;
-            }
-            broadcastSlotStatus();
             connectedAudiencePeers.delete(conn.peer);
             connectedDataConns = connectedDataConns.filter(c => c.peer !== conn.peer);
             broadcastAudienceCount();
@@ -446,9 +402,8 @@
     }
 
     function speakGoody(text, onComplete) {
-      const timestamp = performance.now();
       connectedDataConns.forEach(c => {
-        if (c.open) c.send({ type: "HOST_SPEAK", text: text, ts: timestamp });
+        if (c.open) c.send({ type: "HOST_SPEAK", text: text });
       });
 
       if (!('speechSynthesis' in window)) { 
@@ -461,17 +416,22 @@
       goodyUtterance.rate = 0.95;
       goodyUtterance.pitch = 1.25;
 
-      goodyUtterance.onstart = () => { isGoodySpeaking = true; };
+      goodyUtterance.onstart = () => {
+        isGoodySpeaking = true;
+      };
+
       goodyUtterance.onboundary = (e) => {
         isGoodySpeaking = true;
         const chunk = text.substring(e.charIndex, e.charIndex + 65);
         currentSubtitle = chunk.length > 55 ? chunk.substring(0, 55) + "..." : chunk;
         playTone(460 + Math.random() * 200, 'triangle', 0.05, 0.02);
       };
+
       goodyUtterance.onend = () => {
         isGoodySpeaking = false;
         if (onComplete) onComplete();
       };
+
       goodyUtterance.onerror = () => {
         isGoodySpeaking = false;
         if (onComplete) onComplete();
@@ -615,6 +575,7 @@
       });
     }
 
+    // --- SMOOTH HOPPING ANIMATION SYSTEM ---
     function animatePawnHop(pawn, fromIdx, toIdx, offsetX, onComplete, hopDurationMs = 280) {
       if (fromIdx === toIdx) {
         if (onComplete) onComplete();
@@ -649,6 +610,7 @@
           const elapsed = now - hopStartTime;
           const progress = Math.min(1.0, elapsed / hopDurationMs);
 
+          // Parabolic jump arc: 4 * h * p * (1 - p)
           const jumpArc = 4.0 * 0.35 * progress * (1.0 - progress);
 
           pawn.position.x = startPos.x + (endPos.x - startPos.x) * progress;
@@ -659,9 +621,9 @@
             requestAnimationFrame(stepFrame);
           } else {
             pawn.position.set(endPos.x, 0.52, endPos.z);
-            playTone(220, 'triangle', 0.05, 0.03);
+            playTone(220, 'triangle', 0.05, 0.03); // Land thump
             currentHopIdx = nextHopIdx;
-            setTimeout(hopNextStep, 50);
+            setTimeout(hopNextStep, 50); // Pause between tiles
           }
         }
 
@@ -681,6 +643,7 @@
       if (isP1) p1Index = targetIdx;
       else p2Index = targetIdx;
 
+      // Physically hop along the tiles
       animatePawnHop(targetPawn, oldIdx, targetIdx, xOffset, () => {
         if (p1Index >= boardTileCoords.length - 1 || p2Index >= boardTileCoords.length - 1) {
           triggerFinishLineVictory(isP1 ? "Jake" : "June", isP1 ? "June" : "Jake");
@@ -834,6 +797,7 @@
       if (isP1) p1Index = 0;
       else p2Index = 0;
 
+      // Hop backward rapidly to start (110ms per tile hop)
       animatePawnHop(pawnToMove, startFromIdx, 0, xOffset, onComplete, 110);
     }
 
@@ -1598,6 +1562,7 @@
     miniGoody.position.set(0, 0, -2.6);
     miniDiorama.add(miniGoody);
 
+    // --- ANIMATED LIP-SYNC FACE RENDERING ---
     function renderGoodyFace(time) {
       fctx.fillStyle = '#030108';
       fctx.fillRect(0, 0, 128, 128);
@@ -1610,29 +1575,35 @@
 
       gAntOrb.material.color.setHex(isGoodySpeaking ? 0x00f0ff : 0x39ff14);
 
+      // Glowing Eyes: ^   ^
       fctx.fillStyle = '#39ff14';
       fctx.strokeStyle = '#39ff14';
       fctx.lineWidth = 4;
       fctx.lineCap = 'round';
       fctx.lineJoin = 'round';
 
+      // Left Eye '^'
       fctx.beginPath();
       fctx.moveTo(28, 56);
       fctx.lineTo(44, 38);
       fctx.lineTo(60, 56);
       fctx.stroke();
 
+      // Right Eye '^'
       fctx.beginPath();
       fctx.moveTo(68, 56);
       fctx.lineTo(84, 38);
       fctx.lineTo(100, 56);
       fctx.stroke();
 
+      // Mouth Section:
       if (isGoodySpeaking) {
-        const mouthOpen = (Math.sin(time * 0.022) + 1.0) * 0.5;
-        const mouthHeight = 6 + (mouthOpen * 20);
+        // Mouth flaps open/shut based on time oscillation
+        const mouthOpen = (Math.sin(time * 0.022) + 1.0) * 0.5; // 0.0 to 1.0
+        const mouthHeight = 6 + (mouthOpen * 20); // 6px to 26px opening
         const mouthWidth = 40 + (mouthOpen * 6);
 
+        // Dark open mouth interior
         fctx.fillStyle = '#220033';
         fctx.strokeStyle = '#39ff14';
         fctx.lineWidth = 3.5;
@@ -1642,9 +1613,11 @@
         fctx.fill();
         fctx.stroke();
 
+        // Little stylized white cyber-teeth inside
         fctx.fillStyle = '#ffffff';
         fctx.fillRect(54, 88 - (mouthHeight / 2) + 2, 20, Math.min(5, mouthHeight / 2));
       } else {
+        // Idle happy smile: '‿'
         fctx.strokeStyle = '#39ff14';
         fctx.lineWidth = 5;
         fctx.beginPath();
