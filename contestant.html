@@ -59,11 +59,11 @@
     .btn-jake { background: #0984e3; }
     .btn-june { background: #d63031; }
     .btn-disabled {
-      background: #332a42 !important;
-      color: #776e88 !important;
-      border: 1px dashed #554a6d !important;
+      background: #2a1b38 !important;
+      color: #6d5b80 !important;
+      border: 2px dashed #4e3566 !important;
       cursor: not-allowed !important;
-      opacity: 0.65;
+      opacity: 0.6;
     }
 
     #live-stage-portal {
@@ -306,53 +306,37 @@
     const recapHeader = document.getElementById('recap-header');
     const recapBody = document.getElementById('recap-body');
 
-    // Anti-Lag Live-Edge synchronizer
-    let liveSyncInterval = null;
-    function enforceLiveZeroLatency(videoElement) {
-      if (liveSyncInterval) clearInterval(liveSyncInterval);
-      liveSyncInterval = setInterval(() => {
-        if (!videoElement || videoElement.paused || !videoElement.seekable || videoElement.seekable.length === 0) return;
-        const liveEnd = videoElement.seekable.end(videoElement.seekable.length - 1);
-        const drift = liveEnd - videoElement.currentTime;
-
-        // If buffered playback drifts behind live studio by over 0.25 seconds, snap instantly to live edge
-        if (drift > 0.25) {
-          videoElement.currentTime = liveEnd;
-        }
-      }, 500);
-    }
-
-    // Passive listener to monitor slot updates before joining
-    let slotWatcherPeer = new Peer();
-    slotWatcherPeer.on('open', () => {
-      const monitorConn = slotWatcherPeer.connect("goody-main-studio");
-      monitorConn.on('data', (data) => {
+    // Direct room monitor connection that operates as soon as page loads
+    const initialMonitorPeer = new Peer();
+    initialMonitorPeer.on('open', () => {
+      const conn = initialMonitorPeer.connect("goody-main-studio");
+      conn.on('data', (data) => {
         if (data.type === "SLOTS_UPDATE") {
-          updateSlotButtons(data.slots);
+          applySlotState(data.slots);
         }
       });
     });
 
-    function updateSlotButtons(slots) {
+    function applySlotState(slots) {
       if (!slots) return;
       if (slots.jake) {
         btnJake.disabled = true;
         btnJake.classList.add('btn-disabled');
-        btnJake.textContent = "CONTESTANT 1 (JAKE) - TAKEN";
+        btnJake.textContent = "Contestant 1 (Jake) - TAKEN";
       } else {
         btnJake.disabled = false;
         btnJake.classList.remove('btn-disabled');
-        btnJake.textContent = "I AM CONTESTANT 1 (JAKE)";
+        btnJake.textContent = "I am Contestant 1 (Jake)";
       }
 
       if (slots.june) {
         btnJune.disabled = true;
         btnJune.classList.add('btn-disabled');
-        btnJune.textContent = "CONTESTANT 2 (JUNE) - TAKEN";
+        btnJune.textContent = "Contestant 2 (June) - TAKEN";
       } else {
         btnJune.disabled = false;
         btnJune.classList.remove('btn-disabled');
-        btnJune.textContent = "I AM CONTESTANT 2 (JUNE)";
+        btnJune.textContent = "I am Contestant 2 (June)";
       }
     }
 
@@ -363,14 +347,15 @@
       studioStreamVideo.muted = false;
 
       if ('speechSynthesis' in window) {
-        const primeUtterance = new SpeechSynthesisUtterance('');
-        primeUtterance.volume = 0;
-        window.speechSynthesis.speak(primeUtterance);
+        const prime = new SpeechSynthesisUtterance('');
+        prime.volume = 0;
+        window.speechSynthesis.speak(prime);
       }
     }
 
     function playHostSpeechLocally(text) {
       if (!('speechSynthesis' in window)) return;
+      // Immediately cancel any trailing buffer to stop delayed audio
       window.speechSynthesis.cancel();
       const utt = new SpeechSynthesisUtterance(text);
       utt.rate = 0.95;
@@ -401,8 +386,8 @@
     });
 
     async function joinGame(id, name, enteredCode) {
-      if (slotWatcherPeer) {
-        try { slotWatcherPeer.destroy(); } catch(e){}
+      if (initialMonitorPeer) {
+        try { initialMonitorPeer.destroy(); } catch(e){}
       }
 
       contestantId = id;
@@ -428,17 +413,18 @@
           call.on('stream', (returnStudioStream) => {
             studioStreamVideo.srcObject = returnStudioStream;
             studioStreamVideo.muted = false;
-            studioStreamVideo.play().then(() => {
-              enforceLiveZeroLatency(studioStreamVideo);
-            }).catch(console.error);
+            studioStreamVideo.play().catch(console.error);
           });
 
-          dataConn = peer.connect("goody-main-studio", {
-            metadata: { contestant: contestantId, name: contestantName, passcode: enteredCode }
-          });
+          dataConn = peer.connect("goody-main-studio");
 
           dataConn.on('open', () => {
-            statusPill.textContent = "Verifying code & slot with host...";
+            statusPill.textContent = "Verifying room code with host...";
+            dataConn.send({
+              type: "REQUEST_JOIN",
+              requestedSlot: contestantId,
+              passcode: enteredCode
+            });
           });
 
           dataConn.on('data', (data) => {
@@ -446,14 +432,14 @@
               alert("Incorrect 4-digit code! Please check the host screen and try again.");
               location.reload();
               return;
-            } else if (data.type === "SLOT_TAKEN_ERROR") {
-              alert(data.message);
+            } else if (data.type === "SLOT_TAKEN") {
+              alert(`Contestant ${data.slot} has already been taken by someone else!`);
               location.reload();
               return;
-            } else if (data.type === "SLOTS_UPDATE") {
-              // Slots updated on other screens
             } else if (data.type === "AUTH_SUCCESS") {
               statusPill.textContent = "Connected! Standby for host...";
+            } else if (data.type === "SLOTS_UPDATE") {
+              applySlotState(data.slots);
             } else if (data.type === "HOST_SPEAK") {
               playHostSpeechLocally(data.text);
             } else if (data.type === "START_DICE_COUNTDOWN") {
