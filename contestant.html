@@ -129,6 +129,47 @@
       color: #39ff14; min-height: 18px; line-height: 18px; flex-shrink: 0;
     }
 
+    #choice-card {
+      background: #1f0b3b;
+      border: 2px solid #f1c40f;
+      border-radius: 12px;
+      padding: 10px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      text-align: center;
+      box-shadow: 0 0 14px rgba(241, 196, 15, 0.4);
+      flex-shrink: 0;
+    }
+    #choice-title {
+      color: #ffda66;
+      font-size: 0.85rem;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .choice-btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 2px solid;
+      font-size: 0.85rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+      color: #fff;
+      transition: transform 0.1s;
+    }
+    .choice-btn:active { transform: scale(0.98); }
+    .btn-choice-solo {
+      background: #2980b9;
+      border-color: #3498db;
+    }
+    .btn-choice-goody {
+      background: #8e44ad;
+      border-color: #9b59b6;
+    }
+
     #btn-roll-dice {
       width: 100%; padding: 10px; background: #444; border: 2px solid #777;
       border-radius: 10px; font-size: 0.95rem; font-weight: 900; color: #888;
@@ -224,6 +265,13 @@
 
     <div id="status-pill">Waiting for host...</div>
 
+    <!-- CHOICE CARD WHEN OFFERED BY HOST -->
+    <div id="choice-card">
+      <div id="choice-title">Make Your Choice, Contestant!</div>
+      <button class="choice-btn btn-choice-solo" id="btn-pick-solo">Race Solo Against Clock</button>
+      <button class="choice-btn btn-choice-goody" id="btn-pick-goody">Battle Goody Head-To-Head</button>
+    </div>
+
     <button id="btn-roll-dice" disabled> ROLL DICE (LOCKED)</button>
 
     <div id="trivia-card">
@@ -284,6 +332,10 @@
     const statusPill = document.getElementById('status-pill');
     const btnRollDice = document.getElementById('btn-roll-dice');
     const interactiveViewport = document.getElementById('interactive-viewport');
+
+    const choiceCard = document.getElementById('choice-card');
+    const btnPickSolo = document.getElementById('btn-pick-solo');
+    const btnPickGoody = document.getElementById('btn-pick-goody');
 
     const triviaCard = document.getElementById('trivia-card');
     const qCountryTag = document.getElementById('q-country-tag');
@@ -389,15 +441,16 @@
             } else if (data.type === "HOST_SPEAK") {
               playHostSpeechLocally(data.text);
             } else if (data.type === "START_DICE_COUNTDOWN") {
+              choiceCard.style.display = 'none';
               startTenSecondRoll();
             } else if (data.type === "SYNC_MATCH_TIMER") {
               matchTimerBadge.textContent = ` ${data.timeStr}`;
             } else if (data.type === "INTERMISSION_PAUSE") {
-              // Handle mid-game pause when the opponent disconnects
               if (rollTimer) clearInterval(rollTimer);
               if (questionTimer) clearInterval(questionTimer);
               if ('speechSynthesis' in window) window.speechSynthesis.cancel();
               
+              choiceCard.style.display = 'none';
               btnRollDice.disabled = true;
               btnRollDice.classList.remove('active-roll');
               btnRollDice.textContent = "GAME PAUSED";
@@ -408,7 +461,17 @@
               turnBanner.className = 'turn-paused';
               turnBanner.textContent = "STUDIO INTERMISSION IN PROGRESS";
               statusPill.textContent = "A contestant disconnected! Standby for replacement...";
+            } else if (data.type === "OFFER_CONTESTANT_CHOICE") {
+              turnBanner.style.display = 'block';
+              turnBanner.className = 'turn-mine';
+              turnBanner.textContent = "DECISION TIME: CHOOSE YOUR PATH!";
+              statusPill.textContent = "Listen to Goody, then make your selection!";
+              btnRollDice.style.display = 'none';
+              triviaCard.style.display = 'none';
+              recapCard.style.display = 'none';
+              choiceCard.style.display = 'flex';
             } else if (data.type === "ENABLE_TURN_ROLL") {
+              choiceCard.style.display = 'none';
               recapCard.style.display = 'none';
               btnRollDice.style.display = 'block';
 
@@ -423,6 +486,7 @@
                 btnRollDice.textContent = ` WAITING FOR ${data.activeContestantName.toUpperCase()}...`;
               }
             } else if (data.type === "SHOW_QUESTION_LOCKED") {
+              choiceCard.style.display = 'none';
               isTieBreaker = false;
               recapCard.style.display = 'none';
               const isMe = data.activeContestantId === contestantId;
@@ -433,6 +497,7 @@
                 unlockQuestionInput();
               }
             } else if (data.type === "START_TIE_BREAKER") {
+              choiceCard.style.display = 'none';
               isTieBreaker = true;
               recapCard.style.display = 'none';
               btnRollDice.style.display = 'none';
@@ -449,7 +514,7 @@
                     b.classList.remove('unlocked');
                   });
                   optButtons[chosenIdx].classList.add('selected');
-                  statusPill.textContent = "Opponent locked in! Checking with Goody...";
+                  statusPill.textContent = `${data.contestant === "goody-host-bot" ? "Goody" : "Opponent"} locked in! Checking...`;
                 }
               }
             } else if (data.type === "EVALUATION_RESULT") {
@@ -466,6 +531,22 @@
         alert("Camera & microphone permissions required: " + err.message);
       }
     }
+
+    btnPickSolo.addEventListener('click', () => {
+      choiceCard.style.display = 'none';
+      statusPill.textContent = "Choice confirmed: Solo Race against time!";
+      if (dataConn && dataConn.open) {
+        dataConn.send({ type: "CONTESTANT_CHOSE_PATH", choice: "SOLO", contestant: contestantId });
+      }
+    });
+
+    btnPickGoody.addEventListener('click', () => {
+      choiceCard.style.display = 'none';
+      statusPill.textContent = "Choice confirmed: Battling Goody Head-To-Head!";
+      if (dataConn && dataConn.open) {
+        dataConn.send({ type: "CONTESTANT_CHOSE_PATH", choice: "GOODY", contestant: contestantId });
+      }
+    });
 
     function updateTurnBanner(isMe, subText) {
       turnBanner.style.display = 'block';
@@ -632,6 +713,7 @@
     function handleEvaluationResult(data) {
       if (questionTimer) clearInterval(questionTimer);
       const isMe = data.forContestant === contestantId;
+      const targetName = data.forContestant === "goody-host-bot" ? "Goody" : "Opponent";
 
       const targetIdx = selectedOptionIndex !== null
         ? selectedOptionIndex
@@ -640,10 +722,10 @@
       if (targetIdx !== -1 && optButtons[targetIdx]) {
         if (data.isCorrect) {
           optButtons[targetIdx].classList.add('flash-green');
-          statusPill.textContent = isMe ? " CORRECT! Tile secured." : " Opponent was CORRECT!";
+          statusPill.textContent = isMe ? " CORRECT! Tile secured." : ` ${targetName} was CORRECT!`;
         } else {
           optButtons[targetIdx].classList.add('flash-red');
-          statusPill.textContent = isMe ? " INCORRECT! Back to start." : " Opponent was INCORRECT!";
+          statusPill.textContent = isMe ? " INCORRECT! Back to start." : ` ${targetName} was INCORRECT!`;
         }
       }
 
@@ -672,6 +754,7 @@
 
     function handleGameOver(data) {
       if (rollTimer) clearInterval(rollTimer);
+      choiceCard.style.display = 'none';
       turnBanner.style.display = 'block';
 
       if (data.winner === "NOBODY") {
