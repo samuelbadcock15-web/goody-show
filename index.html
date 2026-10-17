@@ -271,6 +271,7 @@
     const streamJakeVideoOnly = canvasJake.captureStream(30);
     const streamJuneVideoOnly = canvasJune.captureStream(30);
 
+    // Audio Pipeline - Studio mixes tones, voice & contestants
     let audioCtx = null;
     let studioMasterGain = null;
     let studioAudioDestination = null;
@@ -454,32 +455,62 @@
       } catch(e) {}
     }
 
-    let goodyUtterance = null;
+    // --- Goody Studio Robotic Voice Streamer ---
+    // Speaks locally via Web Speech on host PC, and simultaneously generates 
+    // real-time robotic speech formants piped directly into the WebRTC stream 
+    // so phones hear it through their live speaker stream without breaking volume keys!
     function speakGoody(text, onComplete) {
       connectedDataConns.forEach(c => {
         if (c.open) c.send({ type: "HOST_SPEAK", text: text });
       });
 
-      if (!('speechSynthesis' in window)) {
-        if (onComplete) setTimeout(onComplete, 2200);
-        return;
+      // 1. Play natural speech on the studio host computer
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.rate = 0.95;
+        u.pitch = 1.2;
+        window.speechSynthesis.speak(u);
       }
-      window.speechSynthesis.cancel();
-      goodyUtterance = new SpeechSynthesisUtterance(text);
-      goodyUtterance.rate = 0.95;
-      goodyUtterance.pitch = 1.25;
-      // onboundary synth blips removed completely to prevent looping sonar feedback
-      let finished = false;
-      const done = () => {
-        if (!finished) {
-          finished = true;
-          if (onComplete) onComplete();
-        }
-      };
-      goodyUtterance.onend = done;
-      goodyUtterance.onerror = done;
-      window.speechSynthesis.speak(goodyUtterance);
-      setTimeout(done, Math.max(3000, text.length * 75));
+
+      // 2. Stream robotic speech cadence through WebRTC audio to phones
+      if (audioCtx) {
+        const words = text.split(" ");
+        let startTime = audioCtx.currentTime + 0.05;
+        const wordDuration = 0.22;
+
+        words.forEach((w, i) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          const filter = audioCtx.createBiquadFilter();
+
+          filter.type = "bandpass";
+          filter.frequency.setValueAtTime(600 + (w.length % 5) * 150, startTime);
+          filter.Q.setValueAtTime(4.0, startTime);
+
+          osc.type = "sawtooth";
+          const pitch = 140 + ((i % 3) * 15);
+          osc.frequency.setValueAtTime(pitch, startTime);
+
+          gain.gain.setValueAtTime(0.0, startTime);
+          gain.gain.linearRampToValueAtTime(0.09, startTime + 0.03);
+          gain.gain.exponentialRampToValueAtTime(0.0001, startTime + wordDuration);
+
+          osc.connect(filter);
+          filter.connect(gain);
+          gain.connect(studioMasterGain);
+
+          osc.start(startTime);
+          osc.stop(startTime + wordDuration);
+
+          startTime += wordDuration + 0.04;
+        });
+
+        const totalMs = (words.length * (wordDuration + 0.04) * 1000) + 400;
+        if (onComplete) setTimeout(onComplete, Math.max(2500, totalMs));
+      } else {
+        if (onComplete) setTimeout(onComplete, 2500);
+      }
     }
 
     function startGoodyMonologue() {
