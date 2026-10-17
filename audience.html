@@ -82,7 +82,7 @@
       box-shadow: 0 0 15px rgba(253, 203, 110, 0.4);
     }
 
-    /* TRIVIA SYNC BANNER */
+    /* TRIVIA OVERLAY */
     #stage-synced-banner {
       background: rgba(22, 9, 44, 0.94); border: 2px solid #00f0ff; border-radius: 10px;
       padding: 8px 12px; margin: 6px auto; width: 100%; max-width: 440px; text-align: center;
@@ -146,7 +146,6 @@
 <body>
   <canvas id="canvas3d"></canvas>
 
-  <!-- ENTRY SCREEN -->
   <div id="entry-modal">
     <div class="entry-card">
       <div class="badge-audience">VIP PASS</div>
@@ -159,7 +158,6 @@
     </div>
   </div>
 
-  <!-- BROADCAST CAMERAMAN CUTSCENE -->
   <div id="lens-overlay">
     <div class="letterbox-bar" id="bar-top"></div>
     <div class="letterbox-bar" id="bar-bottom"></div>
@@ -169,20 +167,17 @@
     </div>
   </div>
 
-  <!-- AUDIENCE IN-WORLD HUD -->
   <main id="spectator-ui">
     <div class="top-bar">
       <span id="user-display-name" style="color:#00f0ff;">SPECTATOR</span>
-      <span id="location-pill">LOCATION: GRAND FOYER</span>
+      <span id="location-pill">LOCATION: STREET CURBSIDE</span>
       <span id="show-clock-pill" style="color:#ffda66;">SHOW: 20:00</span>
     </div>
 
-    <!-- ELEVATOR ACTION PROMPT -->
     <div id="elevator-prompt">
       PRESS [ ▲ FORWARD ] TO TAKE ELEVATOR
     </div>
 
-    <!-- TRIVIA OVERLAY -->
     <div id="stage-synced-banner">
       <div id="stage-q-title">CURRENT QUESTION</div>
       <div id="stage-q-text">Standby for next question...</div>
@@ -194,7 +189,6 @@
       </div>
     </div>
 
-    <!-- CHAT & CONTROLS -->
     <div style="display:flex; flex-direction:column; align-items:center; width:100%;">
       <div id="chat-container">
         <div id="chat-header">
@@ -230,7 +224,6 @@
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
   <script>
-    // --- 1. HARDWARE FINGERPRINT & STORAGE ---
     function generateDeviceFingerprint() {
       try {
         const c = document.createElement('canvas');
@@ -289,7 +282,7 @@
     let isGoodySpeaking = false;
     let studioPower = true;
     let isSpectatorControlsLocked = true;
-    let currentZone = "STREET"; // "STREET", "FOYER", "STUDIO"
+    let currentZone = "STREET";
 
     let p1ContestantName = "Jake";
     let p2ContestantName = "June";
@@ -303,7 +296,14 @@
     let stageSelectedOption = null;
     let stageOptionStatus = null;
 
-    // Multiplayer Peers Representation Map
+    // Remote Video Stream Hooks for Jake & June
+    const videoJake = document.createElement('video');
+    videoJake.autoplay = true; videoJake.playsInline = true; videoJake.muted = true;
+    const videoJune = document.createElement('video');
+    videoJune.autoplay = true; videoJune.playsInline = true; videoJune.muted = true;
+    let hasLiveJakeStream = false;
+    let hasLiveJuneStream = false;
+
     const peerPlushies = new Map();
 
     btnJoinStudio.addEventListener('click', () => {
@@ -399,6 +399,22 @@
           }
         });
 
+        // Listen for live media calls from host
+        peer.on('call', (call) => {
+          call.answer();
+          call.on('stream', (remoteStream) => {
+            if (call.metadata && call.metadata.contestant === "goody-contestant-2") {
+              videoJune.srcObject = remoteStream;
+              videoJune.play().catch(() => {});
+              hasLiveJuneStream = true;
+            } else {
+              videoJake.srcObject = remoteStream;
+              videoJake.play().catch(() => {});
+              hasLiveJakeStream = true;
+            }
+          });
+        });
+
         dataConn.on('close', () => {
           addChatMessage('System', 'Disconnected from studio. Reconnecting...', 'is-host');
           setTimeout(connectToStudio, 4000);
@@ -426,8 +442,6 @@
 
     function handleRemoteSpectatorMovement(data) {
       if (!peer || data.peerId === peer.id) return;
-
-      // Invisibility rule: If remote spectator is in the tabletop studio, or we are in studio, hide them!
       const shouldBeHidden = (data.zone === "STUDIO" || currentZone === "STUDIO");
 
       let otherP = peerPlushies.get(data.peerId);
@@ -500,9 +514,16 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
 
-    const ambientLight = new THREE.AmbientLight(0x24143a, 1.2); scene.add(ambientLight);
-    const ceilingLight = new THREE.PointLight(0xffecd2, 1.0, 50); ceilingLight.position.set(0, 13.5, 0); scene.add(ceilingLight);
-    const studioSpot = new THREE.SpotLight(0x00f0ff, 5.0, 30, Math.PI / 3, 0.4); studioSpot.position.set(0, 9, -2); scene.add(studioSpot);
+    // Robust Multi-tier Lighting for Street, Foyer, and Tabletop
+    const ambientLight = new THREE.AmbientLight(0x281a42, 1.4); scene.add(ambientLight);
+    const ceilingLight = new THREE.PointLight(0xffecd2, 1.2, 60); ceilingLight.position.set(0, 16.0, 0); scene.add(ceilingLight);
+    const studioSpot = new THREE.SpotLight(0x00f0ff, 5.0, 30, Math.PI / 3, 0.4); studioSpot.position.set(0, 11, -9); scene.add(studioSpot);
+
+    // Street & Curbside Lantern Array
+    const streetLight1 = new THREE.PointLight(0xffda77, 2.2, 18); streetLight1.position.set(-6, 4.0, 7.5); scene.add(streetLight1);
+    const streetLight2 = new THREE.PointLight(0xffda77, 2.2, 18); streetLight2.position.set(6, 4.0, 7.5); scene.add(streetLight2);
+    // Foyer Warm Chandelier
+    const foyerChandelier = new THREE.PointLight(0xffd59e, 2.8, 20); foyerChandelier.position.set(0, 3.8, -4.5); scene.add(foyerChandelier);
 
     // ==========================================
     // GROUND LEVEL: STREET & GRAND THEATER FOYER
@@ -510,7 +531,6 @@
     const groundLevelGroup = new THREE.Group();
     groundLevelGroup.position.set(0, 0, 0);
 
-    // Asphalt Street & Curbside Pavement
     const streetMat = new THREE.MeshStandardMaterial({ color: 0x111116, roughness: 0.8 });
     const street = new THREE.Mesh(new THREE.PlaneGeometry(36, 16), streetMat);
     street.rotation.x = -Math.PI / 2; street.position.set(0, 0, 14); groundLevelGroup.add(street);
@@ -519,17 +539,14 @@
     const curb = new THREE.Mesh(new THREE.BoxGeometry(36, 0.25, 3), curbMat);
     curb.position.set(0, 0.125, 6.5); groundLevelGroup.add(curb);
 
-    // Red Carpet from Limo to Foyer Doors
     const redCarpet = new THREE.Mesh(new THREE.PlaneGeometry(3.5, 9), new THREE.MeshStandardMaterial({ color: 0xb71540 }));
     redCarpet.rotation.x = -Math.PI / 2; redCarpet.position.set(0, 0.26, 3.5); groundLevelGroup.add(redCarpet);
 
-    // Grand Foyer Building Shell
-    const foyerWallMat = new THREE.MeshStandardMaterial({ color: 0x1f0d38 });
-    const foyerFloorMat = new THREE.MeshStandardMaterial({ color: 0x2d1847, roughness: 0.3 }); // Polished marble
+    const foyerFloorMat = new THREE.MeshStandardMaterial({ color: 0x2d1847, roughness: 0.3 });
     const foyerFloor = new THREE.Mesh(new THREE.PlaneGeometry(24, 16), foyerFloorMat);
     foyerFloor.rotation.x = -Math.PI / 2; foyerFloor.position.set(0, 0.25, -5); groundLevelGroup.add(foyerFloor);
 
-    // Grand Entrance Doors & Canopy Marquee
+    // Marquee Canopy
     const marqueeGroup = new THREE.Group();
     marqueeGroup.position.set(0, 4.0, 4.5);
     const canopy = new THREE.Mesh(new THREE.BoxGeometry(10, 0.6, 4), new THREE.MeshStandardMaterial({ color: 0x110820 })); marqueeGroup.add(canopy);
@@ -547,7 +564,7 @@
     marqueeSign.position.set(0, 0.2, 2.01); marqueeGroup.add(marqueeSign);
     groundLevelGroup.add(marqueeGroup);
 
-    // Foyer Concession Bar (Refreshments & Popcorn)
+    // Foyer Concession Bar
     const barCounter = new THREE.Mesh(new THREE.BoxGeometry(6, 1.1, 1.8), new THREE.MeshStandardMaterial({ color: 0x3e1866 }));
     barCounter.position.set(-7, 0.8, -5); groundLevelGroup.add(barCounter);
 
@@ -557,7 +574,7 @@
     const barSign = new THREE.Mesh(new THREE.PlaneGeometry(3, 0.75), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(barSignCanvas) }));
     barSign.position.set(-7, 2.2, -4.9); groundLevelGroup.add(barSign);
 
-    // Restroom Doors & Corridor Sign
+    // Restrooms Corridor Sign
     const restroomSignCanvas = document.createElement('canvas'); restroomSignCanvas.width = 256; restroomSignCanvas.height = 64;
     const rsctx = restroomSignCanvas.getContext('2d'); rsctx.fillStyle = '#110526'; rsctx.fillRect(0,0,256,64);
     rsctx.fillStyle = '#ff7675'; rsctx.font = 'bold 20px monospace'; rsctx.textAlign = 'center'; rsctx.fillText("◀ RESTROOMS", 128, 40);
@@ -565,14 +582,12 @@
     restroomSign.position.set(7, 2.2, -4.9); groundLevelGroup.add(restroomSign);
 
     // ==========================================
-    // EXPRESS STUDIO ELEVATOR (FOYER TO TABLE)
+    // EXPRESS STUDIO ELEVATOR
     // ==========================================
     const elevatorGroup = new THREE.Group();
     elevatorGroup.position.set(0, 0.25, -12.5);
-
     const elevOuter = new THREE.Mesh(new THREE.BoxGeometry(4.5, 4.5, 3.5), new THREE.MeshStandardMaterial({ color: 0x221338 }));
     elevOuter.position.y = 2.25; elevatorGroup.add(elevOuter);
-
     const elevDoorL = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 3.2), new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.8 }));
     elevDoorL.position.set(-0.8, 1.8, 1.76); elevatorGroup.add(elevDoorL);
     const elevDoorR = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 3.2), new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.8 }));
@@ -583,7 +598,6 @@
     esctx.fillStyle = '#ffda66'; esctx.font = 'bold 18px monospace'; esctx.textAlign = 'center'; esctx.fillText("EXPRESS STUDIO LIFT", 128, 40);
     const elevSign = new THREE.Mesh(new THREE.PlaneGeometry(3, 0.75), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(elevSignCanvas) }));
     elevSign.position.set(0, 3.8, 1.77); elevatorGroup.add(elevSign);
-
     groundLevelGroup.add(elevatorGroup);
     scene.add(groundLevelGroup);
 
@@ -619,7 +633,7 @@
     const wallClockMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.2), new THREE.MeshBasicMaterial({ map: wallClockTex }));
     wallClockMesh.position.set(0, 6.2, -4.4); miniDiorama.add(wallClockMesh);
 
-    // Full 14-Country Clean Vector Flag Textures
+    // Full 14 Country Flags
     const COUNTRIES = [
       "France", "Netherlands", "Canada", "Sweden", "Italy", "Denmark",
       "Brazil", "Australia", "Spain", "Germany", "UK", "Nigeria",
@@ -795,7 +809,7 @@
     }
     setPawnTilePosition(pawn1, 0, -0.08); setPawnTilePosition(pawn2, 0, 0.08);
 
-    // Dynamic 3D Stage Question Board
+    // 3D Question Board on Tabletop Stage
     const qBoardCanvas = document.createElement('canvas'); qBoardCanvas.width = 512; qBoardCanvas.height = 384;
     const qBoardCtx = qBoardCanvas.getContext('2d');
     const qBoardTex = new THREE.CanvasTexture(qBoardCanvas);
@@ -811,7 +825,8 @@
         qBoardCtx.fillStyle = '#ffda66'; qBoardCtx.font = 'bold 16px monospace';
         qBoardCtx.fillText(` COUNTRY: ${activeRecap.country.toUpperCase()}`, 256, 78);
         qBoardCtx.fillStyle = '#00f0ff'; qBoardCtx.fillRect(36, 94, 440, 2);
-        qBoardCtx.fillStyle = '#ffffff'; qBoardCtx.font = '16px sans-serif'; qBoardCtx.textAlign = 'center';
+        qBoardCtx.fillStyle = '#ffffff'; qBoardCtx.font = '16px sans-serif';
+        qBoardCtx.textAlign = 'center';
 
         const words = activeRecap.text.split(' ');
         let line = ''; let y = 140;
@@ -886,7 +901,7 @@
     qBoardMesh.position.set(-4.8, 3.4, -3.2); qBoardMesh.rotation.y = 0.8; miniDiorama.add(qBoardMesh);
 
     // --- ACCURATE 3D PLUSHIE GENERATOR ---
-    // Modeled facing forward toward -Z with ears, blush, eyes, snout, mouth
+    // Modeled forward facing (-Z) so third person camera from behind looks forward past ears
     function createCutePlushie3D(color) {
       const pGroup = new THREE.Group();
       const pMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.95 });
@@ -895,9 +910,11 @@
       const pBody = new THREE.Mesh(new THREE.SphereGeometry(0.28, 14, 14), pMat); pBody.position.y = 0.28; pGroup.add(pBody);
       const pHead = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 14), pMat); pHead.position.y = 0.58; pGroup.add(pHead);
 
+      // Symmetrical Ears
       const ear1 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), pMat); ear1.position.set(-0.14, 0.74, 0);
       const ear2 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), earMat); ear2.position.set(0.14, 0.74, 0); pGroup.add(ear1, ear2);
 
+      // Facial Features on -Z (Forward)
       const blushMat = new THREE.MeshBasicMaterial({ color: 0xff69b4 });
       const blush1 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat); blush1.position.set(-0.11, 0.54, -0.17);
       const blush2 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat); blush2.position.set(0.11, 0.54, -0.17); pGroup.add(blush1, blush2);
@@ -917,7 +934,7 @@
       return pGroup;
     }
 
-    // Costume Audience in Stands
+    // Audience Stands Plushies (Orientation locked on Y to avoid tilt)
     const miniAudience = new THREE.Group();
     const plushColors = [0xff7675, 0x74b9ff, 0xa29bfe, 0xffbe76, 0x55efc4, 0xfd79a8, 0xf6e58d, 0x48dbfb, 0xff9ff3];
     [5.7, 6.4].forEach((radius, rowIdx) => {
@@ -927,8 +944,10 @@
         const col = plushColors[(i + rowIdx * 3) % plushColors.length];
         const pGroup = createCutePlushie3D(col);
         pGroup.position.set(Math.sin(theta) * radius, 0.46 + rowIdx * 0.25, Math.cos(theta) * (radius * 0.95) + 0.8);
-        pGroup.lookAt(0, 1.8, -2.6);
-        pGroup.rotation.y += Math.PI;
+
+        // Yaw calculate toward stage center without gimbal roll/tilt
+        const yawToStage = Math.atan2(-pGroup.position.x, -2.6 - pGroup.position.z);
+        pGroup.rotation.set(0, yawToStage + Math.PI, 0); // Upright facing stage
         pGroup.userData = { initialY: pGroup.position.y, phase: Math.random() * Math.PI * 2 };
         miniAudience.add(pGroup);
       }
@@ -972,35 +991,39 @@
       faceTex.needsUpdate = true;
     }
 
-    // Backstage Screens
+    // Backstage Screens: Hooks into live video feeds when connected
     const studioScreenCanvas = document.createElement('canvas'); studioScreenCanvas.width = 512; studioScreenCanvas.height = 256;
     const sScreenCtx = studioScreenCanvas.getContext('2d');
     const studioScreenTex = new THREE.CanvasTexture(studioScreenCanvas);
 
-    function drawScreenFeed(ctx, x, y, width, height, name, city, isGuy, currentRoll) {
+    function drawScreenFeed(ctx, x, y, width, height, name, city, isLive, videoElem, isGuy, currentRoll) {
       ctx.fillStyle = '#05020a'; ctx.fillRect(x, y, width, height);
       ctx.strokeStyle = '#39ff14'; ctx.lineWidth = 3; ctx.strokeRect(x, y, width, height);
 
-      ctx.fillStyle = isGuy ? '#1b2a47' : '#3d1b38'; ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
-      const cx = x + width / 2; const cy = y + height * 0.58;
-      ctx.fillStyle = isGuy ? '#4a69bd' : '#e84393'; ctx.beginPath(); ctx.ellipse(cx, cy + 25, 26, 32, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#f8c291'; ctx.beginPath(); ctx.arc(cx, cy - 10, 16, 0, Math.PI * 2); ctx.fill();
+      if (isLive && videoElem.readyState >= 2) {
+        ctx.save(); ctx.drawImage(videoElem, x + 2, y + 2, width - 4, height - 4); ctx.restore();
+      } else {
+        ctx.fillStyle = isGuy ? '#1b2a47' : '#3d1b38'; ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
+        const cx = x + width / 2; const cy = y + height * 0.58;
+        ctx.fillStyle = isGuy ? '#4a69bd' : '#e84393'; ctx.beginPath(); ctx.ellipse(cx, cy + 25, 26, 32, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#f8c291'; ctx.beginPath(); ctx.arc(cx, cy - 10, 16, 0, Math.PI * 2); ctx.fill();
+      }
 
       ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(x, y + height - 26, width, 26);
       ctx.fillStyle = '#39ff14'; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
-      ctx.fillText(`LIVE ${name.toUpperCase()} [${city.toUpperCase()}]`, x + width / 2, y + height - 8);
+      ctx.fillText(`${isLive ? 'LIVE' : 'CALL'} ${name.toUpperCase()} [${city.toUpperCase()}]`, x + width / 2, y + height - 8);
     }
 
     function renderBackstageScreens() {
       sScreenCtx.fillStyle = '#060210'; sScreenCtx.fillRect(0, 0, 512, 256);
-      drawScreenFeed(sScreenCtx, 15, 20, 225, 215, p1ContestantName, p1ContestantCity, true, p1RollVal);
-      drawScreenFeed(sScreenCtx, 272, 20, 225, 215, p2ContestantName, p2ContestantCity, false, p2RollVal);
+      drawScreenFeed(sScreenCtx, 15, 20, 225, 215, p1ContestantName, p1ContestantCity, hasLiveJakeStream, videoJake, true, p1RollVal);
+      drawScreenFeed(sScreenCtx, 272, 20, 225, 215, p2ContestantName, p2ContestantCity, hasLiveJuneStream, videoJune, false, p2RollVal);
       studioScreenTex.needsUpdate = true;
     }
     const studioBackScreenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshBasicMaterial({ map: studioScreenTex }));
     studioBackScreenMesh.position.set(0, 3.4, -4.5); miniDiorama.add(studioBackScreenMesh);
 
-    // Robotic Camera Rigs (Pointing directly at Goody)
+    // Robotic Camera Rigs: Elevated targeting Goody's head at Y = 9.8
     function createStudioRoboticCamera(x, z) {
       const camRig = new THREE.Group(); camRig.position.set(x, 0.44, z);
       const darkMat = new THREE.MeshStandardMaterial({ color: 0x1f1f26 });
@@ -1021,7 +1044,8 @@
     const autoCam2 = createStudioRoboticCamera(2.4, 0.3); miniDiorama.add(autoCam2.camRig);
 
     function updateCameraAlignment() {
-      const hostHeadPos = new THREE.Vector3(0, 5.77, -11.6);
+      // Goody's head height on tabletop is 1.82 relative to diorama base
+      const hostHeadPos = new THREE.Vector3(0, 1.82, -2.6);
       autoCam1.headPivot.lookAt(hostHeadPos);
       autoCam2.headPivot.lookAt(hostHeadPos);
       autoCam1.headPivot.rotation.y += Math.PI;
@@ -1040,9 +1064,8 @@
     // 6. LIMOUSINE & DOORMAN AUTOMATION (CUTSCENE)
     // ==========================================
     const limoGroup = new THREE.Group();
-    limoGroup.position.set(-18, 0.4, 8.5); // Starts down the street
+    limoGroup.position.set(-18, 0.4, 8.5);
 
-    // Black Stretch Limousine Body
     const limoMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0f, metalness: 0.9, roughness: 0.2 });
     const limoBody = new THREE.Mesh(new THREE.BoxGeometry(8.5, 1.4, 2.2), limoMat);
     limoBody.position.y = 0.55; limoGroup.add(limoBody);
@@ -1050,14 +1073,12 @@
     const limoCabin = new THREE.Mesh(new THREE.BoxGeometry(5.5, 1.0, 1.9), new THREE.MeshStandardMaterial({ color: 0x050508, roughness: 0.1 }));
     limoCabin.position.set(-0.4, 1.6, 0); limoGroup.add(limoCabin);
 
-    // Opening Passenger Door (Pivots open)
     const limoDoorPivot = new THREE.Group();
-    limoDoorPivot.position.set(0.5, 0.55, -1.1); // Door hinge on passenger side
+    limoDoorPivot.position.set(0.5, 0.55, -1.1);
     const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.3, 0.1), limoMat);
     doorMesh.position.set(0.6, 0, 0); limoDoorPivot.add(doorMesh);
     limoGroup.add(limoDoorPivot);
 
-    // Wheels
     const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
     [-3.0, -1.0, 1.0, 3.0].forEach(wx => {
       const wL = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.3, 16), wheelMat);
@@ -1067,21 +1088,20 @@
     });
     scene.add(limoGroup);
 
-    // Doorman Staff Plushie (Standing on sidewalk by marquee)
-    const doormanPlushie = createCutePlushie3D(0x2d3436); // Uniform color
+    // Doorman Staff Plushie: Starts facing sidewalk, turns forward toward limo
+    const doormanPlushie = createCutePlushie3D(0x2d3436);
     doormanPlushie.position.set(2.2, 0.26, 6.2);
-    doormanPlushie.rotation.y = -Math.PI / 2; // Facing the street curb
+    doormanPlushie.rotation.y = Math.PI / 2; // Facing toward street curb & car
     scene.add(doormanPlushie);
 
     // Spectator's Personal Plushie
     const myPlushie = createCutePlushie3D(0xff7675);
-    myPlushie.position.set(0, 0.26, 7.0); // Spawns outside limo
+    myPlushie.position.set(0, 0.26, 7.0);
     myPlushie.visible = false;
     scene.add(myPlushie);
 
-    // Player position and yaw
     let playerPos = { x: 0, y: 0.26, z: 7.0 };
-    let playerYaw = 0; // Facing forward toward Foyer (-Z)
+    let playerYaw = 0; // Facing forward toward Foyer & stage (-Z)
     let playerPitch = -0.12;
 
     // --- 7. CUTSCENE ANIMATION SEQUENCER ---
@@ -1093,7 +1113,6 @@
       cutsceneStartTime = performance.now();
       lensOverlay.style.display = 'block';
 
-      // Start camera looking from pavement at arriving limo
       camera.position.set(3.5, 1.8, 4.0);
       camera.lookAt(-10, 1.0, 8.5);
     }
@@ -1101,32 +1120,32 @@
     function updateCutscene(now) {
       const elapsed = (now - cutsceneStartTime) / 1000;
 
-      // Phase 1: Limo drives in along street (0s - 3s)
+      // Phase 1: Limo pulls up to the curb (0s - 3s)
       if (elapsed < 3.0) {
         const t = elapsed / 3.0;
-        limoGroup.position.x = -18 + (18 * Math.sin(t * Math.PI / 2)); // Ease into curb at x = 0
+        limoGroup.position.x = -18 + (18 * Math.sin(t * Math.PI / 2));
         camera.lookAt(limoGroup.position.x, 1.0, 8.5);
       }
-      // Phase 2: Doorman walks up & opens door (3s - 4.5s)
+      // Phase 2: Doorman steps forward & swings open door (3s - 4.5s)
       else if (elapsed < 4.5) {
         const t = (elapsed - 3.0) / 1.5;
-        limoDoorPivot.rotation.y = -t * 1.4; // Door swings open
-        doormanPlushie.position.x = 2.2 - (t * 0.8); // Doorman steps closer
+        limoDoorPivot.rotation.y = -t * 1.4;
+        doormanPlushie.position.x = 2.2 - (t * 0.9); // Walks forward toward car
         camera.position.set(3.2 - (t * 0.6), 1.6, 4.5);
         camera.lookAt(0.5, 0.8, 7.5);
       }
-      // Phase 3: Player plushie steps out onto red carpet (4.5s - 6.5s)
+      // Phase 3: Player plushie emerges onto red carpet (4.5s - 6.5s)
       else if (elapsed < 6.5) {
         myPlushie.visible = true;
         const t = (elapsed - 4.5) / 2.0;
-        myPlushie.position.set(0, 0.26, 8.0 - (t * 1.6)); // Steps onto red carpet at z = 6.4
+        myPlushie.position.set(0, 0.26, 8.0 - (t * 1.6));
         playerPos.z = myPlushie.position.z;
 
-        // Camera smoothly glides around to driving slot behind plushie
-        camera.position.lerp(new THREE.Vector3(playerPos.x, playerPos.y + 0.85, playerPos.z + 1.4), 0.08);
+        // Camera smoothly glides directly behind the plushie's back
+        camera.position.lerp(new THREE.Vector3(playerPos.x, playerPos.y + 0.85, playerPos.z + 1.35), 0.08);
         camera.lookAt(playerPos.x, playerPos.y + 0.6, playerPos.z - 4.0);
       }
-      // Phase 4: Seamless transition to free player controls
+      // Phase 4: Free controls unlocked
       else {
         cutsceneActive = false;
         isSpectatorControlsLocked = false;
@@ -1172,7 +1191,7 @@
     }
 
     function checkZoneAndElevatorTriggers() {
-      // 1. Street to Foyer Boundary
+      // Street to Foyer boundary
       if (currentZone === "STREET" && playerPos.z < 4.0) {
         currentZone = "FOYER";
         locationPill.textContent = "LOCATION: GRAND FOYER";
@@ -1181,25 +1200,24 @@
         locationPill.textContent = "LOCATION: STREET CURBSIDE";
       }
 
-      // 2. Foyer Elevator Trigger: Step into Elevator to ride up to tabletop studio
+      // Elevator Entry Trigger: Step in to ride to tabletop studio
       if (currentZone === "FOYER" && Math.abs(playerPos.x) < 1.6 && playerPos.z < -10.5) {
         elevatorPrompt.style.display = 'block';
         elevatorPrompt.textContent = "TAKING LIFT TO STUDIO MEZZANINE...";
         isSpectatorControlsLocked = true;
 
         setTimeout(() => {
-          // Transport directly to tabletop diorama observation rim
           currentZone = "STUDIO";
           locationPill.textContent = "LOCATION: LIVE STUDIO TABLE";
           elevatorPrompt.style.display = 'none';
 
-          playerPos.set ? playerPos.set(0, 8.41, -4.5) : (playerPos.x = 0, playerPos.y = 8.41, playerPos.z = -4.5);
-          playerYaw = 0; // Facing Goody and gameboard
+          playerPos.x = 0; playerPos.y = 8.41; playerPos.z = -4.5;
+          playerYaw = 0;
           isSpectatorControlsLocked = false;
         }, 1200);
       }
 
-      // 3. Tabletop Exit Trigger: Walk back to elevator to return to grand foyer
+      // Tabletop Exit Trigger: Walk back to elevator to return to foyer
       if (currentZone === "STUDIO" && playerPos.z > -2.0) {
         elevatorPrompt.style.display = 'block';
         elevatorPrompt.textContent = "TAKING LIFT DOWN TO GRAND FOYER...";
@@ -1211,7 +1229,7 @@
           elevatorPrompt.style.display = 'none';
 
           playerPos.x = 0; playerPos.y = 0.26; playerPos.z = -9.0;
-          playerYaw = Math.PI; // Facing outward into lobby
+          playerYaw = Math.PI;
           isSpectatorControlsLocked = false;
         }, 1200);
       }
@@ -1241,7 +1259,7 @@
       if (cutsceneActive) {
         updateCutscene(time);
       } else {
-        // Normal third-person driving camera locked behind plushie
+        // Personal plushie faces forward; camera positioned directly behind its back
         myPlushie.position.set(playerPos.x, playerPos.y, playerPos.z);
         myPlushie.rotation.y = playerYaw;
 
@@ -1260,7 +1278,6 @@
         );
         camera.lookAt(lookTarget);
 
-        // Low-bandwidth movement broadcast (6Hz)
         if (time - prevBroadcastTime > 160) {
           prevBroadcastTime = time;
           broadcastSpectatorMovement();
@@ -1270,11 +1287,11 @@
       renderGoodyFace(time);
       renderBackstageScreens();
 
-      // Billboards keep pawns and names legible from active camera
+      // Billboards keep pawns legible
       if (pawn1 && pawn1.userData && pawn1.userData.badgeMesh) pawn1.userData.badgeMesh.quaternion.copy(camera.quaternion);
       if (pawn2 && pawn2.userData && pawn2.userData.badgeMesh) pawn2.userData.badgeMesh.quaternion.copy(camera.quaternion);
 
-      // Idle bounce for audience stands
+      // Stands bounce animation
       miniAudience.children.forEach((p) => {
         p.position.y = p.userData.initialY + Math.sin(time * 0.006 + p.userData.phase) * 0.04;
       });
