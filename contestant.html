@@ -28,8 +28,20 @@
       width: 100%; max-width: 420px; background: #1b0933; border: 2px solid #ff79b0;
       border-radius: 16px; padding: 20px; text-align: center; margin-top: 20px;
     }
+    .passcode-input-container { margin: 12px 0; text-align: left; }
+    .passcode-input-container label {
+      display: block; font-size: 0.75rem; color: #ffda66; font-family: monospace; margin-bottom: 4px; font-weight: bold;
+    }
+    .passcode-input-container input {
+      width: 100%; padding: 12px; background: #0c0419; border: 2px solid #00f0ff;
+      border-radius: 8px; color: #39ff14; font-family: monospace; font-size: 1.1rem;
+      font-weight: bold; text-align: center; text-transform: uppercase; outline: none;
+      letter-spacing: 2px;
+    }
+    .passcode-input-container input::placeholder { color: #636e72; font-size: 0.85rem; letter-spacing: 0; }
+
     .btn-select {
-      width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: none;
+      width: 100%; padding: 14px; margin: 6px 0; border-radius: 12px; border: none;
       font-size: 0.95rem; font-weight: bold; text-transform: uppercase; cursor: pointer; color: #fff;
     }
     .btn-jake { background: #0984e3; }
@@ -170,7 +182,13 @@
 
   <div id="setup-card">
     <h2 style="color: #ffda66; margin-bottom: 8px; font-size: 1.3rem;">The Goody Tonight Show</h2>
-    <p style="color: #ebdcf9; font-size: 0.85rem; margin-bottom: 12px;">Select profile to activate controls:</p>
+    <p style="color: #ebdcf9; font-size: 0.85rem; margin-bottom: 8px;">Enter the passcode sent by Goody to unlock:</p>
+    
+    <div class="passcode-input-container">
+      <label for="input-passcode">SHOW ACCESS PASSCODE:</label>
+      <input type="text" id="input-passcode" placeholder="e.g. SHOW-1234" autocomplete="off" autocorrect="off">
+    </div>
+
     <button class="btn-select btn-jake" id="btn-jake">I am Contestant 1 (Jake)</button>
     <button class="btn-select btn-june" id="btn-june">I am Contestant 2 (June)</button>
   </div>
@@ -190,7 +208,7 @@
 
     <div id="turn-banner"></div>
 
-    <div id="status-pill">Waiting for host...</div>
+    <div id="status-pill">Authenticating with studio...</div>
 
     <button id="btn-roll-dice" disabled> ROLL DICE (LOCKED)</button>
 
@@ -234,6 +252,7 @@
     let currentCall = null;
     let contestantId = "";
     let contestantName = "";
+    let contestantPasscode = "";
     let hasRolled = false;
     let rollTimer = null;
     let questionTimer = null;
@@ -244,6 +263,7 @@
     let heartbeatInterval = null;
 
     const setupCard = document.getElementById('setup-card');
+    const inputPasscode = document.getElementById('input-passcode');
     const liveStagePortal = document.getElementById('live-stage-portal');
     const localSelfiePip = document.getElementById('local-selfie-pip');
     const studioStreamVideo = document.getElementById('studio-stream-video');
@@ -291,13 +311,23 @@
       window.speechSynthesis.speak(utt);
     }
 
-    document.getElementById('btn-jake').addEventListener('click', () => {
+    function validateAndStart(id, name) {
+      const code = inputPasscode.value.trim().toUpperCase();
+      if (!code) {
+        alert("Please enter the show access passcode sent to you by Goody!");
+        inputPasscode.focus();
+        return;
+      }
+      contestantPasscode = code;
       unlockMobileAudio();
-      joinGame("goody-contestant-1", "Jake");
+      joinGame(id, name);
+    }
+
+    document.getElementById('btn-jake').addEventListener('click', () => {
+      validateAndStart("goody-contestant-1", "Jake");
     });
     document.getElementById('btn-june').addEventListener('click', () => {
-      unlockMobileAudio();
-      joinGame("goody-contestant-2", "June");
+      validateAndStart("goody-contestant-2", "June");
     });
 
     async function joinGame(id, name) {
@@ -314,7 +344,7 @@
         });
         localSelfiePip.srcObject = localStream;
       } catch (err) {
-        console.warn("Media access denied or restricted, switching to avatar fallback:", err);
+        console.warn("Media access fallback:", err);
         const blankCanvas = document.createElement('canvas');
         blankCanvas.width = 320; blankCanvas.height = 240;
         const bctx = blankCanvas.getContext('2d');
@@ -341,7 +371,7 @@
 
       peer.on('error', (err) => {
         console.error("Peer error:", err);
-        statusPill.textContent = "Connection hiccup, retrying...";
+        statusPill.textContent = "Connecting to Studio...";
         setTimeout(connectToStudioHost, 2500);
       });
     }
@@ -350,7 +380,7 @@
       if (!peer || peer.destroyed) return;
 
       currentCall = peer.call("goody-main-studio", localStream, {
-        metadata: { contestant: contestantId, name: contestantName }
+        metadata: { contestant: contestantId, name: contestantName, passcode: contestantPasscode }
       });
 
       if (currentCall) {
@@ -362,11 +392,11 @@
       }
 
       dataConn = peer.connect("goody-main-studio", {
-        metadata: { contestant: contestantId, name: contestantName }
+        metadata: { contestant: contestantId, name: contestantName, passcode: contestantPasscode }
       });
 
       dataConn.on('open', () => {
-        statusPill.textContent = "Connected! Standby for host...";
+        statusPill.textContent = "Checking code with Goody...";
         if (heartbeatInterval) clearInterval(heartbeatInterval);
         heartbeatInterval = setInterval(() => {
           if (dataConn && dataConn.open) dataConn.send({ type: "PING" });
@@ -374,7 +404,13 @@
       });
 
       dataConn.on('data', (data) => {
-        if (data.type === "HOST_SPEAK") {
+        if (data.type === "AUTH_FAILED") {
+          alert("Access Denied: " + data.error);
+          window.location.reload();
+          return;
+        } else if (data.type === "AUTH_SUCCESS") {
+          statusPill.textContent = "Code Verified! Standby for broadcast...";
+        } else if (data.type === "HOST_SPEAK") {
           playHostSpeechLocally(data.text);
         } else if (data.type === "START_DICE_COUNTDOWN") {
           startTenSecondRoll();
@@ -434,7 +470,7 @@
       });
 
       dataConn.on('close', () => {
-        statusPill.textContent = "Reconnecting to Studio...";
+        statusPill.textContent = "Connection interrupted. Reconnecting...";
         setTimeout(connectToStudioHost, 2000);
       });
     }
