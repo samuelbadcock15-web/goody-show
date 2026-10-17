@@ -3,89 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Goody Tonight Show - Contestant Companion</title>
+  <title>Goody Tonight Show - Contestant 1</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
-    
     html, body {
-      width: 100%;
-      height: 100%;
-      height: 100dvh;
-      overflow: hidden;
-      background: #090314;
-      color: #fff;
+      width: 100%; height: 100%; height: 100dvh; overflow: hidden;
+      background: #090314; color: #fff;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
-
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 6px;
-    }
+    body { display: flex; flex-direction: column; align-items: center; padding: 6px; }
 
     #setup-card {
-      width: 100%; max-width: 420px; background: #1b0933; border: 2px solid #ff79b0;
+      width: 100%; max-width: 420px; background: #1b0933; border: 2px solid #00f0ff;
       border-radius: 16px; padding: 20px; text-align: center; margin-top: 20px;
     }
-    .code-input-container {
-      margin: 12px 0 16px 0;
-      text-align: center;
+    .input-label {
+      font-size: 0.75rem; font-family: monospace; color: #ffda66;
+      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display: block;
     }
-    #passcode-input {
-      width: 180px;
-      padding: 12px;
-      font-size: 1.8rem;
-      font-family: monospace;
-      font-weight: 900;
-      letter-spacing: 8px;
-      text-align: center;
-      background: #080313;
-      color: #39ff14;
-      border: 2px solid #a29bfe;
-      border-radius: 12px;
-      outline: none;
-      transition: border-color 0.2s;
+    .text-input {
+      width: 100%; max-width: 260px; padding: 10px 14px; font-size: 1.1rem;
+      font-weight: bold; text-align: center; background: #080313; color: #00f0ff;
+      border: 2px solid #a29bfe; border-radius: 12px; outline: none; margin-bottom: 12px;
     }
-    #passcode-input:focus {
-      border-color: #39ff14;
-      box-shadow: 0 0 10px rgba(57, 255, 20, 0.4);
+    .text-input:focus { border-color: #39ff14; box-shadow: 0 0 10px rgba(57, 255, 20, 0.4); }
+    #passcode-input { font-size: 1.6rem; letter-spacing: 6px; color: #39ff14; }
+    .btn-enter {
+      width: 100%; padding: 14px; margin-top: 10px; border-radius: 12px; border: none;
+      font-size: 1rem; font-weight: 900; text-transform: uppercase; cursor: pointer; color: #fff;
+      background: #0984e3;
     }
-    .btn-select {
-      width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: none;
-      font-size: 0.95rem; font-weight: bold; text-transform: uppercase; cursor: pointer; color: #fff;
-    }
-    .btn-jake { background: #0984e3; }
-    .btn-june { background: #d63031; }
 
     #live-stage-portal {
-      width: 100%;
-      max-width: 440px;
-      height: 100%;
-      display: none;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 4px;
+      width: 100%; max-width: 440px; height: 100%; display: none;
+      flex-direction: column; justify-content: space-between; gap: 4px;
     }
-
     .badge-bar {
       display: flex; justify-content: space-between; align-items: center;
       background: #18092d; padding: 4px 8px; border-radius: 6px;
       font-family: monospace; font-size: 0.72rem; flex-shrink: 0;
     }
-
     .screens-container {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      max-height: 25vh;
-      background: #000;
-      border: 2px solid #ffda66;
-      border-radius: 10px;
-      overflow: hidden;
-      touch-action: none;
-      flex-shrink: 0;
-      margin: 0 auto;
+      position: relative; width: 100%; aspect-ratio: 16 / 9; max-height: 25vh;
+      background: #000; border: 2px solid #ffda66; border-radius: 10px;
+      overflow: hidden; touch-action: none; flex-shrink: 0; margin: 0 auto;
     }
     #studio-stream-video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
     #local-selfie-pip {
@@ -102,27 +63,12 @@
     #turn-banner {
       width: 100%; padding: 5px 8px; border-radius: 6px; text-align: center;
       font-weight: 900; font-size: 0.75rem; font-family: monospace; text-transform: uppercase;
-      letter-spacing: 0.5px; display: none; flex-shrink: 0;
+      display: none; flex-shrink: 0;
     }
-    .turn-mine {
-      background: #00b894; color: #fff; border: 1.5px solid #55efc4;
-      animation: pulseGlow 1.2s infinite alternate;
-    }
-    .turn-theirs {
-      background: #2d1847; color: #dfe6e9; border: 1.5px solid #636e72;
-    }
-    .turn-tie {
-      background: #e17055; color: #fff; border: 1.5px solid #fdcb6e;
-      animation: pulseGlow 0.8s infinite alternate;
-    }
-    .turn-paused {
-      background: #d63031; color: #fff; border: 1.5px solid #ff7675;
-      animation: pulseGlow 0.9s infinite alternate;
-    }
-    @keyframes pulseGlow {
-      from { box-shadow: 0 0 4px #00b894; }
-      to { box-shadow: 0 0 10px #55efc4; }
-    }
+    .turn-mine { background: #00b894; color: #fff; border: 1.5px solid #55efc4; }
+    .turn-theirs { background: #2d1847; color: #dfe6e9; border: 1.5px solid #636e72; }
+    .turn-tie { background: #e17055; color: #fff; border: 1.5px solid #fdcb6e; }
+    .turn-paused { background: #d63031; color: #fff; border: 1.5px solid #ff7675; }
 
     #status-pill {
       text-align: center; font-family: monospace; font-size: 0.78rem;
@@ -130,51 +76,21 @@
     }
 
     #choice-card {
-      background: #1f0b3b;
-      border: 2px solid #f1c40f;
-      border-radius: 12px;
-      padding: 10px;
-      display: none;
-      flex-direction: column;
-      gap: 8px;
-      text-align: center;
-      box-shadow: 0 0 14px rgba(241, 196, 15, 0.4);
+      background: #1f0b3b; border: 2px solid #f1c40f; border-radius: 12px;
+      padding: 10px; display: none; flex-direction: column; gap: 8px; text-align: center;
       flex-shrink: 0;
     }
-    #choice-title {
-      color: #ffda66;
-      font-size: 0.85rem;
-      font-weight: 900;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
     .choice-btn {
-      width: 100%;
-      padding: 12px;
-      border-radius: 8px;
-      border: 2px solid;
-      font-size: 0.85rem;
-      font-weight: 900;
-      text-transform: uppercase;
-      cursor: pointer;
-      color: #fff;
-      transition: transform 0.1s;
+      width: 100%; padding: 12px; border-radius: 8px; border: 2px solid;
+      font-size: 0.85rem; font-weight: 900; text-transform: uppercase; cursor: pointer; color: #fff;
     }
-    .choice-btn:active { transform: scale(0.98); }
-    .btn-choice-solo {
-      background: #2980b9;
-      border-color: #3498db;
-    }
-    .btn-choice-goody {
-      background: #8e44ad;
-      border-color: #9b59b6;
-    }
+    .btn-choice-solo { background: #2980b9; border-color: #3498db; }
+    .btn-choice-goody { background: #8e44ad; border-color: #9b59b6; }
 
     #btn-roll-dice {
       width: 100%; padding: 10px; background: #444; border: 2px solid #777;
       border-radius: 10px; font-size: 0.95rem; font-weight: 900; color: #888;
-      text-transform: uppercase; letter-spacing: 0.5px; cursor: not-allowed; transition: all 0.2s;
-      flex-shrink: 0;
+      text-transform: uppercase; cursor: not-allowed; flex-shrink: 0;
     }
     #btn-roll-dice.active-roll {
       background: linear-gradient(180deg, #fdcb6e, #e17055);
@@ -186,19 +102,13 @@
       background: #190930; border: 2px solid #00f0ff; border-radius: 10px;
       padding: 8px; display: none; flex-direction: column; gap: 6px; flex-shrink: 1;
     }
-    #q-country-tag {
-      font-size: 0.75rem; font-weight: bold; color: #ffda66; text-transform: uppercase;
-    }
+    #q-country-tag { font-size: 0.75rem; font-weight: bold; color: #ffda66; text-transform: uppercase; }
     #q-timer { font-family: monospace; font-weight: bold; color: #ff7675; font-size: 0.8rem; text-align: right; }
-    
     #q-text {
       font-size: 0.82rem; font-weight: 600; line-height: 1.3; color: #ffffff;
       background: rgba(0,0,0,0.35); padding: 6px; border-radius: 6px; border-left: 3px solid #00f0ff;
     }
-
-    .options-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
-    }
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .btn-opt {
       padding: 8px 6px; background: #2f1454; border: 1.5px solid #9c4dd6; border-radius: 8px;
       color: #fff; font-size: 0.75rem; font-weight: bold; text-align: left; cursor: not-allowed;
@@ -222,30 +132,36 @@
       gap: 2px; flex-shrink: 0; margin-bottom: 2px;
     }
     .dpad-grid {
-      display: grid;
-      grid-template-columns: 46px 46px 46px;
-      grid-template-rows: 32px 32px;
-      gap: 4px;
+      display: grid; grid-template-columns: 46px 46px 46px; grid-template-rows: 32px 32px; gap: 4px;
     }
     .dpad-btn {
       background: #2b1154; border: 2px solid #ff79b0; border-radius: 6px; color: #fff;
-      font-size: 1rem; font-weight: bold; display: flex; justify-content: center; align-items: center;
-      cursor: pointer;
+      font-size: 1rem; font-weight: bold; display: flex; justify-content: center; align-items: center; cursor: pointer;
     }
   </style>
 </head>
 <body>
 
   <div id="setup-card">
-    <h2 style="color: #ffda66; margin-bottom: 8px; font-size: 1.3rem;">The Goody Tonight Show</h2>
+    <h2 style="color: #ffda66; margin-bottom: 4px; font-size: 1.3rem;">The Goody Tonight Show</h2>
+    <div style="color: #00f0ff; font-weight: bold; font-family: monospace; font-size: 0.85rem; margin-bottom: 12px;">CONTESTANT 1 (PODIUM 1)</div>
     
-    <div class="code-input-container">
-      <input type="text" id="passcode-input" maxlength="4" placeholder="0000" inputmode="numeric" pattern="[0-9]*" autocomplete="off" />
+    <span class="input-label">4-Digit Room Code:</span>
+    <div>
+      <input type="text" id="passcode-input" class="text-input" maxlength="4" placeholder="0000" inputmode="numeric" autocomplete="off" />
     </div>
 
-    <p style="color: #ebdcf9; font-size: 0.85rem; margin-bottom: 12px;">Select profile to activate controls:</p>
-    <button class="btn-select btn-jake" id="btn-jake">I am Contestant 1 (Jake)</button>
-    <button class="btn-select btn-june" id="btn-june">I am Contestant 2 (June)</button>
+    <span class="input-label">Your First Name:</span>
+    <div>
+      <input type="text" id="name-input" class="text-input" maxlength="15" placeholder="e.g. Alex" autocomplete="given-name" />
+    </div>
+
+    <span class="input-label">Your Hometown:</span>
+    <div>
+      <input type="text" id="city-input" class="text-input" maxlength="20" placeholder="e.g. London" autocomplete="address-level2" />
+    </div>
+
+    <button class="btn-enter" id="btn-enter">Enter Live Studio</button>
   </div>
 
   <main id="live-stage-portal">
@@ -262,12 +178,10 @@
     </div>
 
     <div id="turn-banner"></div>
-
     <div id="status-pill">Waiting for host...</div>
 
-    <!-- CHOICE CARD WHEN OFFERED BY HOST -->
     <div id="choice-card">
-      <div id="choice-title">Make Your Choice, Contestant!</div>
+      <div style="color:#ffda66; font-size:0.85rem; font-weight:900; text-transform:uppercase;">Make Your Choice, Contestant!</div>
       <button class="choice-btn btn-choice-solo" id="btn-pick-solo">Race Solo Against Clock</button>
       <button class="choice-btn btn-choice-goody" id="btn-pick-goody">Battle Goody Head-To-Head</button>
     </div>
@@ -308,12 +222,14 @@
 
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script>
+    const ASSIGNED_SLOT = "goody-contestant-1";
+
     let localStream = null;
     let peer = null;
     let dataConn = null;
     let mediaCall = null;
-    let contestantId = "";
     let contestantName = "";
+    let contestantCity = "";
     let hasRolled = false;
     let rollTimer = null;
     let questionTimer = null;
@@ -323,6 +239,8 @@
     let mobileAudioUnlocked = false;
 
     const passcodeInput = document.getElementById('passcode-input');
+    const nameInput = document.getElementById('name-input');
+    const cityInput = document.getElementById('city-input');
     const setupCard = document.getElementById('setup-card');
     const liveStagePortal = document.getElementById('live-stage-portal');
     const localSelfiePip = document.getElementById('local-selfie-pip');
@@ -356,13 +274,11 @@
     function unlockMobileAudio() {
       if (mobileAudioUnlocked) return;
       mobileAudioUnlocked = true;
-
       studioStreamVideo.muted = false;
-
       if ('speechSynthesis' in window) {
-        const primeUtterance = new SpeechSynthesisUtterance('');
-        primeUtterance.volume = 0;
-        window.speechSynthesis.speak(primeUtterance);
+        const prime = new SpeechSynthesisUtterance('');
+        prime.volume = 0;
+        window.speechSynthesis.speak(prime);
       }
     }
 
@@ -370,8 +286,7 @@
       if (!('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
       const utt = new SpeechSynthesisUtterance(text);
-      utt.rate = 0.95;
-      utt.pitch = 1.25;
+      utt.rate = 0.95; utt.pitch = 1.25;
       window.speechSynthesis.speak(utt);
     }
 
@@ -379,37 +294,31 @@
       if (dataConn) { try { dataConn.close(); } catch(e){} dataConn = null; }
       if (mediaCall) { try { mediaCall.close(); } catch(e){} mediaCall = null; }
       if (peer) { try { peer.destroy(); } catch(e){} peer = null; }
-
       liveStagePortal.style.display = 'none';
       setupCard.style.display = 'block';
       statusPill.textContent = "Waiting for host...";
     }
 
-    document.getElementById('btn-jake').addEventListener('click', () => {
+    document.getElementById('btn-enter').addEventListener('click', async () => {
       const code = passcodeInput.value.trim();
+      const name = nameInput.value.trim();
+      const city = cityInput.value.trim() || "London";
+
       if (!/^\d{4}$/.test(code)) {
         alert("Please enter the 4-digit code shown on the host screen.");
         passcodeInput.focus();
         return;
       }
-      unlockMobileAudio();
-      joinGame("goody-contestant-1", "Jake", code);
-    });
-
-    document.getElementById('btn-june').addEventListener('click', () => {
-      const code = passcodeInput.value.trim();
-      if (!/^\d{4}$/.test(code)) {
-        alert("Please enter the 4-digit code shown on the host screen.");
-        passcodeInput.focus();
+      if (!name || name.length < 2) {
+        alert("Please enter your first name.");
+        nameInput.focus();
         return;
       }
-      unlockMobileAudio();
-      joinGame("goody-contestant-2", "June", code);
-    });
 
-    async function joinGame(id, name, enteredCode) {
-      contestantId = id;
       contestantName = name;
+      contestantCity = city;
+      unlockMobileAudio();
+
       setupCard.style.display = 'none';
       liveStagePortal.style.display = 'flex';
       roleTag.textContent = `${name.toUpperCase()} (CONNECTING...)`;
@@ -423,13 +332,12 @@
           localSelfiePip.srcObject = localStream;
         }
 
-        // Generate temporary client ID so attempts to join a taken spot do not clash on ID
         if (peer) { try { peer.destroy(); } catch(e){} }
         peer = new Peer();
 
         peer.on('open', () => {
           mediaCall = peer.call("goody-main-studio", localStream, {
-            metadata: { contestant: contestantId, name: contestantName, passcode: enteredCode }
+            metadata: { contestant: ASSIGNED_SLOT, name: contestantName, city: contestantCity, passcode: code }
           });
 
           mediaCall.on('stream', (returnStudioStream) => {
@@ -439,11 +347,11 @@
           });
 
           dataConn = peer.connect("goody-main-studio", {
-            metadata: { contestant: contestantId, name: contestantName, passcode: enteredCode }
+            metadata: { contestant: ASSIGNED_SLOT, name: contestantName, city: contestantCity, passcode: code }
           });
 
           dataConn.on('open', () => {
-            statusPill.textContent = "Verifying availability with studio...";
+            statusPill.textContent = "Verifying with host...";
           });
 
           dataConn.on('data', (data) => {
@@ -452,11 +360,11 @@
               resetToSetupScreen();
               return;
             } else if (data.type === "SLOT_TAKEN") {
-              alert(`Contestant ${data.takenNum} (${data.slotName}) is already taken! Please select Contestant ${data.altNum} (${data.altSlotName}).`);
+              alert("Contestant 1 spot is already occupied! If you are Contestant 2, please use the contestant2 link.");
               resetToSetupScreen();
               return;
             } else if (data.type === "AUTH_SUCCESS") {
-              roleTag.textContent = `${contestantName.toUpperCase()} (CONTESTANT)`;
+              roleTag.textContent = `${contestantName.toUpperCase()} (CONTESTANT 1)`;
               statusPill.textContent = "Connected! Standby for host...";
             } else if (data.type === "HOST_SPEAK") {
               playHostSpeechLocally(data.text);
@@ -495,7 +403,7 @@
               recapCard.style.display = 'none';
               btnRollDice.style.display = 'block';
 
-              const isMe = data.activeContestantId === contestantId;
+              const isMe = data.activeContestantId === ASSIGNED_SLOT;
               updateTurnBanner(isMe, `${data.activeContestantName}'S TURN TO ROLL`);
               if (isMe) {
                 startTenSecondRoll();
@@ -509,11 +417,11 @@
               choiceCard.style.display = 'none';
               isTieBreaker = false;
               recapCard.style.display = 'none';
-              const isMe = data.activeContestantId === contestantId;
+              const isMe = data.activeContestantId === ASSIGNED_SLOT;
               updateTurnBanner(isMe, `${data.activeContestantName}'S QUESTION`);
               showQuestionLocked(data.question, isMe, data.activeContestantName);
             } else if (data.type === "UNLOCK_QUESTION_INPUT") {
-              if (data.activeContestantId === contestantId) {
+              if (data.activeContestantId === ASSIGNED_SLOT) {
                 unlockQuestionInput();
               }
             } else if (data.type === "START_TIE_BREAKER") {
@@ -526,7 +434,7 @@
               turnBanner.textContent = ' TIE-BREAKER! FIRST TO BUZZ WINS!';
               startTieBreakerQuestion(data.question);
             } else if (data.type === "OPPONENT_ANSWERED") {
-              if (data.contestant !== contestantId) {
+              if (data.contestant !== ASSIGNED_SLOT) {
                 const chosenIdx = currentQuestionData ? currentQuestionData.options.indexOf(data.chosenAnswer) : -1;
                 if (chosenIdx !== -1) {
                   optButtons.forEach(b => {
@@ -551,13 +459,13 @@
         alert("Camera & microphone permissions required: " + err.message);
         resetToSetupScreen();
       }
-    }
+    });
 
     btnPickSolo.addEventListener('click', () => {
       choiceCard.style.display = 'none';
       statusPill.textContent = "Choice confirmed: Solo Race against time!";
       if (dataConn && dataConn.open) {
-        dataConn.send({ type: "CONTESTANT_CHOSE_PATH", choice: "SOLO", contestant: contestantId });
+        dataConn.send({ type: "CONTESTANT_CHOSE_PATH", choice: "SOLO", contestant: ASSIGNED_SLOT });
       }
     });
 
@@ -565,7 +473,7 @@
       choiceCard.style.display = 'none';
       statusPill.textContent = "Choice confirmed: Battling Goody Head-To-Head!";
       if (dataConn && dataConn.open) {
-        dataConn.send({ type: "CONTESTANT_CHOSE_PATH", choice: "GOODY", contestant: contestantId });
+        dataConn.send({ type: "CONTESTANT_CHOSE_PATH", choice: "GOODY", contestant: ASSIGNED_SLOT });
       }
     });
 
@@ -580,13 +488,10 @@
       }
     }
 
-    let touchStartX = 0;
-    let touchStartY = 0;
-
+    let touchStartX = 0; let touchStartY = 0;
     interactiveViewport.addEventListener('touchstart', (e) => {
       if (e.touches.length === 1) {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
+        touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY;
       }
     }, { passive: true });
 
@@ -594,15 +499,8 @@
       if (e.touches.length === 1 && dataConn && dataConn.open) {
         const deltaX = e.touches[0].clientX - touchStartX;
         const deltaY = e.touches[0].clientY - touchStartY;
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-
-        dataConn.send({
-          type: "PLUSHIE_LOOK",
-          contestant: contestantId,
-          deltaX: -deltaX,
-          deltaY: deltaY
-        });
+        touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY;
+        dataConn.send({ type: "PLUSHIE_LOOK", contestant: ASSIGNED_SLOT, deltaX: -deltaX, deltaY: deltaY });
       }
     }, { passive: true });
 
@@ -611,7 +509,6 @@
       btnRollDice.disabled = false;
       btnRollDice.classList.add('active-roll');
       btnRollDice.textContent = " ROLL DICE NOW!";
-
       let timeLeft = 10;
       statusPill.textContent = ` ROLL TIMER: ${timeLeft}s`;
 
@@ -640,12 +537,7 @@
       statusPill.textContent = isAuto ? ` Auto-rolled: ${rollValue}` : ` You rolled: ${rollValue}!`;
 
       if (dataConn && dataConn.open) {
-        dataConn.send({
-          type: "PLAYER_ROLLED_DICE",
-          contestant: contestantId,
-          name: contestantName,
-          roll: rollValue
-        });
+        dataConn.send({ type: "PLAYER_ROLLED_DICE", contestant: ASSIGNED_SLOT, name: contestantName, roll: rollValue });
       }
     }
     btnRollDice.addEventListener('click', () => executeRoll(false));
@@ -686,7 +578,7 @@
           qTimer.textContent = "TIME OUT!";
           optButtons.forEach(b => b.disabled = true);
           if (dataConn && dataConn.open) {
-            dataConn.send({ type: "PLAYER_TIMEOUT", contestant: contestantId });
+            dataConn.send({ type: "PLAYER_TIMEOUT", contestant: ASSIGNED_SLOT });
           }
         }
       }, 1000);
@@ -724,7 +616,7 @@
         if (dataConn && dataConn.open) {
           dataConn.send({
             type: "PLAYER_ANSWERED",
-            contestant: contestantId,
+            contestant: ASSIGNED_SLOT,
             chosenAnswer: currentQuestionData.options[idx]
           });
         }
@@ -733,7 +625,7 @@
 
     function handleEvaluationResult(data) {
       if (questionTimer) clearInterval(questionTimer);
-      const isMe = data.forContestant === contestantId;
+      const isMe = data.forContestant === ASSIGNED_SLOT;
       const targetName = data.forContestant === "goody-host-bot" ? "Goody" : "Opponent";
 
       const targetIdx = selectedOptionIndex !== null
@@ -796,7 +688,7 @@
     let dpadInterval = null;
     function sendPlushieMove(direction) {
       if (dataConn && dataConn.open) {
-        dataConn.send({ type: "PLUSHIE_MOVE", contestant: contestantId, direction: direction });
+        dataConn.send({ type: "PLUSHIE_MOVE", contestant: ASSIGNED_SLOT, direction: direction });
       }
     }
     function startPlushieMove(direction) {
