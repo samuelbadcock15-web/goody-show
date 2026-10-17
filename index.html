@@ -570,7 +570,7 @@
       gameState = "IN_PLAY";
       startTwentyMinuteMatchTimer();
 
-      speakGoody(`Contestant number ${winnerNum} wins the roll and goes first! The 20-minute show clock starts now! Moving ${winRoll} spaces.`, () => {
+      speakGoody(`Contestant number ${winnerNum} wins the roll and goes first! The 20-minute show clock has begun! Moving ${winRoll} spaces.`, () => {
         advanceTurnPlayer(activePlayer, winRoll);
       });
     }
