@@ -33,7 +33,6 @@
       display: block; font-size: 0.75rem; color: #ffda66; font-family: monospace; margin-bottom: 6px; font-weight: bold;
     }
     
-    /* Prefilled SHOW- Flex Box */
     .pin-input-group {
       display: flex; align-items: center; background: #0c0419; border: 2px solid #00f0ff;
       border-radius: 8px; overflow: hidden;
@@ -274,9 +273,20 @@
     let isTieBreaker = false;
     let heartbeatInterval = null;
 
+    // Incoming audio element for studio chimes & dice sounds
     const liveStudioAudio = new Audio();
     liveStudioAudio.autoplay = true;
     liveStudioAudio.playsInline = true;
+
+    // Play Goody's speech directly on contestant phones
+    function playHostSpeechLocally(text) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utt = new SpeechSynthesisUtterance(text);
+      utt.rate = 0.95;
+      utt.pitch = 1.25;
+      window.speechSynthesis.speak(utt);
+    }
 
     const setupCard = document.getElementById('setup-card');
     const inputPinDigits = document.getElementById('input-pin-digits');
@@ -314,7 +324,14 @@
       }
       contestantPasscode = "SHOW-" + digits;
 
+      // Prime SpeechSynthesis and audio element during this user tap
+      if ('speechSynthesis' in window) {
+        const prime = new SpeechSynthesisUtterance('');
+        prime.volume = 0;
+        window.speechSynthesis.speak(prime);
+      }
       liveStudioAudio.play().catch(() => {});
+
       joinGame(id, name);
     }
 
@@ -411,6 +428,9 @@
           return;
         } else if (data.type === "AUTH_SUCCESS") {
           statusPill.textContent = "Code Verified! Standby for broadcast...";
+        } else if (data.type === "HOST_SPEAK") {
+          // Play Goody's speech directly on contestant phones
+          playHostSpeechLocally(data.text);
         } else if (data.type === "START_DICE_COUNTDOWN") {
           startTenSecondRoll();
         } else if (data.type === "SYNC_MATCH_TIMER") {
