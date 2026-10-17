@@ -259,8 +259,72 @@
     let currentQuestionData = null;
     let selectedOptionIndex = null;
     let isTieBreaker = false;
-    let mobileAudioUnlocked = false;
     let heartbeatInterval = null;
+
+    // --- Audio Pipeline for Mobile Hardware Volume Rocker ---
+    let audioCtx = null;
+    let mediaGainNode = null;
+    let streamSourceNode = null;
+    let silentKeepAliveAudio = null;
+
+    function initMobileAudioContext() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContextClass();
+        mediaGainNode = audioCtx.createGain();
+        mediaGainNode.gain.setValueAtTime(1.0, audioCtx.currentTime);
+        mediaGainNode.connect(audioCtx.destination);
+      }
+
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      // Create a background media audio element. This forces iOS and Android 
+      // to lock the phone's hardware volume rocker directly to MEDIA VOLUME.
+      if (!silentKeepAliveAudio) {
+        silentKeepAliveAudio = new Audio();
+        // 1-second silent WAV base64 loop
+        silentKeepAliveAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+        silentKeepAliveAudio.loop = true;
+        silentKeepAliveAudio.playsInline = true;
+        silentKeepAliveAudio.volume = 0.01;
+        silentKeepAliveAudio.play().catch(() => {});
+      }
+    }
+
+    function routeStreamToMediaAudio(remoteStream) {
+      initMobileAudioContext();
+      try {
+        // Disconnect old source node if present
+        if (streamSourceNode) {
+          streamSourceNode.disconnect();
+        }
+        // Connect the WebRTC stream into the Web Audio graph
+        streamSourceNode = audioCtx.createMediaStreamSource(remoteStream);
+        streamSourceNode.connect(mediaGainNode);
+      } catch (e) {
+        console.warn("Could not route stream through Web Audio node, falling back to direct video audio:", e);
+      }
+    }
+
+    function playHostSpeechLocally(text) {
+      initMobileAudioContext();
+
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+
+      const utt = new SpeechSynthesisUtterance(text);
+      utt.rate = 0.95;
+      utt.pitch = 1.25;
+      
+      // Ensure the keepalive media channel is actively running so the OS volume rocker stays engaged
+      if (silentKeepAliveAudio && silentKeepAliveAudio.paused) {
+        silentKeepAliveAudio.play().catch(() => {});
+      }
+
+      window.speechSynthesis.speak(utt);
+    }
 
     const setupCard = document.getElementById('setup-card');
     const inputPasscode = document.getElementById('input-passcode');
@@ -289,28 +353,6 @@
     const recapHeader = document.getElementById('recap-header');
     const recapBody = document.getElementById('recap-body');
 
-    function unlockMobileAudio() {
-      if (mobileAudioUnlocked) return;
-      mobileAudioUnlocked = true;
-
-      studioStreamVideo.muted = false;
-
-      if ('speechSynthesis' in window) {
-        const primeUtterance = new SpeechSynthesisUtterance('');
-        primeUtterance.volume = 0;
-        window.speechSynthesis.speak(primeUtterance);
-      }
-    }
-
-    function playHostSpeechLocally(text) {
-      if (!('speechSynthesis' in window)) return;
-      window.speechSynthesis.cancel();
-      const utt = new SpeechSynthesisUtterance(text);
-      utt.rate = 0.95;
-      utt.pitch = 1.25;
-      window.speechSynthesis.speak(utt);
-    }
-
     function validateAndStart(id, name) {
       const code = inputPasscode.value.trim().toUpperCase();
       if (!code) {
@@ -319,7 +361,7 @@
         return;
       }
       contestantPasscode = code;
-      unlockMobileAudio();
+      initMobileAudioContext();
       joinGame(id, name);
     }
 
@@ -386,8 +428,12 @@
       if (currentCall) {
         currentCall.on('stream', (returnStudioStream) => {
           studioStreamVideo.srcObject = returnStudioStream;
-          studioStreamVideo.muted = false;
+          // Mute video element to prevent double audio playback once Web Audio node is attached
+          studioStreamVideo.muted = true;
           studioStreamVideo.play().catch(console.error);
+
+          // Route the studio stream through Web Audio so the phone's hardware volume rocker adjusts it
+          routeStreamToMediaAudio(returnStudioStream);
         });
       }
 
