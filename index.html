@@ -79,7 +79,6 @@
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
   <script>
-    // 4-Digit Room Code Generation
     const studioRoomCode = Math.floor(1000 + Math.random() * 9000).toString();
     document.getElementById('entry-code').textContent = studioRoomCode;
     document.getElementById('hud-code-val').textContent = studioRoomCode;
@@ -87,6 +86,12 @@
     let currentMode = 'BEDROOM';
     let studioPower = false;
     let isGoodySpeaking = false;
+
+    // Track active claimed slots
+    const claimedSlots = {
+      "goody-contestant-1": false,
+      "goody-contestant-2": false
+    };
 
     let showJake = false;
     let showJune = false;
@@ -257,6 +262,20 @@
     let connectedDataConns = [];
     const connectedAudiencePeers = new Set();
 
+    function broadcastSlotStatus() {
+      connectedDataConns.forEach(c => {
+        if (c.open) {
+          c.send({
+            type: "SLOTS_UPDATE",
+            slots: {
+              jake: claimedSlots["goody-contestant-1"],
+              june: claimedSlots["goody-contestant-2"]
+            }
+          });
+        }
+      });
+    }
+
     function initStudioWebRTC() {
       try {
         studioPeer = new Peer("goody-main-studio");
@@ -271,7 +290,14 @@
             return;
           }
 
-          const isJune = call.metadata && call.metadata.contestant === "goody-contestant-2";
+          const contestantKey = call.metadata ? call.metadata.contestant : null;
+          if (contestantKey && claimedSlots[contestantKey]) {
+            console.warn("Call rejected: Slot already claimed", contestantKey);
+            call.close();
+            return;
+          }
+
+          const isJune = contestantKey === "goody-contestant-2";
           const returnStream = isJune ? streamJune : streamJake;
           call.answer(returnStream);
 
@@ -292,6 +318,8 @@
 
         studioPeer.on('connection', (conn) => {
           const passcode = conn.metadata ? conn.metadata.passcode : "";
+          const reqContestant = conn.metadata ? conn.metadata.contestant : null;
+
           if (passcode !== studioRoomCode) {
             conn.on('open', () => {
               conn.send({ type: "AUTH_FAILED", message: "Invalid 4-digit code." });
@@ -300,16 +328,32 @@
             return;
           }
 
+          // Check if slot requested is already taken
+          if (reqContestant && claimedSlots[reqContestant]) {
+            conn.on('open', () => {
+              conn.send({ type: "SLOT_TAKEN_ERROR", message: "That contestant has already been chosen by someone else!" });
+              setTimeout(() => conn.close(), 500);
+            });
+            return;
+          }
+
+          if (reqContestant) {
+            claimedSlots[reqContestant] = true;
+          }
+
           connectedDataConns.push(conn);
 
           conn.on('open', () => {
             conn.send({ type: "AUTH_SUCCESS" });
+            broadcastSlotStatus();
             connectedAudiencePeers.add(conn.peer);
             broadcastAudienceCount();
           });
 
           conn.on('data', (data) => {
-            if (data.type === "PLAYER_ROLLED_DICE") {
+            if (data.type === "CHECK_SLOTS") {
+              broadcastSlotStatus();
+            } else if (data.type === "PLAYER_ROLLED_DICE") {
               handlePlayerRoll(data.contestant, data.name, data.roll);
             } else if (data.type === "PLAYER_ANSWERED") {
               if (isTieBreakerActive) {
@@ -350,6 +394,12 @@
           });
 
           conn.on('close', () => {
+            if (reqContestant) {
+              claimedSlots[reqContestant] = false;
+              if (reqContestant === "goody-contestant-1") { showJake = false; hasLiveJakeStream = false; }
+              if (reqContestant === "goody-contestant-2") { showJune = false; hasLiveJuneStream = false; }
+              broadcastSlotStatus();
+            }
             connectedAudiencePeers.delete(conn.peer);
             connectedDataConns = connectedDataConns.filter(c => c.peer !== conn.peer);
             broadcastAudienceCount();
@@ -575,7 +625,6 @@
       });
     }
 
-    // --- SMOOTH HOPPING ANIMATION SYSTEM ---
     function animatePawnHop(pawn, fromIdx, toIdx, offsetX, onComplete, hopDurationMs = 280) {
       if (fromIdx === toIdx) {
         if (onComplete) onComplete();
@@ -610,7 +659,6 @@
           const elapsed = now - hopStartTime;
           const progress = Math.min(1.0, elapsed / hopDurationMs);
 
-          // Parabolic jump arc: 4 * h * p * (1 - p)
           const jumpArc = 4.0 * 0.35 * progress * (1.0 - progress);
 
           pawn.position.x = startPos.x + (endPos.x - startPos.x) * progress;
@@ -621,9 +669,9 @@
             requestAnimationFrame(stepFrame);
           } else {
             pawn.position.set(endPos.x, 0.52, endPos.z);
-            playTone(220, 'triangle', 0.05, 0.03); // Land thump
+            playTone(220, 'triangle', 0.05, 0.03);
             currentHopIdx = nextHopIdx;
-            setTimeout(hopNextStep, 50); // Pause between tiles
+            setTimeout(hopNextStep, 50);
           }
         }
 
@@ -643,7 +691,6 @@
       if (isP1) p1Index = targetIdx;
       else p2Index = targetIdx;
 
-      // Physically hop along the tiles
       animatePawnHop(targetPawn, oldIdx, targetIdx, xOffset, () => {
         if (p1Index >= boardTileCoords.length - 1 || p2Index >= boardTileCoords.length - 1) {
           triggerFinishLineVictory(isP1 ? "Jake" : "June", isP1 ? "June" : "Jake");
@@ -797,7 +844,6 @@
       if (isP1) p1Index = 0;
       else p2Index = 0;
 
-      // Hop backward rapidly to start (110ms per tile hop)
       animatePawnHop(pawnToMove, startFromIdx, 0, xOffset, onComplete, 110);
     }
 
@@ -1562,7 +1608,6 @@
     miniGoody.position.set(0, 0, -2.6);
     miniDiorama.add(miniGoody);
 
-    // --- ANIMATED LIP-SYNC FACE RENDERING ---
     function renderGoodyFace(time) {
       fctx.fillStyle = '#030108';
       fctx.fillRect(0, 0, 128, 128);
@@ -1575,35 +1620,29 @@
 
       gAntOrb.material.color.setHex(isGoodySpeaking ? 0x00f0ff : 0x39ff14);
 
-      // Glowing Eyes: ^   ^
       fctx.fillStyle = '#39ff14';
       fctx.strokeStyle = '#39ff14';
       fctx.lineWidth = 4;
       fctx.lineCap = 'round';
       fctx.lineJoin = 'round';
 
-      // Left Eye '^'
       fctx.beginPath();
       fctx.moveTo(28, 56);
       fctx.lineTo(44, 38);
       fctx.lineTo(60, 56);
       fctx.stroke();
 
-      // Right Eye '^'
       fctx.beginPath();
       fctx.moveTo(68, 56);
       fctx.lineTo(84, 38);
       fctx.lineTo(100, 56);
       fctx.stroke();
 
-      // Mouth Section:
       if (isGoodySpeaking) {
-        // Mouth flaps open/shut based on time oscillation
-        const mouthOpen = (Math.sin(time * 0.022) + 1.0) * 0.5; // 0.0 to 1.0
-        const mouthHeight = 6 + (mouthOpen * 20); // 6px to 26px opening
+        const mouthOpen = (Math.sin(time * 0.022) + 1.0) * 0.5;
+        const mouthHeight = 6 + (mouthOpen * 20);
         const mouthWidth = 40 + (mouthOpen * 6);
 
-        // Dark open mouth interior
         fctx.fillStyle = '#220033';
         fctx.strokeStyle = '#39ff14';
         fctx.lineWidth = 3.5;
@@ -1613,11 +1652,9 @@
         fctx.fill();
         fctx.stroke();
 
-        // Little stylized white cyber-teeth inside
         fctx.fillStyle = '#ffffff';
         fctx.fillRect(54, 88 - (mouthHeight / 2) + 2, 20, Math.min(5, mouthHeight / 2));
       } else {
-        // Idle happy smile: '‿'
         fctx.strokeStyle = '#39ff14';
         fctx.lineWidth = 5;
         fctx.beginPath();
