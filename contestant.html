@@ -115,6 +115,10 @@
       background: #e17055; color: #fff; border: 1.5px solid #fdcb6e;
       animation: pulseGlow 0.8s infinite alternate;
     }
+    .turn-paused {
+      background: #d63031; color: #fff; border: 1.5px solid #ff7675;
+      animation: pulseGlow 0.9s infinite alternate;
+    }
     @keyframes pulseGlow {
       from { box-shadow: 0 0 4px #00b894; }
       to { box-shadow: 0 0 10px #55efc4; }
@@ -300,10 +304,8 @@
       if (mobileAudioUnlocked) return;
       mobileAudioUnlocked = true;
 
-      // Unmute incoming stream video element
       studioStreamVideo.muted = false;
 
-      // Prime SpeechSynthesis so mobile iOS/Android does not block speech
       if ('speechSynthesis' in window) {
         const primeUtterance = new SpeechSynthesisUtterance('');
         primeUtterance.volume = 0;
@@ -390,6 +392,22 @@
               startTenSecondRoll();
             } else if (data.type === "SYNC_MATCH_TIMER") {
               matchTimerBadge.textContent = ` ${data.timeStr}`;
+            } else if (data.type === "INTERMISSION_PAUSE") {
+              // Handle mid-game pause when the opponent disconnects
+              if (rollTimer) clearInterval(rollTimer);
+              if (questionTimer) clearInterval(questionTimer);
+              if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+              
+              btnRollDice.disabled = true;
+              btnRollDice.classList.remove('active-roll');
+              btnRollDice.textContent = "GAME PAUSED";
+              triviaCard.style.display = 'none';
+              recapCard.style.display = 'none';
+
+              turnBanner.style.display = 'block';
+              turnBanner.className = 'turn-paused';
+              turnBanner.textContent = "STUDIO INTERMISSION IN PROGRESS";
+              statusPill.textContent = "A contestant disconnected! Standby for replacement...";
             } else if (data.type === "ENABLE_TURN_ROLL") {
               recapCard.style.display = 'none';
               btnRollDice.style.display = 'block';
@@ -659,7 +677,7 @@
       if (data.winner === "NOBODY") {
         turnBanner.className = 'turn-theirs';
         turnBanner.textContent = " NOBODY WINS! PRIZE ROLLS OVER!";
-        statusPill.textContent = "Both players stayed at start. Prize rolls over!";
+        statusPill.textContent = "Show ended without completion. Prize rolls over!";
       } else {
         const isMe = data.winner.toLowerCase() === contestantName.toLowerCase();
         turnBanner.className = isMe ? 'turn-mine' : 'turn-theirs';
