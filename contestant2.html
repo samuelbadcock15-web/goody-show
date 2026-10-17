@@ -114,6 +114,21 @@
       font-family: monospace; font-size: 0.72rem; flex-shrink: 0;
     }
 
+    #mic-status-indicator {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 0.68rem;
+      background: #444;
+      color: #bbb;
+    }
+    #mic-status-indicator.mic-hot {
+      background: #e74c3c;
+      color: #fff;
+      box-shadow: 0 0 8px #e74c3c;
+      animation: pulseGlow 0.8s infinite alternate;
+    }
+
     .screens-container {
       position: relative;
       width: 100%;
@@ -301,6 +316,7 @@
   <main id="live-stage-portal">
     <div class="badge-bar">
       <span id="role-tag" style="color: #00f0ff;">CONNECTING...</span>
+      <span id="mic-status-indicator">🎙️ MIC MUTED</span>
       <span id="match-timer-badge" style="color: #ffda66;"> 20:00</span>
       <span style="color: #39ff14;"> LIVE</span>
     </div>
@@ -358,7 +374,6 @@
 
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script>
-    // AUTOMATIC SESSION TOKEN FAIL-SAFE
     let playerSessionToken = sessionStorage.getItem("goody_session_token_c2");
     if (!playerSessionToken) {
       playerSessionToken = "s2_" + Math.random().toString(36).substring(2, 9);
@@ -390,6 +405,7 @@
     const localSelfiePip = document.getElementById('local-selfie-pip');
     const studioStreamVideo = document.getElementById('studio-stream-video');
     const roleTag = document.getElementById('role-tag');
+    const micStatusIndicator = document.getElementById('mic-status-indicator');
     const matchTimerBadge = document.getElementById('match-timer-badge');
     const turnBanner = document.getElementById('turn-banner');
     const statusPill = document.getElementById('status-pill');
@@ -415,6 +431,19 @@
     const recapHeader = document.getElementById('recap-header');
     const recapBody = document.getElementById('recap-body');
 
+    function setMicrophoneState(isHot, label = null) {
+      if (localStream && localStream.getAudioTracks().length > 0) {
+        localStream.getAudioTracks()[0].enabled = isHot;
+      }
+      if (isHot) {
+        micStatusIndicator.className = 'mic-hot';
+        micStatusIndicator.textContent = label ? `🎙️ ${label}` : '🎙️ ON AIR';
+      } else {
+        micStatusIndicator.className = '';
+        micStatusIndicator.textContent = '🎙️ MIC MUTED';
+      }
+    }
+
     function unlockMobileAudio() {
       if (mobileAudioUnlocked) return;
       mobileAudioUnlocked = true;
@@ -438,6 +467,7 @@
     }
 
     function resetToSetupScreen() {
+      setMicrophoneState(false);
       if (dataConn) { try { dataConn.close(); } catch(e){} dataConn = null; }
       if (mediaCall) { try { mediaCall.close(); } catch(e){} mediaCall = null; }
       if (peer) { try { peer.destroy(); } catch(e){} peer = null; }
@@ -481,6 +511,7 @@
             audio: { echoCancellation: true, noiseSuppression: true }
           });
           localSelfiePip.srcObject = localStream;
+          setMicrophoneState(false);
         }
 
         if (peer) { try { peer.destroy(); } catch(e){} }
@@ -530,17 +561,27 @@
               alert(data.message || "You have been disconnected by the studio director.");
               resetToSetupScreen();
               return;
+            } else if (data.type === "SET_MIC_STATE") {
+              setMicrophoneState(data.enabled, data.label);
+              if (data.enabled) {
+                statusPill.textContent = data.label ? `🎙️ ${data.label}` : "🎙️ YOU ARE LIVE ON AIR!";
+              } else {
+                statusPill.textContent = "Standby for Goody...";
+              }
             } else if (data.type === "AUTH_SUCCESS") {
               roleTag.textContent = `${contestantName.toUpperCase()} (CONTESTANT 2)`;
               statusPill.textContent = "Connected! Standby for host...";
+              setMicrophoneState(false);
             } else if (data.type === "HOST_SPEAK") {
               playHostSpeechLocally(data.text);
             } else if (data.type === "START_DICE_COUNTDOWN") {
               choiceCard.style.display = 'none';
+              setMicrophoneState(false);
               startTenSecondRoll();
             } else if (data.type === "SYNC_MATCH_TIMER") {
               matchTimerBadge.textContent = ` ${data.timeStr}`;
             } else if (data.type === "INTERMISSION_PAUSE") {
+              setMicrophoneState(false);
               if (rollTimer) clearInterval(rollTimer);
               if (questionTimer) clearInterval(questionTimer);
               if ('speechSynthesis' in window) window.speechSynthesis.cancel();
@@ -557,6 +598,7 @@
               turnBanner.textContent = "STUDIO INTERMISSION IN PROGRESS";
               statusPill.textContent = "A contestant disconnected! Standby for replacement...";
             } else if (data.type === "OFFER_CONTESTANT_CHOICE") {
+              setMicrophoneState(false);
               turnBanner.style.display = 'block';
               turnBanner.className = 'turn-mine';
               turnBanner.textContent = "DECISION TIME: CHOOSE YOUR PATH!";
@@ -566,6 +608,7 @@
               recapCard.style.display = 'none';
               choiceCard.style.display = 'flex';
             } else if (data.type === "ENABLE_TURN_ROLL") {
+              setMicrophoneState(false);
               choiceCard.style.display = 'none';
               recapCard.style.display = 'none';
               btnRollDice.style.display = 'block';
@@ -581,6 +624,7 @@
                 btnRollDice.textContent = ` WAITING FOR ${data.activeContestantName.toUpperCase()}...`;
               }
             } else if (data.type === "SHOW_QUESTION_LOCKED") {
+              setMicrophoneState(false);
               choiceCard.style.display = 'none';
               isTieBreaker = false;
               recapCard.style.display = 'none';
@@ -590,6 +634,7 @@
             } else if (data.type === "UNLOCK_QUESTION_INPUT") {
               if (data.activeContestantId === CONTESTANT_ID) {
                 unlockQuestionInput();
+                setMicrophoneState(true, "DELIBERATION LIVE (30s)");
               }
             } else if (data.type === "START_TIE_BREAKER") {
               choiceCard.style.display = 'none';
@@ -613,10 +658,13 @@
                 }
               }
             } else if (data.type === "EVALUATION_RESULT") {
+              setMicrophoneState(false);
               handleEvaluationResult(data);
             } else if (data.type === "TIE_BREAKER_RESULT") {
+              setMicrophoneState(false);
               handleTieBreakerResult(data);
             } else if (data.type === "GAME_OVER") {
+              setMicrophoneState(false);
               handleGameOver(data);
             }
           });
@@ -759,6 +807,7 @@
         } else {
           clearInterval(questionTimer);
           qTimer.textContent = "TIME OUT!";
+          setMicrophoneState(false);
           optButtons.forEach(b => b.disabled = true);
           if (dataConn && dataConn.open) {
             dataConn.send({ type: "PLAYER_TIMEOUT", contestant: CONTESTANT_ID });
@@ -789,113 +838,9 @@
         selectedOptionIndex = idx;
         if (questionTimer) clearInterval(questionTimer);
 
+        setMicrophoneState(false);
+
         optButtons.forEach(b => {
           b.disabled = true;
           b.classList.remove('unlocked');
         });
-        btn.classList.add('selected');
-        statusPill.textContent = "Locked in! Checking...";
-
-        if (dataConn && dataConn.open) {
-          dataConn.send({
-            type: "PLAYER_ANSWERED",
-            contestant: CONTESTANT_ID,
-            chosenAnswer: currentQuestionData.options[idx]
-          });
-        }
-      });
-    });
-
-    function handleEvaluationResult(data) {
-      if (questionTimer) clearInterval(questionTimer);
-      const isMe = data.forContestant === CONTESTANT_ID;
-      const targetName = data.forContestant === "goody-host-bot" ? "Goody" : "Opponent";
-
-      const targetIdx = selectedOptionIndex !== null
-        ? selectedOptionIndex
-        : (currentQuestionData ? currentQuestionData.options.indexOf(data.chosenAnswer) : -1);
-
-      if (targetIdx !== -1 && optButtons[targetIdx]) {
-        if (data.isCorrect) {
-          optButtons[targetIdx].classList.add('flash-green');
-          statusPill.textContent = isMe ? " CORRECT! Tile secured." : ` ${targetName} was CORRECT!`;
-        } else {
-          optButtons[targetIdx].classList.add('flash-red');
-          statusPill.textContent = isMe ? " INCORRECT! Back to start." : ` ${targetName} was INCORRECT!`;
-        }
-      }
-
-      setTimeout(() => {
-        triviaCard.style.display = 'none';
-        recapHeader.textContent = ` WHAT WE LEARNED (${data.country}):`;
-        recapBody.textContent = data.recap;
-        recapCard.style.display = 'flex';
-        statusPill.textContent = "Goody is reviewing the recap...";
-      }, 1200);
-    }
-
-    function handleTieBreakerResult(data) {
-      const isMeWinner = data.winner.toLowerCase() === contestantName.toLowerCase();
-      statusPill.textContent = isMeWinner ? ` YOU WON THE TIE-BREAKER!` : ` ${data.winner.toUpperCase()} WON THE TIE-BREAKER!`;
-
-      const targetIdx = currentQuestionData ? currentQuestionData.options.indexOf(data.chosenAnswer) : -1;
-      if (targetIdx !== -1 && optButtons[targetIdx]) {
-        optButtons[targetIdx].classList.add(data.isCorrect ? 'flash-green' : 'flash-red');
-      }
-
-      setTimeout(() => {
-        triviaCard.style.display = 'none';
-      }, 4000);
-    }
-
-    function handleGameOver(data) {
-      if (rollTimer) clearInterval(rollTimer);
-      choiceCard.style.display = 'none';
-      turnBanner.style.display = 'block';
-
-      if (data.winner === "NOBODY") {
-        turnBanner.className = 'turn-theirs';
-        turnBanner.textContent = " NOBODY WINS! PRIZE ROLLS OVER!";
-        statusPill.textContent = "Show ended without completion. Prize rolls over!";
-      } else {
-        const isMe = data.winner.toLowerCase() === contestantName.toLowerCase();
-        turnBanner.className = isMe ? 'turn-mine' : 'turn-theirs';
-        turnBanner.textContent = ` ${data.winner.toUpperCase()} WINS THE GAME!`;
-        statusPill.textContent = isMe ? "Well done! Congratulations!" : "Commiserations! Thanks for playing!";
-      }
-
-      btnRollDice.disabled = true;
-      btnRollDice.classList.remove('active-roll');
-    }
-
-    let dpadInterval = null;
-    function sendPlushieMove(direction) {
-      if (dataConn && dataConn.open) {
-        dataConn.send({ type: "PLUSHIE_MOVE", contestant: CONTESTANT_ID, direction: direction });
-      }
-    }
-    function startPlushieMove(direction) {
-      sendPlushieMove(direction);
-      if (dpadInterval) clearInterval(dpadInterval);
-      dpadInterval = setInterval(() => sendPlushieMove(direction), 100);
-    }
-    function stopPlushieMove() {
-      if (dpadInterval) { clearInterval(dpadInterval); dpadInterval = null; }
-    }
-
-    const bindDpad = (btnId, dir) => {
-      const el = document.getElementById(btnId);
-      el.addEventListener('touchstart', (e) => { e.preventDefault(); startPlushieMove(dir); });
-      el.addEventListener('touchend', (e) => { e.preventDefault(); stopPlushieMove(); });
-      el.addEventListener('mousedown', () => startPlushieMove(dir));
-      el.addEventListener('mouseup', () => stopPlushieMove());
-      el.addEventListener('mouseleave', () => stopPlushieMove());
-    };
-
-    bindDpad('dpad-fwd', 'FORWARD');
-    bindDpad('dpad-back', 'BACK');
-    bindDpad('dpad-left', 'LEFT');
-    bindDpad('dpad-right', 'RIGHT');
-  </script>
-</body>
-</html>
