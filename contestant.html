@@ -54,9 +54,17 @@
     .btn-select {
       width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: none;
       font-size: 0.95rem; font-weight: bold; text-transform: uppercase; cursor: pointer; color: #fff;
+      transition: all 0.2s;
     }
     .btn-jake { background: #0984e3; }
     .btn-june { background: #d63031; }
+    .btn-disabled {
+      background: #332a42 !important;
+      color: #776e88 !important;
+      border: 1px dashed #554a6d !important;
+      cursor: not-allowed !important;
+      opacity: 0.65;
+    }
 
     #live-stage-portal {
       width: 100%;
@@ -271,6 +279,8 @@
 
     const passcodeInput = document.getElementById('passcode-input');
     const setupCard = document.getElementById('setup-card');
+    const btnJake = document.getElementById('btn-jake');
+    const btnJune = document.getElementById('btn-june');
     const liveStagePortal = document.getElementById('live-stage-portal');
     const localSelfiePip = document.getElementById('local-selfie-pip');
     const studioStreamVideo = document.getElementById('studio-stream-video');
@@ -296,14 +306,62 @@
     const recapHeader = document.getElementById('recap-header');
     const recapBody = document.getElementById('recap-body');
 
+    // Anti-Lag Live-Edge synchronizer
+    let liveSyncInterval = null;
+    function enforceLiveZeroLatency(videoElement) {
+      if (liveSyncInterval) clearInterval(liveSyncInterval);
+      liveSyncInterval = setInterval(() => {
+        if (!videoElement || videoElement.paused || !videoElement.seekable || videoElement.seekable.length === 0) return;
+        const liveEnd = videoElement.seekable.end(videoElement.seekable.length - 1);
+        const drift = liveEnd - videoElement.currentTime;
+
+        // If buffered playback drifts behind live studio by over 0.25 seconds, snap instantly to live edge
+        if (drift > 0.25) {
+          videoElement.currentTime = liveEnd;
+        }
+      }, 500);
+    }
+
+    // Passive listener to monitor slot updates before joining
+    let slotWatcherPeer = new Peer();
+    slotWatcherPeer.on('open', () => {
+      const monitorConn = slotWatcherPeer.connect("goody-main-studio");
+      monitorConn.on('data', (data) => {
+        if (data.type === "SLOTS_UPDATE") {
+          updateSlotButtons(data.slots);
+        }
+      });
+    });
+
+    function updateSlotButtons(slots) {
+      if (!slots) return;
+      if (slots.jake) {
+        btnJake.disabled = true;
+        btnJake.classList.add('btn-disabled');
+        btnJake.textContent = "CONTESTANT 1 (JAKE) - TAKEN";
+      } else {
+        btnJake.disabled = false;
+        btnJake.classList.remove('btn-disabled');
+        btnJake.textContent = "I AM CONTESTANT 1 (JAKE)";
+      }
+
+      if (slots.june) {
+        btnJune.disabled = true;
+        btnJune.classList.add('btn-disabled');
+        btnJune.textContent = "CONTESTANT 2 (JUNE) - TAKEN";
+      } else {
+        btnJune.disabled = false;
+        btnJune.classList.remove('btn-disabled');
+        btnJune.textContent = "I AM CONTESTANT 2 (JUNE)";
+      }
+    }
+
     function unlockMobileAudio() {
       if (mobileAudioUnlocked) return;
       mobileAudioUnlocked = true;
 
-      // Unmute incoming stream video element
       studioStreamVideo.muted = false;
 
-      // Prime SpeechSynthesis so mobile iOS/Android does not block speech
       if ('speechSynthesis' in window) {
         const primeUtterance = new SpeechSynthesisUtterance('');
         primeUtterance.volume = 0;
@@ -320,7 +378,7 @@
       window.speechSynthesis.speak(utt);
     }
 
-    document.getElementById('btn-jake').addEventListener('click', () => {
+    btnJake.addEventListener('click', () => {
       const code = passcodeInput.value.trim();
       if (!/^\d{4}$/.test(code)) {
         alert("Please enter the 4-digit code shown on the host screen.");
@@ -331,7 +389,7 @@
       joinGame("goody-contestant-1", "Jake", code);
     });
 
-    document.getElementById('btn-june').addEventListener('click', () => {
+    btnJune.addEventListener('click', () => {
       const code = passcodeInput.value.trim();
       if (!/^\d{4}$/.test(code)) {
         alert("Please enter the 4-digit code shown on the host screen.");
@@ -343,6 +401,10 @@
     });
 
     async function joinGame(id, name, enteredCode) {
+      if (slotWatcherPeer) {
+        try { slotWatcherPeer.destroy(); } catch(e){}
+      }
+
       contestantId = id;
       contestantName = name;
       setupCard.style.display = 'none';
@@ -366,7 +428,9 @@
           call.on('stream', (returnStudioStream) => {
             studioStreamVideo.srcObject = returnStudioStream;
             studioStreamVideo.muted = false;
-            studioStreamVideo.play().catch(console.error);
+            studioStreamVideo.play().then(() => {
+              enforceLiveZeroLatency(studioStreamVideo);
+            }).catch(console.error);
           });
 
           dataConn = peer.connect("goody-main-studio", {
@@ -374,7 +438,7 @@
           });
 
           dataConn.on('open', () => {
-            statusPill.textContent = "Verifying code with host...";
+            statusPill.textContent = "Verifying code & slot with host...";
           });
 
           dataConn.on('data', (data) => {
@@ -382,6 +446,12 @@
               alert("Incorrect 4-digit code! Please check the host screen and try again.");
               location.reload();
               return;
+            } else if (data.type === "SLOT_TAKEN_ERROR") {
+              alert(data.message);
+              location.reload();
+              return;
+            } else if (data.type === "SLOTS_UPDATE") {
+              // Slots updated on other screens
             } else if (data.type === "AUTH_SUCCESS") {
               statusPill.textContent = "Connected! Standby for host...";
             } else if (data.type === "HOST_SPEAK") {
