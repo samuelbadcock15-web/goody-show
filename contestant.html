@@ -311,6 +311,7 @@
     let localStream = null;
     let peer = null;
     let dataConn = null;
+    let mediaCall = null;
     let contestantId = "";
     let contestantName = "";
     let hasRolled = false;
@@ -374,6 +375,16 @@
       window.speechSynthesis.speak(utt);
     }
 
+    function resetToSetupScreen() {
+      if (dataConn) { try { dataConn.close(); } catch(e){} dataConn = null; }
+      if (mediaCall) { try { mediaCall.close(); } catch(e){} mediaCall = null; }
+      if (peer) { try { peer.destroy(); } catch(e){} peer = null; }
+
+      liveStagePortal.style.display = 'none';
+      setupCard.style.display = 'block';
+      statusPill.textContent = "Waiting for host...";
+    }
+
     document.getElementById('btn-jake').addEventListener('click', () => {
       const code = passcodeInput.value.trim();
       if (!/^\d{4}$/.test(code)) {
@@ -401,23 +412,27 @@
       contestantName = name;
       setupCard.style.display = 'none';
       liveStagePortal.style.display = 'flex';
-      roleTag.textContent = `${name.toUpperCase()} (CONTESTANT)`;
+      roleTag.textContent = `${name.toUpperCase()} (CONNECTING...)`;
 
       try {
-        localStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
-          audio: { echoCancellation: true, noiseSuppression: true }
-        });
-        localSelfiePip.srcObject = localStream;
+        if (!localStream) {
+          localStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
+            audio: { echoCancellation: true, noiseSuppression: true }
+          });
+          localSelfiePip.srcObject = localStream;
+        }
 
-        peer = new Peer(contestantId);
+        // Generate temporary client ID so attempts to join a taken spot do not clash on ID
+        if (peer) { try { peer.destroy(); } catch(e){} }
+        peer = new Peer();
 
         peer.on('open', () => {
-          const call = peer.call("goody-main-studio", localStream, {
+          mediaCall = peer.call("goody-main-studio", localStream, {
             metadata: { contestant: contestantId, name: contestantName, passcode: enteredCode }
           });
 
-          call.on('stream', (returnStudioStream) => {
+          mediaCall.on('stream', (returnStudioStream) => {
             studioStreamVideo.srcObject = returnStudioStream;
             studioStreamVideo.muted = false;
             studioStreamVideo.play().catch(console.error);
@@ -428,15 +443,20 @@
           });
 
           dataConn.on('open', () => {
-            statusPill.textContent = "Verifying code with host...";
+            statusPill.textContent = "Verifying availability with studio...";
           });
 
           dataConn.on('data', (data) => {
             if (data.type === "AUTH_FAILED") {
               alert("Incorrect 4-digit code! Please check the host screen and try again.");
-              location.reload();
+              resetToSetupScreen();
+              return;
+            } else if (data.type === "SLOT_TAKEN") {
+              alert(`Contestant ${data.takenNum} (${data.slotName}) is already taken! Please select Contestant ${data.altNum} (${data.altSlotName}).`);
+              resetToSetupScreen();
               return;
             } else if (data.type === "AUTH_SUCCESS") {
+              roleTag.textContent = `${contestantName.toUpperCase()} (CONTESTANT)`;
               statusPill.textContent = "Connected! Standby for host...";
             } else if (data.type === "HOST_SPEAK") {
               playHostSpeechLocally(data.text);
@@ -529,6 +549,7 @@
 
       } catch (err) {
         alert("Camera & microphone permissions required: " + err.message);
+        resetToSetupScreen();
       }
     }
 
