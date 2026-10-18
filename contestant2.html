@@ -336,8 +336,8 @@
     </div>
 
     <div class="form-group">
-      <span class="input-label">Hometown / City:</span>
-      <input type="text" id="city-input" class="text-field" maxlength="20" placeholder="e.g. Nottingham" autocomplete="address-level2" />
+      <span class="input-label">Country:</span>
+      <input type="text" id="country-input" class="text-field" maxlength="24" placeholder="e.g. Canada" autocomplete="country-name" />
     </div>
 
     <button class="btn-enter" id="btn-enter-studio">Enter Live Studio</button>
@@ -423,7 +423,7 @@
     let dataConn = null;
     let mediaCall = null;
     let contestantName = "";
-    let contestantCity = "";
+    let contestantCountry = "";
     let hasRolled = false;
     let rollTimer = null;
     let questionTimer = null;
@@ -434,7 +434,7 @@
 
     const passcodeInput = document.getElementById('passcode-input');
     const nameInput = document.getElementById('name-input');
-    const cityInput = document.getElementById('city-input');
+    const countryInput = document.getElementById('country-input');
     const btnEnterStudio = document.getElementById('btn-enter-studio');
 
     const setupCard = document.getElementById('setup-card');
@@ -514,7 +514,7 @@
     btnEnterStudio.addEventListener('click', () => {
       const code = passcodeInput.value.trim();
       const name = nameInput.value.trim();
-      const city = cityInput.value.trim() || "Nottingham";
+      const country = countryInput.value.trim() || "Canada";
 
       if (!/^\d{4}$/.test(code)) {
         alert("Please enter the 4-digit code shown on the host screen.");
@@ -528,12 +528,12 @@
       }
 
       unlockMobileAudio();
-      joinGame(name, city, code);
+      joinGame(name, country, code);
     });
 
-    async function joinGame(name, city, enteredCode) {
+    async function joinGame(name, country, enteredCode) {
       contestantName = name;
-      contestantCity = city;
+      contestantCountry = country;
       setupCard.style.display = 'none';
       liveStagePortal.style.display = 'flex';
       roleTag.textContent = `${name.toUpperCase()} (CONNECTING...)`;
@@ -556,7 +556,7 @@
             metadata: {
               contestant: CONTESTANT_ID,
               name: contestantName,
-              city: contestantCity,
+              country: contestantCountry,
               passcode: enteredCode,
               sessionToken: playerSessionToken
             }
@@ -572,7 +572,7 @@
             metadata: {
               contestant: CONTESTANT_ID,
               name: contestantName,
-              city: contestantCity,
+              country: contestantCountry,
               passcode: enteredCode,
               sessionToken: playerSessionToken
             }
@@ -765,8 +765,8 @@
     interactiveViewport.addEventListener('touchstart', (e) => {
       if (e.touches.length === 1) {
         isViewportDragging = true;
-        vpStartX = e.touches[0].clientX;
-        vpStartY = e.touches[0].clientY;
+        vpStartX = e.clientX;
+        vpStartY = e.clientY;
       }
     }, { passive: true });
 
