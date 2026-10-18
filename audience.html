@@ -102,7 +102,7 @@
 
     /* CHAT */
     #chat-container {
-      width: 100%; max-width: 400px; background: rgba(13, 5, 26, 0.88);
+      width: 100%; max-width: 420px; background: rgba(13, 5, 26, 0.88);
       border: 1.5px solid #d4af37; border-radius: 10px; display: flex; flex-direction: column;
       pointer-events: auto; margin-bottom: 6px; backdrop-filter: blur(4px);
     }
@@ -112,7 +112,7 @@
       align-items: center; cursor: pointer;
     }
     #chat-messages {
-      height: 100px; overflow-y: auto; padding: 6px 8px; display: flex; flex-direction: column;
+      height: 95px; overflow-y: auto; padding: 6px 8px; display: flex; flex-direction: column;
       gap: 4px; font-size: 0.78rem;
     }
     .chat-msg { word-break: break-word; line-height: 1.25; }
@@ -129,17 +129,43 @@
       font-size: 0.75rem; padding: 0 12px; cursor: pointer;
     }
 
-    /* CONTROLS */
-    .controls-wrapper { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; pointer-events: none; }
-    .dpad-section { background: rgba(20, 7, 40, 0.85); border: 1.5px solid #d4af37; border-radius: 10px; padding: 4px; pointer-events: auto; }
+    /* CONTROLS BAR: D-PAD (LEFT) & LOOK PAD (RIGHT) */
+    .controls-wrapper {
+      display: flex; justify-content: space-between; align-items: flex-end;
+      width: 100%; pointer-events: none; padding: 0 4px;
+    }
+    .dpad-section {
+      background: rgba(20, 7, 40, 0.90); border: 1.5px solid #d4af37; border-radius: 10px;
+      padding: 4px; pointer-events: auto; display: flex; flex-direction: column; align-items: center;
+    }
+    .dpad-sublabel {
+      font-size: 0.60rem; font-family: monospace; color: #ffda66; margin-top: 2px;
+    }
     .dpad-grid { display: grid; grid-template-columns: 44px 44px 44px; grid-template-rows: 32px 32px; gap: 4px; }
     .dpad-btn {
       background: #2b1154; border: 1.5px solid #d4af37; border-radius: 6px; color: #fff;
-      font-size: 1rem; font-weight: bold; display: flex; justify-content: center; align-items: center; cursor: pointer;
+      font-size: 1rem; font-weight: bold; display: flex; justify-content: center; align-items: center;
+      cursor: pointer; transition: background 0.1s;
     }
-    .touch-look-hint {
-      background: rgba(0, 0, 0, 0.7); border: 1px dashed #00f0ff; border-radius: 6px;
-      padding: 4px 8px; color: #00f0ff; font-size: 0.68rem; font-family: monospace; pointer-events: none; margin-bottom: 4px;
+    .dpad-btn:active, .dpad-btn.pressed { background: #6c5ce7; }
+
+    /* DEDICATED VISIBLE-CURSOR LOOK PAD */
+    #look-pad {
+      width: 110px; height: 90px; background: rgba(18, 7, 38, 0.90);
+      border: 1.5px solid #00f0ff; border-radius: 12px; pointer-events: auto;
+      cursor: grab; display: flex; flex-direction: column; justify-content: center;
+      align-items: center; position: relative; box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
+      touch-action: none;
+    }
+    #look-pad:active { cursor: grabbing; border-color: #ffda66; }
+    #look-pad-knob {
+      width: 32px; height: 32px; border-radius: 50%; background: #00f0ff;
+      opacity: 0.85; pointer-events: none; transition: transform 0.05s linear;
+      box-shadow: 0 0 8px #00f0ff;
+    }
+    #look-pad-label {
+      font-size: 0.62rem; font-family: monospace; color: #00f0ff;
+      margin-top: 4px; pointer-events: none; font-weight: bold;
     }
   </style>
 </head>
@@ -174,7 +200,7 @@
       <span id="show-clock-pill" style="color:#ffda66;">SHOW: 20:00</span>
     </div>
 
-    <div id="interaction-prompt">PRESS [ ▲ FORWARD ] TO TAKE ELEVATOR</div>
+    <div id="interaction-prompt">PRESS [ W / ▲ ] TO TAKE ELEVATOR</div>
 
     <div id="stage-synced-banner">
       <div id="stage-q-title">CURRENT QUESTION</div>
@@ -212,8 +238,13 @@
             <button class="dpad-btn" id="dpad-back">▼</button>
             <button class="dpad-btn" id="dpad-right">▶</button>
           </div>
+          <span class="dpad-sublabel">WASD / ARROWS</span>
         </div>
-        <div class="touch-look-hint">Drag screen to look around</div>
+
+        <div id="look-pad">
+          <div id="look-pad-knob"></div>
+          <div id="look-pad-label">DRAG TO LOOK</div>
+        </div>
       </div>
     </div>
   </main>
@@ -571,32 +602,26 @@
     const ceilingLight = new THREE.PointLight(0xffecd2, 1.2, 60); ceilingLight.position.set(0, 16.0, 0); scene.add(ceilingLight);
     const studioSpot = new THREE.SpotLight(0x00f0ff, 5.0, 30, Math.PI / 3, 0.4); studioSpot.position.set(0, 11, -9); scene.add(studioSpot);
 
-    // Street Lamps
     const streetLamp1 = new THREE.PointLight(0xffe599, 3.5, 24); streetLamp1.position.set(-6, 4.2, 7.8); scene.add(streetLamp1);
     const streetLamp2 = new THREE.PointLight(0xffe599, 3.5, 24); streetLamp2.position.set(6, 4.2, 7.8); scene.add(streetLamp2);
-    // Foyer Chandeliers
     const foyerChandelier1 = new THREE.PointLight(0xffdfa9, 3.5, 20); foyerChandelier1.position.set(-3.5, 3.8, -4.5); scene.add(foyerChandelier1);
     const foyerChandelier2 = new THREE.PointLight(0xffdfa9, 3.5, 20); foyerChandelier2.position.set(3.5, 3.8, -4.5); scene.add(foyerChandelier2);
-    // Restroom Vanity Light
     const restroomVanityLight = new THREE.PointLight(0xffffff, 2.5, 12); restroomVanityLight.position.set(8.5, 3.2, -5.0); scene.add(restroomVanityLight);
 
     // --- GROUND LEVEL: STREET, LOBBY, FOYER, RESTROOMS ---
     const groundLevelGroup = new THREE.Group();
 
-    // Dark Asphalt Street
     const streetMat = new THREE.MeshStandardMaterial({ color: 0x121216, roughness: 0.9 });
     const street = new THREE.Mesh(new THREE.PlaneGeometry(38, 16), streetMat);
     street.rotation.x = -Math.PI / 2; street.position.set(0, 0, 14); groundLevelGroup.add(street);
 
-    // Pavement Curb
     const curb = new THREE.Mesh(new THREE.BoxGeometry(38, 0.25, 3), new THREE.MeshStandardMaterial({ color: 0x484854, roughness: 0.6 }));
     curb.position.set(0, 0.125, 6.5); groundLevelGroup.add(curb);
 
-    // Polished Checkered Foyer Marble Floor
     const foyerFloor = new THREE.Mesh(new THREE.PlaneGeometry(24, 16), new THREE.MeshStandardMaterial({ color: 0x221338, roughness: 0.25 }));
     foyerFloor.rotation.x = -Math.PI / 2; foyerFloor.position.set(0, 0.25, -5); groundLevelGroup.add(foyerFloor);
 
-    // TRUE CRIMSON RED CARPET: From curbside limo step (z = 8.2) straight into studio elevator (z = -12.5)
+    // TRUE CRIMSON RED CARPET
     const redCarpetGroup = new THREE.Group();
     const crimsonCarpetMat = new THREE.MeshStandardMaterial({ color: 0x99001a, roughness: 0.85 });
     const goldTrimMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.85, roughness: 0.2 });
@@ -613,7 +638,6 @@
     goldBorderR.rotation.x = -Math.PI / 2; goldBorderR.position.set(1.67, 0.262, -2.0);
     redCarpetGroup.add(goldBorderR);
 
-    // Gold Stanchion Posts along the carpet path
     [-8, -4, 0, 4].forEach(sz => {
       [-1.9, 1.9].forEach(sx => {
         const post = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.9, 12), goldTrimMat);
@@ -640,7 +664,7 @@
     marqueeSign.position.set(0, 0.2, 2.01); marqueeGroup.add(marqueeSign);
     groundLevelGroup.add(marqueeGroup);
 
-    // --- REFRESHMENTS & SNACK BAR (POPCORN WARMER & SODA MACHINE) ---
+    // --- REFRESHMENTS & SNACK BAR ---
     const barGroup = new THREE.Group(); barGroup.position.set(-7.5, 0.25, -5.0);
     const counterBase = new THREE.Mesh(new THREE.BoxGeometry(6.5, 1.1, 2.2), new THREE.MeshStandardMaterial({ color: 0x3d1a0a, roughness: 0.7 }));
     counterBase.position.y = 0.55; barGroup.add(counterBase);
@@ -932,7 +956,6 @@
       const pBody = new THREE.Mesh(new THREE.SphereGeometry(0.28, 14, 14), pMat); pBody.position.y = 0.28; pGroup.add(pBody);
       const pHead = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 14), pMat); pHead.position.y = 0.58; pGroup.add(pHead);
 
-      // Uniform Jacket & Gold Buttons (For Staff Plushies)
       if (hasUniform) {
         const jacket = new THREE.Mesh(
           new THREE.CylinderGeometry(0.29, 0.30, 0.26, 16), 
@@ -948,11 +971,9 @@
         });
       }
 
-      // Ears
       const ear1 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), pMat); ear1.position.set(-0.14, 0.74, 0);
       const ear2 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), earMat); ear2.position.set(0.14, 0.74, 0); pGroup.add(ear1, ear2);
 
-      // Face on -Z (Forward)
       const blushMat = new THREE.MeshBasicMaterial({ color: 0xff69b4, transparent: isTransparent, opacity: opacity });
       const blush1 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat); blush1.position.set(-0.11, 0.54, -0.17);
       const blush2 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat); blush2.position.set(0.11, 0.54, -0.17); pGroup.add(blush1, blush2);
@@ -1061,7 +1082,7 @@
     const studioBackScreenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshBasicMaterial({ map: studioScreenTex }));
     studioBackScreenMesh.position.set(0, 3.4, -4.5); miniDiorama.add(studioBackScreenMesh);
 
-    // Robotic Camera Rigs (180deg flipped so lens faces Goody)
+    // Robotic Camera Rigs
     function createStudioRoboticCamera(x, z) {
       const camRig = new THREE.Group(); camRig.position.set(x, 0.44, z);
       const darkMat = new THREE.MeshStandardMaterial({ color: 0x1f1f26 });
@@ -1129,7 +1150,6 @@
     doorWindow.position.set(0.6, 0.55, 0); limoDoorPivot.add(doorWindow);
     limoGroup.add(limoDoorPivot);
 
-    // Chrome Wheels
     [-3.0, -1.0, 1.0, 3.0].forEach(wx => {
       const wL = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.28, 16), chromeMat);
       wL.rotation.x = Math.PI / 2; wL.position.set(wx, 0.2, 1.15); limoGroup.add(wL);
@@ -1138,13 +1158,13 @@
     });
     scene.add(limoGroup);
 
-    // Uniformed Doorman Staff Plushie (Solid Opacity 1.0)
+    // Uniformed Doorman Staff Plushie
     const doormanPlushie = createCutePlushie3D(0x2c3e50, true, 1.0);
     doormanPlushie.position.set(1.5, 0.26, 6.2);
     doormanPlushie.rotation.y = Math.PI;
     scene.add(doormanPlushie);
 
-    // Spectator's Personal Plushie (Slightly Transparent at 0.75 Opacity)
+    // Spectator's Personal Plushie (75% Opacity)
     const myPlushie = createCutePlushie3D(0xff7675, false, 0.75);
     myPlushie.position.set(0, 0.26, 7.8);
     myPlushie.visible = false;
@@ -1169,23 +1189,18 @@
     function updateCutscene(now) {
       const elapsed = (now - cutsceneStartTime) / 1000;
 
-      // Phase 1: White Limo pulls up to the curb (0s - 3s)
       if (elapsed < 3.0) {
         const t = elapsed / 3.0;
         limoGroup.position.x = -18 + (18 * Math.sin(t * Math.PI / 2));
         camera.lookAt(limoGroup.position.x, 1.0, 8.5);
-      }
-      // Phase 2: Doorman walks forward facing car, opens door, stands respectfully (3s - 4.5s)
-      else if (elapsed < 4.5) {
+      } else if (elapsed < 4.5) {
         const t = (elapsed - 3.0) / 1.5;
         limoDoorPivot.rotation.y = -t * 1.4;
         doormanPlushie.position.z = 6.2 + (t * 0.9);
         doormanPlushie.rotation.y = Math.PI - (t * 0.5);
         camera.position.set(3.2 - (t * 0.5), 1.6, 4.5);
         camera.lookAt(0.5, 0.8, 7.5);
-      }
-      // Phase 3: Player emerges onto red carpet (4.5s - 6.5s)
-      else if (elapsed < 6.5) {
+      } else if (elapsed < 6.5) {
         myPlushie.visible = true;
         const t = (elapsed - 4.5) / 2.0;
         myPlushie.position.set(0, 0.26, 8.2 - (t * 1.6));
@@ -1193,9 +1208,7 @@
 
         camera.position.lerp(new THREE.Vector3(playerPos.x, playerPos.y + 0.85, playerPos.z + 1.35), 0.08);
         camera.lookAt(playerPos.x, playerPos.y + 0.6, playerPos.z - 4.0);
-      }
-      // Phase 4: Doorman closes door & player takes control (6.5s+)
-      else if (elapsed < 7.2) {
+      } else if (elapsed < 7.2) {
         const t = (elapsed - 6.5) / 0.7;
         limoDoorPivot.rotation.y = -1.4 * (1.0 - t);
       } else {
@@ -1208,40 +1221,140 @@
       }
     }
 
-    // --- 6. NAVIGATION & INTERACTION TRIGGERS ---
-    let touchStartX = 0; let touchStartY = 0;
-    window.addEventListener('touchstart', (e) => {
+    // ==========================================
+    // 6. PC KEYBOARD (WASD / ARROWS) & ON-SCREEN CONTROLS
+    // ==========================================
+    const keysPressed = {};
+
+    window.addEventListener('keydown', (e) => {
+      // Don't steer when typing in inputs
+      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+      keysPressed[e.code] = true;
+    });
+
+    window.addEventListener('keyup', (e) => {
+      keysPressed[e.code] = false;
+    });
+
+    function applyMovementStep(deltaSec) {
+      if (isSpectatorControlsLocked) return;
+
+      let moveFwd = 0;
+      let moveRight = 0;
+
+      // Keyboard Inputs
+      if (keysPressed['KeyW'] || keysPressed['ArrowUp']) moveFwd += 1;
+      if (keysPressed['KeyS'] || keysPressed['ArrowDown']) moveFwd -= 1;
+      if (keysPressed['KeyA'] || keysPressed['ArrowLeft']) moveRight -= 1;
+      if (keysPressed['KeyD'] || keysPressed['ArrowRight']) moveRight += 1;
+
+      // On-Screen D-Pad Inputs
+      if (dpadActiveDirs.has('FORWARD')) moveFwd += 1;
+      if (dpadActiveDirs.has('BACK')) moveFwd -= 1;
+      if (dpadActiveDirs.has('LEFT')) moveRight -= 1;
+      if (dpadActiveDirs.has('RIGHT')) moveRight += 1;
+
+      if (moveFwd === 0 && moveRight === 0) return;
+
+      // Normalize diagonal movement
+      const len = Math.hypot(moveFwd, moveRight);
+      const speed = 4.2; // meters/sec
+      const dist = (speed * deltaSec) / len;
+
+      const fwdX = -Math.sin(playerYaw);
+      const fwdZ = -Math.cos(playerYaw);
+      const rX = Math.cos(playerYaw);
+      const rZ = -Math.sin(playerYaw);
+
+      playerPos.x += (fwdX * moveFwd + rX * moveRight) * dist;
+      playerPos.z += (fwdZ * moveFwd + rZ * moveRight) * dist;
+
+      checkZoneAndElevatorTriggers();
+    }
+
+    // On-Screen D-Pad Mouse / Touch Click Bindings
+    const dpadActiveDirs = new Set();
+    function setupDpadButton(btnId, dir) {
+      const el = document.getElementById(btnId);
+      const start = (e) => {
+        unlockAudio();
+        e.preventDefault();
+        dpadActiveDirs.add(dir);
+        el.classList.add('pressed');
+      };
+      const stop = () => {
+        dpadActiveDirs.delete(dir);
+        el.classList.remove('pressed');
+      };
+
+      el.addEventListener('mousedown', start);
+      el.addEventListener('mouseup', stop);
+      el.addEventListener('mouseleave', stop);
+      el.addEventListener('touchstart', start, { passive: false });
+      el.addEventListener('touchend', stop, { passive: false });
+    }
+    setupDpadButton('dpad-fwd', 'FORWARD');
+    setupDpadButton('dpad-back', 'BACK');
+    setupDpadButton('dpad-left', 'LEFT');
+    setupDpadButton('dpad-right', 'RIGHT');
+
+    // ==========================================
+    // 7. INTERACTIVE VISIBLE-CURSOR LOOK PAD
+    // ==========================================
+    const lookPad = document.getElementById('look-pad');
+    const lookPadKnob = document.getElementById('look-pad-knob');
+    let isLooking = false;
+    let lookOriginX = 0;
+    let lookOriginY = 0;
+
+    function handleLookStart(clientX, clientY) {
       unlockAudio();
-      if (isSpectatorControlsLocked || e.target.closest('#chat-container') || e.target.closest('.dpad-section') || e.target.closest('#entry-modal') || e.target.closest('#stage-synced-banner')) return;
-      if (e.touches.length === 1) { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }
+      isLooking = true;
+      lookOriginX = clientX;
+      lookOriginY = clientY;
+    }
+
+    function handleLookMove(clientX, clientY) {
+      if (!isLooking || isSpectatorControlsLocked) return;
+
+      const deltaX = clientX - lookOriginX;
+      const deltaY = clientY - lookOriginY;
+      lookOriginX = clientX;
+      lookOriginY = clientY;
+
+      // Adjust camera yaw and pitch
+      playerYaw -= deltaX * 0.008;
+      playerPitch = Math.max(-0.6, Math.min(0.5, playerPitch - deltaY * 0.006));
+
+      // Visual knob offset
+      const maxOffset = 22;
+      const knobX = Math.max(-maxOffset, Math.min(maxOffset, deltaX * 3));
+      const knobY = Math.max(-maxOffset, Math.min(maxOffset, deltaY * 3));
+      lookPadKnob.style.transform = `translate(${knobX}px, ${knobY}px)`;
+    }
+
+    function handleLookEnd() {
+      isLooking = false;
+      lookPadKnob.style.transform = `translate(0px, 0px)`;
+    }
+
+    lookPad.addEventListener('mousedown', (e) => handleLookStart(e.clientX, e.clientY));
+    window.addEventListener('mousemove', (e) => handleLookMove(e.clientX, e.clientY));
+    window.addEventListener('mouseup', handleLookEnd);
+
+    lookPad.addEventListener('touchstart', (e) => {
+      if (e.touches.length > 0) handleLookStart(e.touches[0].clientX, e.touches[0].clientY);
     }, { passive: true });
 
     window.addEventListener('touchmove', (e) => {
-      if (isSpectatorControlsLocked || e.target.closest('#chat-container') || e.target.closest('.dpad-section') || e.target.closest('#entry-modal') || e.target.closest('#stage-synced-banner')) return;
-      if (e.touches.length === 1) {
-        const dx = e.touches[0].clientX - touchStartX; const dy = e.touches[0].clientY - touchStartY;
-        touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY;
-        playerYaw -= dx * 0.006;
-        playerPitch = Math.max(-0.6, Math.min(0.5, playerPitch - dy * 0.005));
-      }
+      if (isLooking && e.touches.length > 0) handleLookMove(e.touches[0].clientX, e.touches[0].clientY);
     }, { passive: true });
 
-    let moveInterval = null;
-    function moveStep(dir) {
-      if (isSpectatorControlsLocked) return;
-      const step = 0.24;
-      const fwdX = -Math.sin(playerYaw); const fwdZ = -Math.cos(playerYaw);
-      const rightX = Math.cos(playerYaw); const rightZ = -Math.sin(playerYaw);
+    window.addEventListener('touchend', handleLookEnd);
 
-      if (dir === 'FORWARD') { playerPos.x += fwdX * step; playerPos.z += fwdZ * step; }
-      if (dir === 'BACK') { playerPos.x -= fwdX * step; playerPos.z -= fwdZ * step; }
-      if (dir === 'LEFT') { playerPos.x -= rightX * step; playerPos.z -= rightZ * step; }
-      if (dir === 'RIGHT') { playerPos.x += rightX * step; playerPos.z += rightZ * step; }
-
-      checkZoneAndElevatorTriggers();
-      broadcastSpectatorMovement();
-    }
-
+    // ==========================================
+    // 8. ZONE & ELEVATOR TRIGGERS
+    // ==========================================
     function checkZoneAndElevatorTriggers() {
       // Street / Foyer Boundaries
       if (currentZone === "STREET" && playerPos.z < 4.0) {
@@ -1253,7 +1366,7 @@
       // Restroom Sink Proximity
       if (currentZone === "FOYER" && playerPos.x > 6.0 && Math.abs(playerPos.z - (-5.0)) < 2.0) {
         interactionPrompt.style.display = 'block';
-        interactionPrompt.textContent = " RESTROOM: WASHING & DRYING HANDS...";
+        interactionPrompt.textContent = "🚿 RESTROOM: WASHING & DRYING HANDS...";
         playTone(380, 'sine', 0.15, 0.03);
       }
       // Refreshment Bar Proximity
@@ -1295,34 +1408,27 @@
       }
     }
 
-    const bindDpad = (id, dir) => {
-      const el = document.getElementById(id);
-      const start = (e) => { 
-        unlockAudio(); e.preventDefault(); moveStep(dir); 
-        if (moveInterval) clearInterval(moveInterval); 
-        moveInterval = setInterval(() => moveStep(dir), 90); 
-      };
-      const stop = () => { if (moveInterval) { clearInterval(moveInterval); moveInterval = null; } };
-      el.addEventListener('touchstart', start); el.addEventListener('touchend', stop);
-      el.addEventListener('mousedown', start); el.addEventListener('mouseup', stop);
-      el.addEventListener('mouseleave', stop);
-    };
-    bindDpad('dpad-fwd', 'FORWARD'); bindDpad('dpad-back', 'BACK'); bindDpad('dpad-left', 'LEFT'); bindDpad('dpad-right', 'RIGHT');
-
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // --- 7. MAIN RENDER LOOP ---
+    // --- 9. MAIN RENDER LOOP ---
+    let prevFrameTime = performance.now();
     let prevBroadcastTime = 0;
+
     function animate() {
       requestAnimationFrame(animate);
       const time = performance.now();
+      const deltaSec = Math.min((time - prevFrameTime) / 1000, 0.1);
+      prevFrameTime = time;
 
       if (cutsceneActive) {
         updateCutscene(time);
       } else {
+        // Continuous keyboard / on-screen movement physics
+        applyMovementStep(deltaSec);
+
         myPlushie.position.set(playerPos.x, playerPos.y, playerPos.z);
         myPlushie.rotation.y = playerYaw;
 
