@@ -434,7 +434,7 @@
     let savedGameState = null;
 
     // --- SPECTATOR ROSTER & MODERATION STATE ---
-    const connectedSpectatorData = new Map(); // peerId -> { name, sessionToken, hardwareId, conn }
+    const connectedSpectatorData = new Map();
     const shadowbannedTokens = new Set();
     const shadowbannedHardwareIds = new Set();
     let isAudienceChatGlobalMuted = false;
@@ -464,7 +464,7 @@
       const spec = connectedSpectatorData.get(peerId);
       const name = spec ? spec.name : "Spectator";
       
-      const confirmKick = confirm(`Are you sure you want to boot out ${name}?`);
+      const confirmKick = confirm(`Are you sure you want to eject ${name} from the studio?`);
       if (!confirmKick) return;
 
       if (spec && spec.conn && spec.conn.open) {
@@ -481,7 +481,7 @@
       connectedAudiencePeers.delete(peerId);
       broadcastAudienceCount();
       renderSpectatorRoster();
-      addModeratorLog(`[DIRECTOR] Kicked spectator ${name}.`);
+      addModeratorLog(`[DIRECTOR] Ejected spectator ${name}.`);
     }
 
     const modChatStream = document.getElementById('mod-chat-stream');
@@ -602,6 +602,7 @@
       }
     }
 
+    // --- INTERMISSION & DROPOUT HANDLER (ROLL SCRUBBING INCLUDED) ---
     function handleMidGameDropout(contestantId) {
       if (gameState === "GAME_OVER" || gameState === "INTERMISSION") return;
 
@@ -618,6 +619,13 @@
       if (diceInterval) clearInterval(diceInterval);
       if (questionInterval) clearInterval(questionInterval);
       if (matchTimerInterval) clearInterval(matchTimerInterval);
+
+      // Clean roll duel state so replacements never inherit stale dice
+      p1RollVal = null;
+      p2RollVal = null;
+      isDiceRollingP1 = false;
+      isDiceRollingP2 = false;
+      isAdvancingPawn = false;
 
       savedGameState = gameState;
       savedTurnPlayer = activePlayer;
@@ -712,7 +720,10 @@
         return;
       }
       if (savedGameState === "OPENING_DUEL") {
-        gameState = "OPENING_DUEL"; renderStageQuestionBoard();
+        gameState = "OPENING_DUEL";
+        p1RollVal = null;
+        p2RollVal = null;
+        renderStageQuestionBoard();
         const speech = isSamePerson
           ? `Welcome back, ${newName}! Audio and video back online! Now, where were we? Ah yes, we were about to roll to see who takes the first turn! Both contestants, get ready to roll!`
           : `Welcome back to the show! ${newName} from ${contestantCities[contestantId]} has joined us as contestant number ${numStr}! Now, where were we? Ah yes, we were about to roll to see who takes the first turn! Both contestants, get ready to roll!`;
@@ -1191,7 +1202,6 @@
                 });
               }
 
-              // Send live video calls to spectator if available
               if (liveJakeMediaStream) {
                 try { studioPeer.call(conn.peer, liveJakeMediaStream, { metadata: { contestant: "goody-contestant-1" } }); } catch(e){}
               }
@@ -1234,7 +1244,7 @@
           });
 
           conn.on('data', (data) => {
-            // --- SPECTATOR LOBBY MULTIPLAYER POS RELAY ---
+            // Relay spectator movement in lobby
             if (data.type === "SPECTATOR_MOVE") {
               connectedDataConns.forEach(c => {
                 if (c.open && c.metadata && c.metadata.role === 'AUDIENCE' && c.peer !== conn.peer) {
@@ -1253,7 +1263,7 @@
               return;
             }
 
-            // --- AUDIENCE LIVE CHAT & SHADOWBAN DISPATCHER ---
+            // Spectator communal chat and shadowban management
             if (data.type === "AUDIENCE_CHAT_MESSAGE") {
               const senderToken = data.sessionToken;
               const senderHw = data.hardwareId;
@@ -1373,6 +1383,14 @@
           }
         });
       } catch(e) { console.error(e); }
+    }
+
+    function forwardMediaToSpectators(slot, mediaStream) {
+      connectedDataConns.forEach(c => {
+        if (c.open && c.metadata && c.metadata.role === 'AUDIENCE') {
+          try { studioPeer.call(c.peer, mediaStream, { metadata: { contestant: slot } }); } catch(e){}
+        }
+      });
     }
 
     function broadcastAudienceCount() {
@@ -1514,13 +1532,14 @@
       }, 1000);
     }
 
+    // --- ACCURATE DICE DUEL RESOLUTION (NO FORCED WINNER, RE-ROLL ON DRAW) ---
     function finalizeDiceDuel() {
       if (p1RollVal === null) p1RollVal = Math.floor(Math.random() * 6) + 1;
       if (p2RollVal === null) p2RollVal = Math.floor(Math.random() * 6) + 1;
       isDiceRollingP1 = false;
       isDiceRollingP2 = false;
 
-      // Handle a tie naturally without incrementing or picking one arbitrarily
+      // Handle ties naturally without incrementing or picking one arbitrarily
       if (p1RollVal === p2RollVal) {
         const tieVal = p1RollVal;
         speakGoody(`We have a tie! Both contestants rolled a ${tieVal}! Let's roll again to see who moves first!`, () => {
@@ -2072,7 +2091,7 @@
           qBoardCtx.fillText(` ${questionTimer}s`, 492, 36);
         }
         qBoardCtx.fillStyle = '#ffffff'; qBoardCtx.font = '15px sans-serif'; qBoardCtx.textAlign = 'left';
-        const words = activeQuestion.q.split(' ');
+        const words = (activeQuestion.q || activeQuestion.text || "").split(' ');
         let line = ''; let y = 72;
         for (let n = 0; n < words.length; n++) {
           const testLine = line + words[n] + ' ';
@@ -2144,7 +2163,8 @@
             qBoardCtx.fillStyle = idx % 2 === 0 ? '#ffffff' : '#ebdcf9';
             qBoardCtx.fillText(rule, 26, 96 + (idx * 34));
           });
-          qBoardCtx.fillStyle = '#39ff14'; qBoardCtx.font = 'bold 15px monospace'; qBoardCtx.textAlign = 'center';
+          qBoardCtx.fillStyle = '#39ff14'; qBoardCtx.font = 'bold 15px monospace';
+          qBoardCtx.textAlign = 'center';
           qBoardCtx.fillText(" LIVE BROADCAST IN PROGRESS", 256, 342);
         }
       }
@@ -2155,19 +2175,69 @@
     const qBoardMesh = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 2.7), new THREE.MeshBasicMaterial({ map: qBoardTex }));
     qBoardMesh.position.set(-4.8, 3.4, -3.2); qBoardMesh.rotation.y = 0.8; miniDiorama.add(qBoardMesh);
 
+    // --- FULL ACCURATE 3D PLUSHIE GENERATOR WITH COMPLETE FACIAL DETAILS ---
     function createCutePlushie3D(color) {
       const pGroup = new THREE.Group();
       const pMat = new THREE.MeshStandardMaterial({ color, roughness: 0.95 });
-      const pBody = new THREE.Mesh(new THREE.SphereGeometry(0.28, 14, 14), pMat); pBody.position.y = 0.28; pGroup.add(pBody);
-      const pHead = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 14), pMat); pHead.position.y = 0.58; pGroup.add(pHead);
       const earMat = new THREE.MeshStandardMaterial({ color: 0xff7675, roughness: 0.95 });
-      const ear1 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), pMat); ear1.position.set(-0.14, 0.74, 0);
-      const ear2 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), earMat); ear2.position.set(0.14, 0.74, 0); pGroup.add(ear1, ear2);
+
+      const pBody = new THREE.Mesh(new THREE.SphereGeometry(0.28, 14, 14), pMat);
+      pBody.position.y = 0.28;
+      pGroup.add(pBody);
+
+      const pHead = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 14), pMat);
+      pHead.position.y = 0.58;
+      pGroup.add(pHead);
+
+      // Ears
+      const ear1 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), pMat);
+      ear1.position.set(-0.14, 0.74, 0);
+      const ear2 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), earMat);
+      ear2.position.set(0.14, 0.74, 0);
+      pGroup.add(ear1, ear2);
+
+      // Cheek Blush
+      const blushMat = new THREE.MeshBasicMaterial({ color: 0xff69b4 });
+      const blush1 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat);
+      blush1.position.set(-0.11, 0.54, 0.17);
+      const blush2 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat);
+      blush2.position.set(0.11, 0.54, 0.17);
+      pGroup.add(blush1, blush2);
+
+      // Eyes & Specular Highlights
+      const eyeBlackMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+      const eyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+      const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), eyeBlackMat);
+      eyeL.position.set(-0.07, 0.60, 0.19);
+      const shineL = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 6), eyeWhiteMat);
+      shineL.position.set(-0.08, 0.612, 0.21);
+      pGroup.add(eyeL, shineL);
+
+      const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), eyeBlackMat);
+      eyeR.position.set(0.07, 0.60, 0.19);
+      const shineR = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 6), eyeWhiteMat);
+      shineR.position.set(0.06, 0.612, 0.21);
+      pGroup.add(eyeR, shineR);
+
+      // Snout and Mouth
+      const snout = new THREE.Mesh(new THREE.SphereGeometry(0.042, 8, 8), new THREE.MeshStandardMaterial({ color: 0xff8fab, roughness: 0.6 }));
+      snout.scale.set(1.2, 0.8, 1);
+      snout.position.set(0, 0.56, 0.21);
+      pGroup.add(snout);
+
+      const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.007, 4, 8, Math.PI), new THREE.MeshBasicMaterial({ color: 0x222222 }));
+      mouth.position.set(0, 0.525, 0.21);
+      mouth.rotation.x = Math.PI * 0.1;
+      pGroup.add(mouth);
+
       return pGroup;
     }
+
     const miniAudience = new THREE.Group();
     const plushColors = [0xff7675, 0x74b9ff, 0xa29bfe, 0xffbe76, 0x55efc4, 0xfd79a8, 0xf6e58d, 0x48dbfb, 0xff9ff3];
-    let playerPlushie1 = null; let playerPlushie2 = null;
+    let playerPlushie1 = null;
+    let playerPlushie2 = null;
 
     [5.7, 6.4].forEach((radius, rowIdx) => {
       const count = rowIdx === 0 ? 14 : 18;
@@ -2179,6 +2249,7 @@
         pGroup.lookAt(0, 1.8, -2.6);
         pGroup.userData = { initialY: pGroup.position.y, phase: Math.random() * Math.PI * 2 };
         miniDiorama.add(pGroup);
+
         if (rowIdx === 0 && i === 4) playerPlushie1 = pGroup;
         if (rowIdx === 0 && i === 9) playerPlushie2 = pGroup;
       }
@@ -2334,7 +2405,7 @@
       const lensBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.095, 0.26, 16), new THREE.MeshStandardMaterial({ color: 0x0a0a0a }));
       lensBarrel.rotation.x = Math.PI / 2; lensBarrel.position.set(0, 0, -0.24); headPivot.add(lensBarrel);
       const frontGlass = new THREE.Mesh(new THREE.CircleGeometry(0.08, 16), new THREE.MeshBasicMaterial({ color: 0x00f0ff })); frontGlass.position.set(0, 0, -0.431); headPivot.add(frontGlass);
-      const tallyLamp = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), new THREE.MeshBasicMaterial({ color: 0x111111 })); tallyLamp.position.set(0, 0.15, -0.28); headPivot.add(tallyLamp);
+      const tallyLamp = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff0000 })); tallyLamp.position.set(0, 0.15, -0.28); headPivot.add(tallyLamp);
       camRig.add(headPivot); miniDiorama.add(camRig);
       return { headPivot, tallyLamp, frontGlass };
     }
