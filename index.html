@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>The Goody Tonight Show - Live Studio</title>
+  <title>The Goody Tonight Show - Master Director Studio</title>
   <style>
     body, html {
       margin: 0; padding: 0; width: 100%; height: 100%;
@@ -17,9 +17,45 @@
       box-shadow: 0 0 8px #00f0ff; transition: transform 0.15s; z-index: 10;
     }
     #crosshair.hover-active { transform: translate(-50%, -50%) scale(2.2); background: #ff69b4; }
+
+    /* DIRECTOR AUTHENTICATION MODAL */
+    #director-gate {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: #06020c; display: flex; flex-direction: column;
+      justify-content: center; align-items: center; z-index: 2000;
+    }
+    .gate-card {
+      background: #150628; border: 2.5px solid #ff7675; border-radius: 18px;
+      padding: 32px 28px; width: 100%; max-width: 380px; text-align: center;
+      box-shadow: 0 0 35px rgba(255, 118, 117, 0.4);
+    }
+    .gate-badge {
+      display: inline-block; padding: 4px 10px; background: #c0392b;
+      color: #fff; font-family: monospace; font-weight: 900; font-size: 0.75rem;
+      border-radius: 6px; margin-bottom: 12px; letter-spacing: 1.5px;
+    }
+    .gate-title { color: #ffda66; font-size: 1.35rem; margin-bottom: 6px; font-weight: 800; }
+    .gate-sub { color: #ebdcf9; font-size: 0.82rem; line-height: 1.4; margin-bottom: 18px; }
+    #director-pin-input {
+      width: 100%; padding: 12px; font-size: 2.2rem; font-family: monospace;
+      font-weight: 900; letter-spacing: 12px; text-align: center;
+      background: #090314; color: #39ff14; border: 2px solid #a29bfe;
+      border-radius: 12px; outline: none; margin-bottom: 16px;
+      -webkit-text-security: disc;
+    }
+    #director-pin-input:focus { border-color: #39ff14; box-shadow: 0 0 12px rgba(57, 255, 20, 0.4); }
+    .btn-gate-enter {
+      width: 100%; padding: 14px; border-radius: 12px; border: none;
+      font-size: 1rem; font-weight: 900; text-transform: uppercase; cursor: pointer; color: #fff;
+      background: linear-gradient(180deg, #d63031, #b71540);
+      box-shadow: 0 3px 0 #5f0a1c, 0 0 14px rgba(214, 48, 49, 0.5);
+    }
+    .btn-gate-enter:active { transform: scale(0.98); }
+    #gate-error { color: #ff7675; font-size: 0.8rem; font-weight: bold; font-family: monospace; margin-top: 10px; display: none; }
+
     #blocker {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(8, 4, 16, 0.92); display: flex; flex-direction: column;
+      background: rgba(8, 4, 16, 0.92); display: none; flex-direction: column;
       justify-content: center; align-items: center; color: #fff; z-index: 100; text-align: center;
     }
     #instructions-card {
@@ -168,10 +204,23 @@
   </style>
 </head>
 <body>
+
+  <!-- FIXED HARDCODED DIRECTOR AUTHENTICATION GATE -->
+  <div id="director-gate">
+    <div class="gate-card">
+      <div class="gate-badge">DIRECTOR SECURITY CHECKPOINT</div>
+      <div class="gate-title">Host Console Lock</div>
+      <div class="gate-sub">Enter the 4-digit Master Director PIN to initialize studio broadcast controls.</div>
+      <input type="password" id="director-pin-input" maxlength="4" placeholder="••••" inputmode="numeric" pattern="[0-9]*" autocomplete="off" />
+      <button class="btn-gate-enter" id="btn-unlock-director">Unlock Studio</button>
+      <div id="gate-error">ACCESS DENIED: INVALID DIRECTOR PIN</div>
+    </div>
+  </div>
+
   <div id="crosshair"></div>
   <div id="hud">
     <div class="hud-title" id="mode-title" style="color: #ffda66;">BEDROOM WORKSHOP</div>
-    <div class="hud-sub" id="mode-sub">WebRTC Studio Host: ONLINE • FULL GAME LOOP READY</div>
+    <div class="hud-sub" id="mode-sub">WebRTC Studio Host: STANDBY • ENTER PIN TO BOOT</div>
     <div id="room-code-pill">CODE: <span id="hud-code-val">----</span></div>
     <div id="countdown-pill">BROADCAST STARTS IN: <span id="timer-val" style="color:#ff7675;">10s</span></div>
     <div id="match-clock-hud">SHOW CLOCK: <span id="game-clock-val" style="color:#ffda66;">20:00</span></div>
@@ -240,6 +289,38 @@
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
   <script>
+    // --- IMMUTABLE DIRECTOR SECURITY CREDENTIAL ---
+    const MASTER_DIRECTOR_PIN = "3776";
+    let isDirectorAuthenticated = false;
+
+    const directorGateEl = document.getElementById('director-gate');
+    const directorPinInput = document.getElementById('director-pin-input');
+    const btnUnlockDirector = document.getElementById('btn-unlock-director');
+    const gateErrorEl = document.getElementById('gate-error');
+
+    function checkDirectorPin() {
+      const val = directorPinInput.value.trim();
+      if (val === MASTER_DIRECTOR_PIN) {
+        isDirectorAuthenticated = true;
+        directorGateEl.style.display = 'none';
+        document.getElementById('blocker').style.display = 'flex';
+        document.getElementById('mode-sub').textContent = "WebRTC Studio Host: ONLINE • FULL GAME LOOP READY";
+        initStudioWebRTC();
+        startAutoStartCountdown();
+      } else {
+        gateErrorEl.style.display = 'block';
+        directorPinInput.value = '';
+        directorPinInput.focus();
+        setTimeout(() => { gateErrorEl.style.display = 'none'; }, 3000);
+      }
+    }
+
+    btnUnlockDirector.addEventListener('click', checkDirectorPin);
+    directorPinInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') checkDirectorPin();
+    });
+
+    // Random 4-digit code generated only for Jake & June contestant access
     const studioRoomCode = Math.floor(1000 + Math.random() * 9000).toString();
     document.getElementById('entry-code').textContent = studioRoomCode;
     document.getElementById('hud-code-val').textContent = studioRoomCode;
@@ -382,17 +463,21 @@
     }
 
     let autoStartSeconds = 10;
-    let autoStartInterval = setInterval(() => {
-      autoStartSeconds--;
-      if (autoStartSeconds > 0) {
-        timerValEl.textContent = `${autoStartSeconds}s`;
-      } else {
-        clearInterval(autoStartInterval);
-        timerExpired = true;
-        checkReadyOrWait();
-      }
-      renderStageQuestionBoard();
-    }, 1000);
+    let autoStartInterval = null;
+
+    function startAutoStartCountdown() {
+      autoStartInterval = setInterval(() => {
+        autoStartSeconds--;
+        if (autoStartSeconds > 0) {
+          timerValEl.textContent = `${autoStartSeconds}s`;
+        } else {
+          clearInterval(autoStartInterval);
+          timerExpired = true;
+          checkReadyOrWait();
+        }
+        renderStageQuestionBoard();
+      }, 1000);
+    }
 
     function checkReadyOrWait() {
       if (isP1Connected && isP2Connected) {
@@ -900,275 +985,11 @@
 
     blocker.addEventListener('click', () => { initAudio(); controls.lock(); });
     controls.addEventListener('lock', () => { blocker.style.display = 'none'; });
-    controls.addEventListener('unlock', () => { blocker.style.display = 'flex'; });
+    controls.addEventListener('unlock', () => { if (isDirectorAuthenticated) blocker.style.display = 'flex'; });
 
     let studioPeer = null;
     let connectedDataConns = [];
     const connectedAudiencePeers = new Set();
-
-    function initStudioWebRTC() {
-      try {
-        studioPeer = new Peer("goody-main-studio");
-        studioPeer.on('open', (id) => console.log("Master Host Registered:", id));
-
-        studioPeer.on('call', (call) => {
-          const isAudience = call.metadata && call.metadata.role === 'AUDIENCE';
-
-          if (!isAudience) {
-            const passcode = call.metadata ? call.metadata.passcode : "";
-            if (passcode !== studioRoomCode) { call.close(); return; }
-
-            const cId = call.metadata ? call.metadata.contestant : null;
-            if (cId === "goody-contestant-1" && isP1Connected && p1PeerId && p1PeerId !== call.peer) { call.close(); return; }
-            if (cId === "goody-contestant-2" && isP2Connected && p2PeerId && p2PeerId !== call.peer) { call.close(); return; }
-
-            const isJune = cId === "goody-contestant-2";
-            const returnStream = isJune ? streamJune : streamJake;
-            call.answer(returnStream);
-
-            call.on('stream', (remoteStream) => {
-              if (isJune) {
-                liveJuneMediaStream = remoteStream;
-                videoJune.srcObject = remoteStream; videoJune.muted = false; videoJune.play().catch(console.error);
-                hasLiveJuneStream = true; showJune = true;
-                forwardMediaToSpectators("goody-contestant-2", remoteStream);
-              } else {
-                liveJakeMediaStream = remoteStream;
-                videoJake.srcObject = remoteStream; videoJake.muted = false; videoJake.play().catch(console.error);
-                hasLiveJakeStream = true; showJake = true;
-                forwardMediaToSpectators("goody-contestant-1", remoteStream);
-              }
-            });
-          }
-        });
-
-        studioPeer.on('connection', (conn) => {
-          const isAudience = conn.metadata && conn.metadata.role === 'AUDIENCE';
-
-          if (!isAudience) {
-            const passcode = conn.metadata ? conn.metadata.passcode : "";
-            if (passcode !== studioRoomCode) {
-              conn.on('open', () => { conn.send({ type: "AUTH_FAILED", message: "Invalid 4-digit code." }); setTimeout(() => conn.close(), 500); });
-              return;
-            }
-            const cId = conn.metadata ? conn.metadata.contestant : null;
-            const isSlot1Taken = (cId === "goody-contestant-1" && isP1Connected && p1PeerId && p1PeerId !== conn.peer);
-            const isSlot2Taken = (cId === "goody-contestant-2" && isP2Connected && p2PeerId && p2PeerId !== conn.peer);
-            if (isSlot1Taken || isSlot2Taken) {
-              conn.on('open', () => {
-                conn.send({
-                  type: "SLOT_TAKEN",
-                  takenNum: cId === "goody-contestant-1" ? "1" : "2",
-                  slotName: contestantNames[cId] || "Occupied",
-                  altNum: cId === "goody-contestant-1" ? "2" : "1",
-                  altSlotName: contestantNames[cId === "goody-contestant-1" ? "goody-contestant-2" : "goody-contestant-1"] || "Contestant"
-                });
-                setTimeout(() => conn.close(), 600);
-              });
-              return;
-            }
-          }
-
-          connectedDataConns.push(conn);
-
-          conn.on('open', () => {
-            if (isAudience) {
-              connectedAudiencePeers.add(conn.peer);
-              broadcastAudienceCount();
-
-              const mins = Math.max(0, Math.floor(matchTimerSeconds / 60)).toString().padStart(2, '0');
-              const secs = Math.max(0, (matchTimerSeconds % 60)).toString().padStart(2, '0');
-              conn.send({ type: "SYNC_MATCH_TIMER", timeStr: `${mins}:${secs}`, secondsLeft: matchTimerSeconds });
-
-              conn.send({
-                type: "SYNC_BOARD_STATE",
-                studioPower: studioPower,
-                p1Index: p1Index,
-                p2Index: p2Index,
-                p1Name: contestantNames["goody-contestant-1"],
-                p2Name: contestantNames["goody-contestant-2"]
-              });
-
-              if (activeQuestion) {
-                conn.send({
-                  type: "SHOW_QUESTION_LOCKED",
-                  question: activeQuestion,
-                  activeContestantId: activePlayer,
-                  activeContestantName: contestantNames[activePlayer]
-                });
-              }
-
-              // Connect spectator to live feeds if already rolling
-              if (liveJakeMediaStream) {
-                try { studioPeer.call(conn.peer, liveJakeMediaStream, { metadata: { contestant: "goody-contestant-1" } }); } catch(e){}
-              }
-              if (liveJuneMediaStream) {
-                try { studioPeer.call(conn.peer, liveJuneMediaStream, { metadata: { contestant: "goody-contestant-2" } }); } catch(e){}
-              }
-              return;
-            }
-
-            const clientName = (conn.metadata && conn.metadata.name) ? conn.metadata.name.trim() : (cId === "goody-contestant-2" ? "June" : "Jake");
-            const clientCity = (conn.metadata && conn.metadata.city) ? conn.metadata.city.trim() : (cId === "goody-contestant-2" ? "Nottingham" : "London");
-            const clientToken = conn.metadata ? conn.metadata.sessionToken : null;
-            const cId = conn.metadata ? conn.metadata.contestant : null;
-
-            if (cId === "goody-contestant-1") {
-              isP1Connected = true; p1PeerId = conn.peer;
-              if (clientToken) contestantTokens["goody-contestant-1"] = clientToken;
-              if (gameState !== "INTERMISSION") {
-                contestantNames["goody-contestant-1"] = clientName;
-                contestantCities["goody-contestant-1"] = clientCity;
-                updatePawnNameBadge(pawn1, clientName);
-              }
-            }
-            if (cId === "goody-contestant-2") {
-              isP2Connected = true; p2PeerId = conn.peer;
-              if (clientToken) contestantTokens["goody-contestant-2"] = clientToken;
-              if (gameState !== "INTERMISSION") {
-                contestantNames["goody-contestant-2"] = clientName;
-                contestantCities["goody-contestant-2"] = clientCity;
-                updatePawnNameBadge(pawn2, clientName);
-              }
-            }
-
-            conn.send({ type: "AUTH_SUCCESS" });
-            connectedAudiencePeers.add(conn.peer);
-            broadcastAudienceCount();
-
-            if (!studioPower) checkBothContestantsReady();
-            else if (gameState === "INTERMISSION" && cId === droppedOutContestant) handleReplacementJoined(cId, clientName, clientCity, clientToken);
-          });
-
-          conn.on('data', (data) => {
-            // --- SPECTATOR LOBBY MULTIPLAYER POS RELAY ---
-            if (data.type === "SPECTATOR_MOVE") {
-              connectedDataConns.forEach(c => {
-                if (c.open && c.metadata && c.metadata.role === 'AUDIENCE' && c.peer !== conn.peer) {
-                  c.send({
-                    type: 'SPECTATOR_POS_RELAY',
-                    peerId: data.peerId,
-                    name: data.name,
-                    x: data.x,
-                    y: data.y,
-                    z: data.z,
-                    yaw: data.yaw,
-                    zone: data.zone
-                  });
-                }
-              });
-              return;
-            }
-
-            // --- AUDIENCE LIVE CHAT & SHADOWBAN DISPATCHER ---
-            if (data.type === "AUDIENCE_CHAT_MESSAGE") {
-              const senderToken = data.sessionToken;
-              const senderHw = data.hardwareId;
-              const authorName = data.author || "Guest";
-              const rawText = data.text || "";
-
-              const alreadyBanned = isSenderShadowbanned(senderToken, senderHw);
-              const tripsFilter = profanityTripwireRegex.test(rawText);
-
-              if (tripsFilter && !alreadyBanned) {
-                shadowbanSpectator(senderToken, senderHw, authorName);
-              }
-              const isShadowbanned = alreadyBanned || tripsFilter;
-
-              const chatRow = document.createElement('div');
-              chatRow.className = `mod-chat-row ${isShadowbanned ? 'is-shadowbanned' : ''}`;
-              const textSpan = document.createElement('span');
-              textSpan.innerHTML = `<strong style="color:${isShadowbanned ? '#ff7675' : '#00f0ff'};">${authorName}:</strong> ${rawText} ${isShadowbanned ? '<em style="color:#ff7675;">[SHADOWBANNED]</em>' : ''}`;
-              chatRow.appendChild(textSpan);
-
-              if (!isShadowbanned) {
-                const banBtn = document.createElement('button');
-                banBtn.className = 'mod-btn-ban';
-                banBtn.textContent = 'Mute';
-                banBtn.onclick = () => {
-                  shadowbanSpectator(senderToken, senderHw, authorName);
-                  chatRow.classList.add('is-shadowbanned');
-                  textSpan.innerHTML += ' <em style="color:#ff7675;">[MUTED]</em>';
-                  banBtn.remove();
-                };
-                chatRow.appendChild(banBtn);
-              }
-
-              modChatStream.appendChild(chatRow);
-              modChatStream.scrollTop = modChatStream.scrollHeight;
-
-              if (!isShadowbanned && !isAudienceChatGlobalMuted) {
-                connectedDataConns.forEach(c => {
-                  if (c.open && c.metadata && c.metadata.role === 'AUDIENCE') {
-                    c.send({ type: "AUDIENCE_CHAT_BROADCAST", author: authorName, text: rawText });
-                  }
-                });
-              }
-              return;
-            }
-
-            if (gameState === "INTERMISSION") return;
-
-            if (data.type === "CONTESTANT_CHOSE_PATH") {
-              if (gameState !== "CONTESTANT_CHOOSING") return;
-              if (data.choice === "SOLO") triggerOnePlayerMode();
-              else if (data.choice === "GOODY") triggerVsGoodyMode();
-            } else if (data.type === "PLAYER_ROLLED_DICE") {
-              handlePlayerRoll(data.contestant, data.name, data.roll);
-            } else if (data.type === "PLAYER_ANSWERED") {
-              broadcastMicState(data.contestant, false);
-              if (isTieBreakerActive) { handleTieBreakerAnswer(data.contestant, data.chosenAnswer); return; }
-              stageSelectedOption = data.chosenAnswer; stageOptionStatus = 'selected';
-              renderStageQuestionBoard();
-
-              connectedDataConns.forEach(c => {
-                if (c.open) c.send({ type: "OPPONENT_ANSWERED", contestant: data.contestant, chosenAnswer: data.chosenAnswer });
-              });
-              setTimeout(() => evaluateAnswer(data.contestant, data.chosenAnswer), 1200);
-            } else if (data.type === "PLAYER_TIMEOUT") {
-              broadcastMicState(data.contestant, false);
-              if (isTieBreakerActive) return;
-              handleQuestionTimeout(data.contestant);
-            } else if (data.type === "PLUSHIE_MOVE") {
-              handlePlushieMovement(data.contestant, data.direction);
-            } else if (data.type === "PLUSHIE_LOOK") {
-              if (contestantRotations[data.contestant]) {
-                contestantRotations[data.contestant].yaw += data.deltaX * 0.005;
-                contestantRotations[data.contestant].pitch = Math.max(-0.8, Math.min(0.4, contestantRotations[data.contestant].pitch + data.deltaY * 0.005));
-              }
-            }
-          });
-
-          conn.on('close', () => {
-            connectedAudiencePeers.delete(conn.peer);
-            connectedDataConns = connectedDataConns.filter(c => c.peer !== conn.peer);
-            broadcastAudienceCount();
-
-            const cId = conn.metadata ? conn.metadata.contestant : null;
-            if (cId === "goody-contestant-1" && p1PeerId === conn.peer) { isP1Connected = false; p1PeerId = null; }
-            if (cId === "goody-contestant-2" && p2PeerId === conn.peer) { isP2Connected = false; p2PeerId = null; }
-
-            if (!studioPower && timerExpired) checkReadyOrWait();
-            else if (studioPower && (gameState === "IN_PLAY" || gameState === "OPENING_DUEL" || gameState === "INTRO_SPEECH" || gameState === "IDLE") && !isSoloMode && !isVsGoodyMode) {
-              if (cId === "goody-contestant-1" || cId === "goody-contestant-2") handleMidGameDropout(cId);
-            }
-          });
-        });
-
-        studioPeer.on('error', (err) => {
-          if (err.type === 'unavailable-id') {
-            const viewerPeer = new Peer();
-            viewerPeer.on('open', () => {
-              const dataConn = viewerPeer.connect("goody-main-studio");
-              dataConn.on('data', (data) => {
-                if (data.type === "AUDIENCE_COUNT") audienceCountEl.textContent = data.count;
-              });
-            });
-          }
-        });
-      } catch(e) { console.error(e); }
-    }
-    initStudioWebRTC();
 
     function forwardMediaToSpectators(slot, mediaStream) {
       connectedDataConns.forEach(c => {
@@ -1280,7 +1101,6 @@
         else { p1RollVal = roll; isDiceRollingP1 = false; }
         playTone(587, 'sine', 0.15, 0.08);
 
-        // When both contestants have submitted their opening roll, resolve duel
         if (p1RollVal !== null && p2RollVal !== null) {
           if (diceInterval) clearInterval(diceInterval);
           finalizeDiceDuel();
@@ -1317,7 +1137,6 @@
       }, 1000);
     }
 
-    // --- ACCURATE DICE DUEL RESOLUTION (NO FORCED WINNER, RE-ROLL ON DRAW) ---
     function finalizeDiceDuel() {
       if (p1RollVal === null) p1RollVal = Math.floor(Math.random() * 6) + 1;
       if (p2RollVal === null) p2RollVal = Math.floor(Math.random() * 6) + 1;
@@ -1750,7 +1569,7 @@
         case "Spain": ctx.fillStyle = '#AA151B'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#F1BF00'; ctx.fillRect(0, h * 0.25, w, h * 0.5); ctx.fillStyle = '#AA151B'; ctx.beginPath(); ctx.arc(80, 128, 22, 0, Math.PI * 2); ctx.fill(); break;
         case "Germany": ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w, h / 3); ctx.fillStyle = '#DD0000'; ctx.fillRect(0, h / 3, w, h / 3); ctx.fillStyle = '#FFCE00'; ctx.fillRect(0, (h / 3) * 2, w / 3, h); break;
         case "UK": ctx.fillStyle = '#012169'; ctx.fillRect(0, 0, w, h); ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 36; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke(); ctx.strokeStyle = '#C8102E'; ctx.lineWidth = 14; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke(); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(100, 0, 56, h); ctx.fillRect(0, 100, w, 56); ctx.fillStyle = '#C8102E'; ctx.fillRect(112, 0, 32, h); ctx.fillRect(0, 112, w, 32); break;
-        case "Nigeria": ctx.fillStyle = '#008751'; ctx.fillRect(0, 0, w / 3, h); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h); ctx.fillStyle = '#008751'; ctx.fillRect((w / 3) * 2, 0, w / 3, h); break;
+        case "Nigeria": ctx.fillStyle = '#008751'; ctx.fillRect(0, 0, w, h / 3); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h); ctx.fillStyle = '#008751'; ctx.fillRect((w / 3) * 2, 0, w / 3, h); break;
         case "United States": ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, w, h); for (let s = 0; s < 13; s++) { if (s % 2 === 0) { ctx.fillStyle = '#B22234'; ctx.fillRect(0, s * (h / 13), w, Math.ceil(h / 13)); } } ctx.fillStyle = '#3C3B6E'; ctx.fillRect(0, 0, w * 0.48, h * 0.54); ctx.fillStyle = '#FFFFFF'; for (let r = 18; r < 125; r += 26) { for (let col = 16; col < 115; col += 24) { ctx.beginPath(); ctx.arc(col, r, 4, 0, Math.PI * 2); ctx.fill(); } } break;
         case "Belgium": ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w / 3, h); ctx.fillStyle = '#FDDA24'; ctx.fillRect(w / 3, 0, w / 3, h); ctx.fillStyle = '#EF3340'; ctx.fillRect((w / 3) * 2, 0, w / 3, h); break;
         default: ctx.fillStyle = '#22143b'; ctx.fillRect(0, 0, w, h);
@@ -1854,7 +1673,8 @@
         qBoardCtx.fillStyle = '#ffda66'; qBoardCtx.font = 'bold 16px monospace';
         qBoardCtx.fillText(` COUNTRY: ${activeRecap.country.toUpperCase()}`, 256, 78);
         qBoardCtx.fillStyle = '#00f0ff'; qBoardCtx.fillRect(36, 94, 440, 2);
-        qBoardCtx.fillStyle = '#ffffff'; qBoardCtx.font = '16px sans-serif'; qBoardCtx.textAlign = 'center';
+        qBoardCtx.fillStyle = '#ffffff'; qBoardCtx.font = '16px sans-serif';
+        qBoardCtx.textAlign = 'center';
 
         const words = activeRecap.text.split(' ');
         let line = ''; let y = 140;
@@ -2040,7 +1860,8 @@
         ctx.fillStyle = isGuy ? '#1b2a47' : '#3d1b38'; ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
         const cx = x + width / 2; const cy = y + height * 0.58;
         ctx.fillStyle = isGuy ? '#4a69bd' : '#e84393'; ctx.beginPath(); ctx.ellipse(cx, cy + 25, 26, 32, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#f8c291'; ctx.beginPath(); ctx.arc(cx, cy - 10, 16, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(cx - 5, cy - 10, 2, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(cx + 5, cy - 10, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#f8c291'; ctx.beginPath(); ctx.arc(cx, cy - 10, 16, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(cx - 5, cy - 10, 2, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(cx + 5, cy - 10, 2, 0, Math.PI * 2); ctx.fill();
       }
 
       if (diceCountdown > 0 && !isGoodyHostSlot) {
@@ -2160,10 +1981,12 @@
     const move = { forward: false, backward: false, left: false, right: false };
     const velocity = new THREE.Vector3();
     document.addEventListener('keydown', (e) => {
+      if (!isDirectorAuthenticated) return;
       if (e.code === 'KeyW') move.forward = true; if (e.code === 'KeyS') move.backward = true;
       if (e.code === 'KeyA') move.left = true; if (e.code === 'KeyD') move.right = true;
     });
     document.addEventListener('keyup', (e) => {
+      if (!isDirectorAuthenticated) return;
       if (e.code === 'KeyW') move.forward = false; if (e.code === 'KeyS') move.backward = false;
       if (e.code === 'KeyA') move.left = false; if (e.code === 'KeyD') move.right = false;
     });
