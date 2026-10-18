@@ -224,7 +224,6 @@
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
   <script>
-    // --- 1. HARDWARE FINGERPRINT & STORAGE ---
     function generateDeviceFingerprint() {
       try {
         const c = document.createElement('canvas');
@@ -247,7 +246,6 @@
       localStorage.setItem('goody_audience_token', spectatorSessionToken);
     }
 
-    // --- AUDIO CONTEXT & MOBILE AUDIO UNLOCK ENGINE ---
     let audioCtx = null;
     let audioUnlocked = false;
 
@@ -469,7 +467,6 @@
           }
         });
 
-        // Remote live video from contestants
         peer.on('call', (call) => {
           call.answer();
           call.on('stream', (remoteStream) => {
@@ -584,7 +581,6 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
 
-    // Multi-tier Street, Foyer, and Tabletop Lighting
     const ambientLight = new THREE.AmbientLight(0x281a42, 1.4); scene.add(ambientLight);
     const ceilingLight = new THREE.PointLight(0xffecd2, 1.2, 60); ceilingLight.position.set(0, 16.0, 0); scene.add(ceilingLight);
     const studioSpot = new THREE.SpotLight(0x00f0ff, 5.0, 30, Math.PI / 3, 0.4); studioSpot.position.set(0, 11, -9); scene.add(studioSpot);
@@ -605,8 +601,29 @@
     const curb = new THREE.Mesh(new THREE.BoxGeometry(36, 0.25, 3), curbMat);
     curb.position.set(0, 0.125, 6.5); groundLevelGroup.add(curb);
 
-    const redCarpet = new THREE.Mesh(new THREE.PlaneGeometry(3.5, 9), new THREE.MeshStandardMaterial({ color: 0xb71540 }));
-    redCarpet.rotation.x = -Math.PI / 2; redCarpet.position.set(0, 0.26, 3.5); groundLevelGroup.add(redCarpet);
+    // CONTINUOUS RED CARPET: From curbside limo dropoff (z = 8.0) to studio elevator lift (z = -11.5)
+    const redCarpetGroup = new THREE.Group();
+    const carpetMat = new THREE.MeshStandardMaterial({ color: 0xb71540, roughness: 0.85 });
+    const goldTrimMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.8, roughness: 0.3 });
+
+    // Main red runner (Width: 3.4m, Length: 20m)
+    const redRunner = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 20.0), carpetMat);
+    redRunner.rotation.x = -Math.PI / 2;
+    redRunner.position.set(0, 0.26, -1.5);
+    redCarpetGroup.add(redRunner);
+
+    // Left and right gold metallic borders
+    const trimLeft = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 20.0), goldTrimMat);
+    trimLeft.rotation.x = -Math.PI / 2;
+    trimLeft.position.set(-1.76, 0.262, -1.5);
+    redCarpetGroup.add(trimLeft);
+
+    const trimRight = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 20.0), goldTrimMat);
+    trimRight.rotation.x = -Math.PI / 2;
+    trimRight.position.set(1.76, 0.262, -1.5);
+    redCarpetGroup.add(trimRight);
+
+    groundLevelGroup.add(redCarpetGroup);
 
     const foyerFloorMat = new THREE.MeshStandardMaterial({ color: 0x2d1847, roughness: 0.3 });
     const foyerFloor = new THREE.Mesh(new THREE.PlaneGeometry(24, 16), foyerFloorMat);
@@ -834,7 +851,7 @@
       ctx.fillStyle = '#0a0314'; ctx.strokeStyle = pawnGroup.userData.tagColor; ctx.lineWidth = 8;
       ctx.beginPath();
       ctx.moveTo(r, 4); ctx.lineTo(w - r, 4); ctx.quadraticCurveTo(w - 4, 4, w - 4, r);
-      ctx.lineTo(w - r, h - r); ctx.quadraticCurveTo(w - 4, h - 4, w - r, h - 4);
+      ctx.lineTo(w - 4, h - r); ctx.quadraticCurveTo(w - 4, h - 4, w - r, h - 4);
       ctx.lineTo(r, h - 4); ctx.quadraticCurveTo(4, h - 4, 4, h - r);
       ctx.lineTo(4, r); ctx.quadraticCurveTo(4, 4, r, 4); ctx.closePath();
       ctx.fill(); ctx.stroke();
@@ -865,7 +882,6 @@
     const pawn2 = createPlayerPawn(0xff3838, "June");
     miniDiorama.add(pawn1); miniDiorama.add(pawn2);
 
-    // Smooth Pawn Hop Animation for Audience
     function animatePawnHop(pawn, fromIdx, toIdx, offsetX, hopDurationMs = 280) {
       if (fromIdx === toIdx) return;
       const stepDirection = toIdx > fromIdx ? 1 : -1;
@@ -993,6 +1009,7 @@
     qBoardMesh.position.set(-4.8, 3.4, -3.2); qBoardMesh.rotation.y = 0.8; miniDiorama.add(qBoardMesh);
 
     // --- ACCURATE 3D PLUSHIE GENERATOR ---
+    // Modeled forward facing (-Z) so third-person camera looks forward past ears
     function createCutePlushie3D(color) {
       const pGroup = new THREE.Group();
       const pMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.95 });
@@ -1137,10 +1154,10 @@
       gHead.getWorldPosition(headWorldPos);
       
       autoCam1.headPivot.lookAt(headWorldPos);
-      autoCam1.headPivot.rotation.y += Math.PI; // Inverted so front lens faces Goody
+      autoCam1.headPivot.rotation.y += Math.PI;
 
       autoCam2.headPivot.lookAt(headWorldPos);
-      autoCam2.headPivot.rotation.y += Math.PI; // Inverted so front lens faces Goody
+      autoCam2.headPivot.rotation.y += Math.PI;
     }
 
     miniDiorama.position.set(0, 7.95, -9);
@@ -1179,20 +1196,20 @@
     });
     scene.add(limoGroup);
 
-    // Doorman Staff Plushie: Faces towards car door initially (-X)
+    // Doorman Staff Plushie: Faces directly toward the car across the curb (+Z)
     const doormanPlushie = createCutePlushie3D(0x2d3436);
-    doormanPlushie.position.set(2.2, 0.26, 6.2);
-    doormanPlushie.rotation.y = -Math.PI / 2;
+    doormanPlushie.position.set(1.5, 0.26, 6.2);
+    doormanPlushie.rotation.y = Math.PI; // Face +Z directly toward the arriving car door
     scene.add(doormanPlushie);
 
     // Spectator's Personal Plushie
     const myPlushie = createCutePlushie3D(0xff7675);
-    myPlushie.position.set(0, 0.26, 7.0);
+    myPlushie.position.set(0, 0.26, 7.4);
     myPlushie.visible = false;
     scene.add(myPlushie);
 
-    let playerPos = { x: 0, y: 0.26, z: 7.0 };
-    let playerYaw = 0;
+    let playerPos = { x: 0, y: 0.26, z: 7.4 };
+    let playerYaw = 0; // Look straight down the red carpet toward foyer (-Z)
     let playerPitch = -0.12;
 
     // --- 7. CUTSCENE ANIMATION SEQUENCER ---
@@ -1217,12 +1234,14 @@
         limoGroup.position.x = -18 + (18 * Math.sin(t * Math.PI / 2));
         camera.lookAt(limoGroup.position.x, 1.0, 8.5);
       }
-      // Phase 2: Doorman walks forward facing car & turns to greet player (3s - 4.5s)
+      // Phase 2: Doorman steps forward facing car, opens door, turns to greet (3s - 4.5s)
       else if (elapsed < 4.5) {
         const t = (elapsed - 3.0) / 1.5;
         limoDoorPivot.rotation.y = -t * 1.4;
-        doormanPlushie.position.x = 2.2 - (t * 0.9);
-        doormanPlushie.rotation.y = -Math.PI / 2 + (t * (Math.PI / 2));
+        // Step forward from sidewalk toward car door while facing it (+Z)
+        doormanPlushie.position.z = 6.2 + (t * 0.9);
+        // Turn smoothly toward player on red carpet
+        doormanPlushie.rotation.y = Math.PI - (t * 0.6);
         camera.position.set(3.2 - (t * 0.6), 1.6, 4.5);
         camera.lookAt(0.5, 0.8, 7.5);
       }
@@ -1230,7 +1249,7 @@
       else if (elapsed < 6.5) {
         myPlushie.visible = true;
         const t = (elapsed - 4.5) / 2.0;
-        myPlushie.position.set(0, 0.26, 8.0 - (t * 1.6));
+        myPlushie.position.set(0, 0.26, 8.2 - (t * 1.6));
         playerPos.z = myPlushie.position.z;
 
         camera.position.lerp(new THREE.Vector3(playerPos.x, playerPos.y + 0.85, playerPos.z + 1.35), 0.08);
@@ -1388,11 +1407,9 @@
       renderGoodyFace(time);
       renderBackstageScreens();
 
-      // Billboards keep pawns legible
       if (pawn1 && pawn1.userData && pawn1.userData.badgeMesh) pawn1.userData.badgeMesh.quaternion.copy(camera.quaternion);
       if (pawn2 && pawn2.userData && pawn2.userData.badgeMesh) pawn2.userData.badgeMesh.quaternion.copy(camera.quaternion);
 
-      // Stands bounce animation
       miniAudience.children.forEach((p) => {
         p.position.y = p.userData.initialY + Math.sin(time * 0.006 + p.userData.phase) * 0.04;
       });
