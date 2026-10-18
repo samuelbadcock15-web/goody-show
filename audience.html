@@ -16,21 +16,21 @@
     /* ENTRY MODAL */
     #entry-modal {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(6, 2, 14, 0.94); display: flex; flex-direction: column;
+      background: rgba(6, 2, 14, 0.95); display: flex; flex-direction: column;
       justify-content: center; align-items: center; z-index: 100; padding: 16px;
     }
     .entry-card {
-      background: #19082f; border: 2px solid #a29bfe; border-radius: 16px;
-      padding: 24px; width: 100%; max-width: 380px; text-align: center;
-      box-shadow: 0 0 25px rgba(162, 155, 254, 0.35);
+      background: #17072b; border: 2.5px solid #d4af37; border-radius: 18px;
+      padding: 26px 22px; width: 100%; max-width: 380px; text-align: center;
+      box-shadow: 0 0 30px rgba(212, 175, 55, 0.35);
     }
     .badge-audience {
-      display: inline-block; padding: 4px 12px; background: #6c5ce7; color: #fff;
-      font-family: monospace; font-weight: 900; font-size: 0.8rem; border-radius: 6px;
-      margin-bottom: 12px; letter-spacing: 1px;
+      display: inline-block; padding: 4px 14px; background: #99001a; color: #ffda66;
+      font-family: monospace; font-weight: 900; font-size: 0.82rem; border-radius: 6px;
+      margin-bottom: 12px; letter-spacing: 1.5px; border: 1px solid #d4af37;
     }
     .text-field {
-      width: 100%; padding: 12px; font-size: 1rem; font-weight: bold; background: #090314;
+      width: 100%; padding: 12px; font-size: 1.05rem; font-weight: bold; background: #090314;
       color: #00f0ff; border: 2px solid #a29bfe; border-radius: 10px; outline: none;
       margin-bottom: 14px; text-align: center;
     }
@@ -38,7 +38,7 @@
     .btn-join {
       width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 1.05rem;
       font-weight: 900; text-transform: uppercase; cursor: pointer; color: #fff;
-      background: linear-gradient(180deg, #6c5ce7, #4834d4); box-shadow: 0 3px 0 #2e1e77;
+      background: linear-gradient(180deg, #d4af37, #b8860b); box-shadow: 0 3px 0 #6e5200;
     }
     .btn-join:active { transform: scale(0.98); }
 
@@ -68,18 +68,18 @@
     }
     .top-bar {
       display: flex; justify-content: space-between; align-items: center;
-      background: rgba(18, 7, 36, 0.85); border: 1.5px solid #a29bfe; border-radius: 8px;
-      padding: 6px 10px; font-family: monospace; font-size: 0.78rem; pointer-events: auto;
+      background: rgba(18, 7, 36, 0.90); border: 1.5px solid #d4af37; border-radius: 8px;
+      padding: 6px 12px; font-family: monospace; font-size: 0.78rem; pointer-events: auto;
     }
     #location-pill { color: #39ff14; font-weight: bold; }
 
-    /* ELEVATOR PROMPT */
-    #elevator-prompt {
-      position: absolute; top: 22%; left: 50%; transform: translateX(-50%);
-      background: rgba(18, 7, 36, 0.92); border: 2px solid #fdcb6e; border-radius: 10px;
-      padding: 8px 16px; color: #ffda66; font-family: monospace; font-weight: bold;
+    /* PROMPTS */
+    #interaction-prompt {
+      position: absolute; top: 20%; left: 50%; transform: translateX(-50%);
+      background: rgba(18, 7, 36, 0.94); border: 2px solid #fdcb6e; border-radius: 10px;
+      padding: 8px 18px; color: #ffda66; font-family: monospace; font-weight: bold;
       font-size: 0.82rem; display: none; pointer-events: auto; text-align: center;
-      box-shadow: 0 0 15px rgba(253, 203, 110, 0.4);
+      box-shadow: 0 0 18px rgba(253, 203, 110, 0.45);
     }
 
     /* TRIVIA OVERLAY */
@@ -103,7 +103,7 @@
     /* CHAT */
     #chat-container {
       width: 100%; max-width: 400px; background: rgba(13, 5, 26, 0.88);
-      border: 1.5px solid #ff79b0; border-radius: 10px; display: flex; flex-direction: column;
+      border: 1.5px solid #d4af37; border-radius: 10px; display: flex; flex-direction: column;
       pointer-events: auto; margin-bottom: 6px; backdrop-filter: blur(4px);
     }
     #chat-header {
@@ -125,20 +125,20 @@
       color: #fff; padding: 6px 8px; font-size: 0.82rem; outline: none;
     }
     #btn-send-chat {
-      background: #ff79b0; border: none; border-radius: 6px; color: #fff; font-weight: bold;
+      background: #d4af37; border: none; border-radius: 6px; color: #111; font-weight: bold;
       font-size: 0.75rem; padding: 0 12px; cursor: pointer;
     }
 
     /* CONTROLS */
     .controls-wrapper { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; pointer-events: none; }
-    .dpad-section { background: rgba(20, 7, 40, 0.85); border: 1.5px solid #a29bfe; border-radius: 10px; padding: 4px; pointer-events: auto; }
+    .dpad-section { background: rgba(20, 7, 40, 0.85); border: 1.5px solid #d4af37; border-radius: 10px; padding: 4px; pointer-events: auto; }
     .dpad-grid { display: grid; grid-template-columns: 44px 44px 44px; grid-template-rows: 32px 32px; gap: 4px; }
     .dpad-btn {
-      background: #2b1154; border: 1.5px solid #ff79b0; border-radius: 6px; color: #fff;
+      background: #2b1154; border: 1.5px solid #d4af37; border-radius: 6px; color: #fff;
       font-size: 1rem; font-weight: bold; display: flex; justify-content: center; align-items: center; cursor: pointer;
     }
     .touch-look-hint {
-      background: rgba(0, 0, 0, 0.65); border: 1px dashed #00f0ff; border-radius: 6px;
+      background: rgba(0, 0, 0, 0.7); border: 1px dashed #00f0ff; border-radius: 6px;
       padding: 4px 8px; color: #00f0ff; font-size: 0.68rem; font-family: monospace; pointer-events: none; margin-bottom: 4px;
     }
   </style>
@@ -149,12 +149,12 @@
   <div id="entry-modal">
     <div class="entry-card">
       <div class="badge-audience">VIP PASS</div>
-      <h2 style="color: #ffda66; font-size: 1.3rem; margin-bottom: 8px;">The Goody Tonight Show</h2>
+      <h2 style="color: #ffda66; font-size: 1.35rem; margin-bottom: 8px;">The Goody Tonight Show</h2>
       <p style="color: #ebdcf9; font-size: 0.85rem; margin-bottom: 16px;">
-        Arrive curbside in style, explore the grand foyer, and head up to the live broadcast!
+        Step out of the white stretch limo onto the red carpet, visit the refreshments bar & restrooms, and ride the elevator to the live taping!
       </p>
       <input type="text" id="audience-name-input" class="text-field" maxlength="14" placeholder="Your Name" autocomplete="off" />
-      <button class="btn-join" id="btn-join-studio">Arrive at Studios</button>
+      <button class="btn-join" id="btn-join-studio">Arrive in Limousine</button>
     </div>
   </div>
 
@@ -163,7 +163,7 @@
     <div class="letterbox-bar" id="bar-bottom"></div>
     <div class="lens-ui">
       <div class="rec-indicator">● LIVE FEED [CAM 04]</div>
-      <div style="color: #ffda66;">FOYER ENTRANCE CURB</div>
+      <div style="color: #ffda66;">STUDIO VIP ARRIVAL CURB</div>
     </div>
   </div>
 
@@ -174,9 +174,7 @@
       <span id="show-clock-pill" style="color:#ffda66;">SHOW: 20:00</span>
     </div>
 
-    <div id="elevator-prompt">
-      PRESS [ ▲ FORWARD ] TO TAKE ELEVATOR
-    </div>
+    <div id="interaction-prompt">PRESS [ ▲ FORWARD ] TO TAKE ELEVATOR</div>
 
     <div id="stage-synced-banner">
       <div id="stage-q-title">CURRENT QUESTION</div>
@@ -301,7 +299,7 @@
     const userDisplayName = document.getElementById('user-display-name');
     const locationPill = document.getElementById('location-pill');
     const showClockPill = document.getElementById('show-clock-pill');
-    const elevatorPrompt = document.getElementById('elevator-prompt');
+    const interactionPrompt = document.getElementById('interaction-prompt');
     const stageSyncedBanner = document.getElementById('stage-synced-banner');
     const stageQTitle = document.getElementById('stage-q-title');
     const stageQText = document.getElementById('stage-q-text');
@@ -338,7 +336,6 @@
     let p2ContestantCity = "Nottingham";
     let p1RollVal = null;
     let p2RollVal = null;
-
     let p1Index = 0;
     let p2Index = 0;
 
@@ -366,7 +363,7 @@
       startLimoArrivalCutscene();
     });
 
-    // --- 2. PEERJS WEBRTC CONNECTION ---
+    // --- 2. WEBRTC CONNECTION ---
     function connectToStudio() {
       peer = new Peer();
       peer.on('open', () => {
@@ -394,23 +391,18 @@
             if (data.p2Name) { p2ContestantName = data.p2Name; updatePawnNameBadge(pawn2, data.p2Name); }
             
             if (data.p1Index !== undefined && data.p1Index !== p1Index) {
-              const old = p1Index;
-              p1Index = data.p1Index;
+              const old = p1Index; p1Index = data.p1Index;
               animatePawnHop(pawn1, old, p1Index, -0.08);
             }
             if (data.p2Index !== undefined && data.p2Index !== p2Index) {
-              const old = p2Index;
-              p2Index = data.p2Index;
+              const old = p2Index; p2Index = data.p2Index;
               animatePawnHop(pawn2, old, p2Index, 0.08);
             }
             renderStageQuestionBoard();
           } else if (data.type === 'SHOW_QUESTION_LOCKED') {
-            activeQuestion = data.question;
-            activeRecap = null;
-            stageSelectedOption = null;
-            stageOptionStatus = null;
+            activeQuestion = data.question; activeRecap = null;
+            stageSelectedOption = null; stageOptionStatus = null;
             renderStageQuestionBoard();
-
             stageSyncedBanner.style.display = 'block';
             stageQTitle.textContent = `${data.question.country.toUpperCase()} [${data.activeContestantName.toUpperCase()}]`;
             stageQText.textContent = data.question.text || data.question.q;
@@ -425,8 +417,7 @@
               stageOptionsGrid.style.display = 'none';
             }
           } else if (data.type === 'OPPONENT_ANSWERED') {
-            stageSelectedOption = data.chosenAnswer;
-            stageOptionStatus = 'selected';
+            stageSelectedOption = data.chosenAnswer; stageOptionStatus = 'selected';
             renderStageQuestionBoard();
             if (activeQuestion && activeQuestion.options) {
               const idx = activeQuestion.options.indexOf(data.chosenAnswer);
@@ -463,7 +454,6 @@
             if (peer) { try { peer.destroy(); } catch(e){} }
             spectatorUi.style.display = 'none';
             entryModal.style.display = 'flex';
-            return;
           }
         });
 
@@ -471,12 +461,10 @@
           call.answer();
           call.on('stream', (remoteStream) => {
             if (call.metadata && call.metadata.contestant === "goody-contestant-2") {
-              videoJune.srcObject = remoteStream;
-              videoJune.play().catch(() => {});
+              videoJune.srcObject = remoteStream; videoJune.play().catch(() => {});
               hasLiveJuneStream = true;
             } else {
-              videoJake.srcObject = remoteStream;
-              videoJake.play().catch(() => {});
+              videoJake.srcObject = remoteStream; videoJake.play().catch(() => {});
               hasLiveJakeStream = true;
             }
           });
@@ -491,7 +479,6 @@
       peer.on('error', () => setTimeout(connectToStudio, 4000));
     }
 
-    // --- 3. MULTIPLAYER SPECTATOR RELAY ---
     function broadcastSpectatorMovement() {
       if (dataConn && dataConn.open && !isSpectatorControlsLocked) {
         dataConn.send({
@@ -517,7 +504,6 @@
         scene.add(otherP);
         peerPlushies.set(data.peerId, otherP);
       }
-
       otherP.visible = !shouldBeHidden;
       if (!shouldBeHidden) {
         otherP.position.set(data.x, data.y, data.z);
@@ -525,7 +511,6 @@
       }
     }
 
-    // --- 4. CHAT FUNCTIONS ---
     function addChatMessage(author, text, customClass = '') {
       const msgEl = document.createElement('div');
       msgEl.className = 'chat-msg';
@@ -570,7 +555,7 @@
       document.getElementById('chat-toggle-icon').textContent = hidden ? '▼' : '▲';
     });
 
-    // --- 5. 3D SCENE & WORLD GENERATION ---
+    // --- 3. 3D SCENE & WORLD GENERATION ---
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x040208);
     scene.fog = new THREE.FogExp2(0x040208, 0.015);
@@ -581,108 +566,160 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
 
-    const ambientLight = new THREE.AmbientLight(0x281a42, 1.4); scene.add(ambientLight);
+    // ILLUMINATION RIG
+    const ambientLight = new THREE.AmbientLight(0x352155, 1.6); scene.add(ambientLight);
     const ceilingLight = new THREE.PointLight(0xffecd2, 1.2, 60); ceilingLight.position.set(0, 16.0, 0); scene.add(ceilingLight);
     const studioSpot = new THREE.SpotLight(0x00f0ff, 5.0, 30, Math.PI / 3, 0.4); studioSpot.position.set(0, 11, -9); scene.add(studioSpot);
 
-    const streetLight1 = new THREE.PointLight(0xffda77, 2.5, 20); streetLight1.position.set(-6, 4.0, 7.5); scene.add(streetLight1);
-    const streetLight2 = new THREE.PointLight(0xffda77, 2.5, 20); streetLight2.position.set(6, 4.0, 7.5); scene.add(streetLight2);
-    const foyerChandelier = new THREE.PointLight(0xffd59e, 3.0, 22); foyerChandelier.position.set(0, 3.8, -4.5); scene.add(foyerChandelier);
+    // Street Lamps
+    const streetLamp1 = new THREE.PointLight(0xffe599, 3.5, 24); streetLamp1.position.set(-6, 4.2, 7.8); scene.add(streetLamp1);
+    const streetLamp2 = new THREE.PointLight(0xffe599, 3.5, 24); streetLamp2.position.set(6, 4.2, 7.8); scene.add(streetLamp2);
+    // Foyer Chandeliers
+    const foyerChandelier1 = new THREE.PointLight(0xffdfa9, 3.5, 20); foyerChandelier1.position.set(-3.5, 3.8, -4.5); scene.add(foyerChandelier1);
+    const foyerChandelier2 = new THREE.PointLight(0xffdfa9, 3.5, 20); foyerChandelier2.position.set(3.5, 3.8, -4.5); scene.add(foyerChandelier2);
+    // Restroom Vanity Light
+    const restroomVanityLight = new THREE.PointLight(0xffffff, 2.5, 12); restroomVanityLight.position.set(8.5, 3.2, -5.0); scene.add(restroomVanityLight);
 
-    // GROUND LEVEL: STREET & FOYER
+    // --- GROUND LEVEL: STREET, LOBBY, FOYER, RESTROOMS ---
     const groundLevelGroup = new THREE.Group();
-    groundLevelGroup.position.set(0, 0, 0);
 
-    const streetMat = new THREE.MeshStandardMaterial({ color: 0x111116, roughness: 0.8 });
-    const street = new THREE.Mesh(new THREE.PlaneGeometry(36, 16), streetMat);
+    // Dark Asphalt Street
+    const streetMat = new THREE.MeshStandardMaterial({ color: 0x121216, roughness: 0.9 });
+    const street = new THREE.Mesh(new THREE.PlaneGeometry(38, 16), streetMat);
     street.rotation.x = -Math.PI / 2; street.position.set(0, 0, 14); groundLevelGroup.add(street);
 
-    const curbMat = new THREE.MeshStandardMaterial({ color: 0x3a3a46, roughness: 0.6 });
-    const curb = new THREE.Mesh(new THREE.BoxGeometry(36, 0.25, 3), curbMat);
+    // Pavement Curb
+    const curb = new THREE.Mesh(new THREE.BoxGeometry(38, 0.25, 3), new THREE.MeshStandardMaterial({ color: 0x484854, roughness: 0.6 }));
     curb.position.set(0, 0.125, 6.5); groundLevelGroup.add(curb);
 
-    // CONTINUOUS RED CARPET: From curbside limo dropoff (z = 8.0) to studio elevator lift (z = -11.5)
-    const redCarpetGroup = new THREE.Group();
-    const carpetMat = new THREE.MeshStandardMaterial({ color: 0xb71540, roughness: 0.85 });
-    const goldTrimMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.8, roughness: 0.3 });
-
-    // Main red runner (Width: 3.4m, Length: 20m)
-    const redRunner = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 20.0), carpetMat);
-    redRunner.rotation.x = -Math.PI / 2;
-    redRunner.position.set(0, 0.26, -1.5);
-    redCarpetGroup.add(redRunner);
-
-    // Left and right gold metallic borders
-    const trimLeft = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 20.0), goldTrimMat);
-    trimLeft.rotation.x = -Math.PI / 2;
-    trimLeft.position.set(-1.76, 0.262, -1.5);
-    redCarpetGroup.add(trimLeft);
-
-    const trimRight = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 20.0), goldTrimMat);
-    trimRight.rotation.x = -Math.PI / 2;
-    trimRight.position.set(1.76, 0.262, -1.5);
-    redCarpetGroup.add(trimRight);
-
-    groundLevelGroup.add(redCarpetGroup);
-
-    const foyerFloorMat = new THREE.MeshStandardMaterial({ color: 0x2d1847, roughness: 0.3 });
-    const foyerFloor = new THREE.Mesh(new THREE.PlaneGeometry(24, 16), foyerFloorMat);
+    // Polished Checkered Foyer Marble Floor
+    const foyerFloor = new THREE.Mesh(new THREE.PlaneGeometry(24, 16), new THREE.MeshStandardMaterial({ color: 0x221338, roughness: 0.25 }));
     foyerFloor.rotation.x = -Math.PI / 2; foyerFloor.position.set(0, 0.25, -5); groundLevelGroup.add(foyerFloor);
 
-    // Marquee Canopy
-    const marqueeGroup = new THREE.Group();
-    marqueeGroup.position.set(0, 4.0, 4.5);
-    const canopy = new THREE.Mesh(new THREE.BoxGeometry(10, 0.6, 4), new THREE.MeshStandardMaterial({ color: 0x110820 })); marqueeGroup.add(canopy);
+    // TRUE CRIMSON RED CARPET: From curbside limo step (z = 8.2) straight into studio elevator (z = -12.5)
+    const redCarpetGroup = new THREE.Group();
+    const crimsonCarpetMat = new THREE.MeshStandardMaterial({ color: 0x99001a, roughness: 0.85 }); // True deep red velvet
+    const goldTrimMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.85, roughness: 0.2 });
 
+    const carpetRunner = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 21.0), crimsonCarpetMat);
+    carpetRunner.rotation.x = -Math.PI / 2; carpetRunner.position.set(0, 0.26, -2.0);
+    redCarpetGroup.add(carpetRunner);
+
+    const goldBorderL = new THREE.Mesh(new THREE.PlaneGeometry(0.14, 21.0), goldTrimMat);
+    goldBorderL.rotation.x = -Math.PI / 2; goldBorderL.position.set(-1.67, 0.262, -2.0);
+    redCarpetGroup.add(goldBorderL);
+
+    const goldBorderR = new THREE.Mesh(new THREE.PlaneGeometry(0.14, 21.0), goldTrimMat);
+    goldBorderR.rotation.x = -Math.PI / 2; goldBorderR.position.set(1.67, 0.262, -2.0);
+    redCarpetGroup.add(goldBorderR);
+
+    // Gold Stanchion Posts along the carpet path
+    [-8, -4, 0, 4].forEach(sz => {
+      [-1.9, 1.9].forEach(sx => {
+        const post = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.9, 12), goldTrimMat);
+        post.position.set(sx, 0.7, sz);
+        const topOrb = new THREE.Mesh(new THREE.SphereGeometry(0.08, 12, 12), goldTrimMat);
+        topOrb.position.set(sx, 1.15, sz);
+        redCarpetGroup.add(post, topOrb);
+      });
+    });
+    groundLevelGroup.add(redCarpetGroup);
+
+    // Marquee Canopy
+    const marqueeGroup = new THREE.Group(); marqueeGroup.position.set(0, 4.0, 4.5);
+    const canopy = new THREE.Mesh(new THREE.BoxGeometry(10, 0.6, 4), new THREE.MeshStandardMaterial({ color: 0x110820 })); marqueeGroup.add(canopy);
     const marqueeCanvas = document.createElement('canvas'); marqueeCanvas.width = 512; marqueeCanvas.height = 128;
     const mctx = marqueeCanvas.getContext('2d');
     mctx.fillStyle = '#0a0314'; mctx.fillRect(0, 0, 512, 128);
-    mctx.strokeStyle = '#ffda66'; mctx.lineWidth = 6; mctx.strokeRect(4, 4, 504, 120);
+    mctx.strokeStyle = '#d4af37'; mctx.lineWidth = 6; mctx.strokeRect(4, 4, 504, 120);
     mctx.fillStyle = '#ffda66'; mctx.font = 'bold 24px monospace'; mctx.textAlign = 'center';
     mctx.fillText("THE GOODY TONIGHT SHOW", 256, 48);
     mctx.fillStyle = '#39ff14'; mctx.font = 'bold 22px monospace';
     mctx.fillText("● TELEVISION STUDIOS ●", 256, 92);
-    const marqueeTex = new THREE.CanvasTexture(marqueeCanvas);
-    const marqueeSign = new THREE.Mesh(new THREE.PlaneGeometry(8, 2), new THREE.MeshBasicMaterial({ map: marqueeTex }));
+    const marqueeSign = new THREE.Mesh(new THREE.PlaneGeometry(8, 2), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(marqueeCanvas) }));
     marqueeSign.position.set(0, 0.2, 2.01); marqueeGroup.add(marqueeSign);
     groundLevelGroup.add(marqueeGroup);
 
-    // Concession Bar
-    const barCounter = new THREE.Mesh(new THREE.BoxGeometry(6, 1.1, 1.8), new THREE.MeshStandardMaterial({ color: 0x3e1866 }));
-    barCounter.position.set(-7, 0.8, -5); groundLevelGroup.add(barCounter);
+    // --- REFRESHMENTS & SNACK BAR (POPCORN WARMER & SODA MACHINE) ---
+    const barGroup = new THREE.Group(); barGroup.position.set(-7.5, 0.25, -5.0);
+    // Wooden counter with marble top
+    const counterBase = new THREE.Mesh(new THREE.BoxGeometry(6.5, 1.1, 2.2), new THREE.MeshStandardMaterial({ color: 0x3d1a0a, roughness: 0.7 }));
+    counterBase.position.y = 0.55; barGroup.add(counterBase);
+    const marbleTop = new THREE.Mesh(new THREE.BoxGeometry(6.7, 0.1, 2.4), new THREE.MeshStandardMaterial({ color: 0xe6e6e6, roughness: 0.2 }));
+    marbleTop.position.y = 1.12; barGroup.add(marbleTop);
 
-    const barSignCanvas = document.createElement('canvas'); barSignCanvas.width = 256; barSignCanvas.height = 64;
-    const bsctx = barSignCanvas.getContext('2d'); bsctx.fillStyle = '#110526'; bsctx.fillRect(0,0,256,64);
-    bsctx.fillStyle = '#00f0ff'; bsctx.font = 'bold 20px monospace'; bsctx.textAlign = 'center'; bsctx.fillText("STUDIO BAR & SNACKS", 128, 40);
-    const barSign = new THREE.Mesh(new THREE.PlaneGeometry(3, 0.75), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(barSignCanvas) }));
-    barSign.position.set(-7, 2.2, -4.9); groundLevelGroup.add(barSign);
+    // Popcorn Warmer Machine (Glass chamber with kernels)
+    const popcornMachine = new THREE.Group(); popcornMachine.position.set(-1.8, 1.17, 0);
+    const pcBase = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.2, 1.0), new THREE.MeshStandardMaterial({ color: 0xc0392b })); pcBase.position.y = 0.1; popcornMachine.add(pcBase);
+    const pcGlass = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.1, 0.9), new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.35 }));
+    pcGlass.position.y = 0.75; popcornMachine.add(pcGlass);
+    const pcPopcorn = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.65, 0.75), new THREE.MeshStandardMaterial({ color: 0xfed330, roughness: 0.9 })); // Popped kernels
+    pcPopcorn.position.y = 0.55; popcornMachine.add(pcPopcorn);
+    const pcRoof = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.25, 1.05), new THREE.MeshStandardMaterial({ color: 0xc0392b })); pcRoof.position.y = 1.35; popcornMachine.add(pcRoof);
+    const pcLight = new THREE.PointLight(0xffda77, 1.2, 4); pcLight.position.y = 1.0; popcornMachine.add(pcLight);
+    barGroup.add(popcornMachine);
 
-    // Restroom Doors Sign
-    const restroomSignCanvas = document.createElement('canvas'); restroomSignCanvas.width = 256; restroomSignCanvas.height = 64;
-    const rsctx = restroomSignCanvas.getContext('2d'); rsctx.fillStyle = '#110526'; rsctx.fillRect(0,0,256,64);
-    rsctx.fillStyle = '#ff7675'; rsctx.font = 'bold 20px monospace'; rsctx.textAlign = 'center'; rsctx.fillText("◀ RESTROOMS", 128, 40);
-    const restroomSign = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 0.65), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(restroomSignCanvas) }));
-    restroomSign.position.set(7, 2.2, -4.9); groundLevelGroup.add(restroomSign);
+    // Soda Dispenser Machine
+    const sodaMachine = new THREE.Group(); sodaMachine.position.set(1.5, 1.17, 0);
+    const smBody = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.2, 1.0), new THREE.MeshStandardMaterial({ color: 0x222f3e, metalness: 0.7 }));
+    smBody.position.y = 0.6; sodaMachine.add(smBody);
+    [-0.35, 0, 0.35].forEach(sx => {
+      const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.18, 8), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9 }));
+      nozzle.position.set(sx, 0.45, 0.55); sodaMachine.add(nozzle);
+    });
+    barGroup.add(sodaMachine);
 
-    // Express Studio Lift
-    const elevatorGroup = new THREE.Group();
-    elevatorGroup.position.set(0, 0.25, -12.5);
+    // Uniformed Barista Usher Plushie
+    const barUsher = createCutePlushie3D(0x27ae60);
+    barUsher.position.set(0, 0.26, -1.5); barUsher.rotation.y = 0; // Faces guests
+    barGroup.add(barUsher);
+    groundLevelGroup.add(barGroup);
+
+    // --- WALK-IN LUXURY RESTROOM (SINKS, TAPS, MIRROR, HAND DRYER) ---
+    const restroomGroup = new THREE.Group(); restroomGroup.position.set(8.5, 0.25, -5.0);
+    // Tiled dividing walls
+    const tileMat = new THREE.MeshStandardMaterial({ color: 0xdfe6e9, roughness: 0.3 });
+    const rBackWall = new THREE.Mesh(new THREE.PlaneGeometry(6, 4), tileMat); rBackWall.position.set(0, 2, -2.5); restroomGroup.add(rBackWall);
+    const rSideWall = new THREE.Mesh(new THREE.PlaneGeometry(5, 4), tileMat); rSideWall.rotation.y = -Math.PI / 2; rSideWall.position.set(-3, 2, 0); restroomGroup.add(rSideWall);
+
+    // Ceramic Vanity Counter
+    const vanityCounter = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.85, 1.6), new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.2 }));
+    vanityCounter.position.set(0, 0.45, -1.2); restroomGroup.add(vanityCounter);
+
+    // Double Porcelain Sinks & Chrome Taps
+    [-1.2, 1.2].forEach(vx => {
+      const sinkBowl = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.32, 0.25, 16), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.1 }));
+      sinkBowl.position.set(vx, 0.90, -1.2); restroomGroup.add(sinkBowl);
+      const tapNeck = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.025, 8, 16, Math.PI), new THREE.MeshStandardMaterial({ color: 0xdcdde1, metalness: 0.95 }));
+      tapNeck.position.set(vx, 1.15, -1.45); tapNeck.rotation.x = Math.PI / 2; restroomGroup.add(tapNeck);
+    });
+
+    // Glass Wall Mirror with Chrome Bezel
+    const mirrorGlass = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 1.6), new THREE.MeshStandardMaterial({ color: 0xa4b0be, metalness: 0.95, roughness: 0.05 }));
+    mirrorGlass.position.set(0, 2.3, -2.48); restroomGroup.add(mirrorGlass);
+    const mirrorFrame = new THREE.Mesh(new THREE.BoxGeometry(4.4, 1.75, 0.04), new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.9 }));
+    mirrorFrame.position.set(0, 2.3, -2.49); restroomGroup.add(mirrorFrame);
+
+    // Stainless Steel Hand Dryer
+    const handDryer = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 0.35), new THREE.MeshStandardMaterial({ color: 0xbdc3c7, metalness: 0.9, roughness: 0.2 }));
+    handDryer.position.set(2.4, 1.6, -1.2); restroomGroup.add(handDryer);
+    groundLevelGroup.add(restroomGroup);
+
+    // --- EXPRESS STUDIO ELEVATOR ---
+    const elevatorGroup = new THREE.Group(); elevatorGroup.position.set(0, 0.25, -12.5);
     const elevOuter = new THREE.Mesh(new THREE.BoxGeometry(4.5, 4.5, 3.5), new THREE.MeshStandardMaterial({ color: 0x221338 }));
     elevOuter.position.y = 2.25; elevatorGroup.add(elevOuter);
-    const elevDoorL = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 3.2), new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.8 }));
+    const elevDoorL = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 3.2), new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.85 }));
     elevDoorL.position.set(-0.8, 1.8, 1.76); elevatorGroup.add(elevDoorL);
-    const elevDoorR = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 3.2), new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.8 }));
+    const elevDoorR = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 3.2), new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.85 }));
     elevDoorR.position.set(0.8, 1.8, 1.76); elevatorGroup.add(elevDoorR);
-
-    const elevSignCanvas = document.createElement('canvas'); elevSignCanvas.width = 256; elevSignCanvas.height = 64;
-    const esctx = elevSignCanvas.getContext('2d'); esctx.fillStyle = '#0a0314'; esctx.fillRect(0,0,256,64);
-    esctx.fillStyle = '#ffda66'; esctx.font = 'bold 18px monospace'; esctx.textAlign = 'center'; esctx.fillText("EXPRESS STUDIO LIFT", 128, 40);
-    const elevSign = new THREE.Mesh(new THREE.PlaneGeometry(3, 0.75), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(elevSignCanvas) }));
-    elevSign.position.set(0, 3.8, 1.77); elevatorGroup.add(elevSign);
     groundLevelGroup.add(elevatorGroup);
+
     scene.add(groundLevelGroup);
 
+    // ==========================================
     // TOP LEVEL: TABLETOP BROADCAST STUDIO
+    // ==========================================
     const bedroomGroup = new THREE.Group();
     const deskTop = new THREE.Mesh(new THREE.BoxGeometry(22, 1.0, 16), new THREE.MeshStandardMaterial({ color: 0x331c0e }));
     deskTop.position.set(0, 7.5, -9); bedroomGroup.add(deskTop);
@@ -691,7 +728,6 @@
     const miniDiorama = new THREE.Group(); miniDiorama.position.set(0, 8.05, -9);
     const feltCarpet = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 0.08, 48), new THREE.MeshStandardMaterial({ color: 0x271147 }));
     feltCarpet.position.y = 0.44; miniDiorama.add(feltCarpet);
-
     const miniWall = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 4.5, 32, 1, true, -Math.PI / 2, Math.PI), new THREE.MeshStandardMaterial({ color: 0x15092a, side: THREE.BackSide }));
     miniWall.position.y = 2.65; miniDiorama.add(miniWall);
 
@@ -705,116 +741,35 @@
       wallClockCtx.fillStyle = '#ffda66'; wallClockCtx.font = 'bold 18px monospace'; wallClockCtx.textAlign = 'center';
       wallClockCtx.fillText("20-MIN SHOW CLOCK", 128, 36);
       wallClockCtx.fillStyle = '#ff7675'; wallClockCtx.font = 'bold 50px monospace';
-      wallClockCtx.fillText(str, 128, 95);
-      wallClockTex.needsUpdate = true;
+      wallClockCtx.fillText(str, 128, 95); wallClockTex.needsUpdate = true;
     }
     renderWallClockTexture("20:00");
     const wallClockMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.2), new THREE.MeshBasicMaterial({ map: wallClockTex }));
     wallClockMesh.position.set(0, 6.2, -4.4); miniDiorama.add(wallClockMesh);
 
     // Full 14-Country Clean Flag Textures
-    const COUNTRIES = [
-      "France", "Netherlands", "Canada", "Sweden", "Italy", "Denmark",
-      "Brazil", "Australia", "Spain", "Germany", "UK", "Nigeria",
-      "United States", "Belgium"
-    ];
-
+    const COUNTRIES = ["France", "Netherlands", "Canada", "Sweden", "Italy", "Denmark", "Brazil", "Australia", "Spain", "Germany", "UK", "Nigeria", "United States", "Belgium"];
     function createCountryFlagTexture(countryName) {
       const c = document.createElement('canvas'); c.width = 256; c.height = 256;
       const ctx = c.getContext('2d'); const w = 256; const h = 256;
       ctx.fillStyle = '#1e1035'; ctx.fillRect(0, 0, w, h);
       ctx.save(); ctx.beginPath(); ctx.arc(128, 128, 124, 0, Math.PI * 2); ctx.clip();
-
       switch(countryName) {
-        case "France":
-          ctx.fillStyle = '#002654'; ctx.fillRect(0, 0, w / 3, h);
-          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h);
-          ctx.fillStyle = '#ED2939'; ctx.fillRect((w / 3) * 2, 0, w / 3, h);
-          break;
-        case "Netherlands":
-          ctx.fillStyle = '#AE1C28'; ctx.fillRect(0, 0, w, h / 3);
-          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, h / 3, w, h / 3);
-          ctx.fillStyle = '#21468B'; ctx.fillRect(0, (h / 3) * 2, w / 3, h);
-          break;
-        case "Canada":
-          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, w, h);
-          ctx.fillStyle = '#FF0000'; ctx.fillRect(0, 0, w * 0.28, h); ctx.fillRect(w * 0.72, 0, w * 0.28, h);
-          ctx.beginPath(); ctx.arc(128, 128, 36, 0, Math.PI * 2); ctx.fill();
-          break;
-        case "Brazil":
-          ctx.fillStyle = '#009739'; ctx.fillRect(0, 0, w, h);
-          ctx.fillStyle = '#FEDD00';
-          ctx.beginPath(); ctx.moveTo(128, 24); ctx.lineTo(236, 128); ctx.lineTo(128, 232); ctx.lineTo(20, 128); ctx.closePath(); ctx.fill();
-          ctx.fillStyle = '#012169'; ctx.beginPath(); ctx.arc(128, 128, 52, 0, Math.PI * 2); ctx.fill();
-          ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(128, 134, 46, 3.4, 6.0); ctx.stroke();
-          break;
-        case "Sweden":
-          ctx.fillStyle = '#006AA7'; ctx.fillRect(0, 0, w, h);
-          ctx.fillStyle = '#FECC00';
-          ctx.fillRect(75, 0, 36, h); ctx.fillRect(0, 110, w, 36);
-          break;
-        case "Italy":
-          ctx.fillStyle = '#009246'; ctx.fillRect(0, 0, w / 3, h);
-          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h);
-          ctx.fillStyle = '#CE2B37'; ctx.fillRect((w / 3) * 2, 0, w / 3, h);
-          break;
-        case "Denmark":
-          ctx.fillStyle = '#C60C30'; ctx.fillRect(0, 0, w, h);
-          ctx.fillStyle = '#FFFFFF';
-          ctx.fillRect(80, 0, 34, h); ctx.fillRect(0, 111, w, 34);
-          break;
-        case "Australia":
-          ctx.fillStyle = '#00008B'; ctx.fillRect(0, 0, w, h);
-          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, 120, 120);
-          ctx.fillStyle = '#CC0000'; ctx.fillRect(48, 0, 24, 120); ctx.fillRect(0, 48, 120, 24);
-          ctx.fillStyle = '#FFFFFF';
-          [[60, 180], [180, 70], [210, 120], [180, 190], [150, 130]].forEach(([sx, sy]) => {
-            ctx.beginPath(); ctx.arc(sx, sy, 10, 0, Math.PI * 2); ctx.fill();
-          });
-          break;
-        case "Spain":
-          ctx.fillStyle = '#AA151B'; ctx.fillRect(0, 0, w, h);
-          ctx.fillStyle = '#F1BF00'; ctx.fillRect(0, h * 0.25, w, h * 0.5);
-          ctx.fillStyle = '#AA151B';
-          ctx.beginPath(); ctx.arc(80, 128, 22, 0, Math.PI * 2); ctx.fill();
-          break;
-        case "Germany":
-          ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w, h / 3);
-          ctx.fillStyle = '#DD0000'; ctx.fillRect(0, h / 3, w, h / 3);
-          ctx.fillStyle = '#FFCE00'; ctx.fillRect(0, (h / 3) * 2, w, h / 3);
-          break;
-        case "UK":
-          ctx.fillStyle = '#012169'; ctx.fillRect(0, 0, w, h);
-          ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 36;
-          ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke();
-          ctx.strokeStyle = '#C8102E'; ctx.lineWidth = 14;
-          ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke();
-          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(100, 0, 56, h); ctx.fillRect(0, 100, w, 56);
-          ctx.fillStyle = '#C8102E'; ctx.fillRect(112, 0, 32, h); ctx.fillRect(0, 112, w, 32);
-          break;
-        case "Nigeria":
-          ctx.fillStyle = '#008751'; ctx.fillRect(0, 0, w / 3, h);
-          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h);
-          ctx.fillStyle = '#008751'; ctx.fillRect((w / 3) * 2, 0, w / 3, h);
-          break;
-        case "United States":
-          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, w, h);
-          for (let s = 0; s < 13; s++) { 
-            if (s % 2 === 0) { ctx.fillStyle = '#B22234'; ctx.fillRect(0, s * (h / 13), w, Math.ceil(h / 13)); }
-          }
-          ctx.fillStyle = '#3C3B6E'; ctx.fillRect(0, 0, w * 0.48, h * 0.54); 
-          ctx.fillStyle = '#FFFFFF';
-          for (let r = 18; r < 125; r += 26) { 
-            for (let col = 16; col < 115; col += 24) { ctx.beginPath(); ctx.arc(col, r, 4, 0, Math.PI * 2); ctx.fill(); } 
-          }
-          break;
-        case "Belgium":
-          ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w / 3, h);
-          ctx.fillStyle = '#FDDA24'; ctx.fillRect(w / 3, 0, w / 3, h);
-          ctx.fillStyle = '#EF3340'; ctx.fillRect((w / 3) * 2, 0, w / 3, h);
-          break;
-        default:
-          ctx.fillStyle = '#22143b'; ctx.fillRect(0, 0, w, h);
+        case "France": ctx.fillStyle = '#002654'; ctx.fillRect(0, 0, w / 3, h); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h); ctx.fillStyle = '#ED2939'; ctx.fillRect((w / 3) * 2, 0, w / 3, h); break;
+        case "Netherlands": ctx.fillStyle = '#AE1C28'; ctx.fillRect(0, 0, w, h / 3); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, h / 3, w, h / 3); ctx.fillStyle = '#21468B'; ctx.fillRect(0, (h / 3) * 2, w / 3, h); break;
+        case "Canada": ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FF0000'; ctx.fillRect(0, 0, w * 0.28, h); ctx.fillRect(w * 0.72, 0, w * 0.28, h); ctx.beginPath(); ctx.arc(128, 128, 36, 0, Math.PI * 2); ctx.fill(); break;
+        case "Brazil": ctx.fillStyle = '#009739'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FEDD00'; ctx.beginPath(); ctx.moveTo(128, 24); ctx.lineTo(236, 128); ctx.lineTo(128, 232); ctx.lineTo(20, 128); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#012169'; ctx.beginPath(); ctx.arc(128, 128, 52, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(128, 134, 46, 3.4, 6.0); ctx.stroke(); break;
+        case "Sweden": ctx.fillStyle = '#006AA7'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FECC00'; ctx.fillRect(75, 0, 36, h); ctx.fillRect(0, 110, w, 36); break;
+        case "Italy": ctx.fillStyle = '#009246'; ctx.fillRect(0, 0, w / 3, h); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h); ctx.fillStyle = '#CE2B37'; ctx.fillRect((w / 3) * 2, 0, w / 3, h); break;
+        case "Denmark": ctx.fillStyle = '#C60C30'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(80, 0, 34, h); ctx.fillRect(0, 111, w, 34); break;
+        case "Australia": ctx.fillStyle = '#00008B'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, 120, 120); ctx.fillStyle = '#CC0000'; ctx.fillRect(48, 0, 24, 120); ctx.fillRect(0, 48, 120, 24); ctx.fillStyle = '#FFFFFF'; [[60, 180], [180, 70], [210, 120], [180, 190], [150, 130]].forEach(([sx, sy]) => { ctx.beginPath(); ctx.arc(sx, sy, 10, 0, Math.PI * 2); ctx.fill(); }); break;
+        case "Spain": ctx.fillStyle = '#AA151B'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#F1BF00'; ctx.fillRect(0, h * 0.25, w, h * 0.5); ctx.fillStyle = '#AA151B'; ctx.beginPath(); ctx.arc(80, 128, 22, 0, Math.PI * 2); ctx.fill(); break;
+        case "Germany": ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w, h / 3); ctx.fillStyle = '#DD0000'; ctx.fillRect(0, h / 3, w, h / 3); ctx.fillStyle = '#FFCE00'; ctx.fillRect(0, (h / 3) * 2, w / 3, h); break;
+        case "UK": ctx.fillStyle = '#012169'; ctx.fillRect(0, 0, w, h); ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 36; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke(); ctx.strokeStyle = '#C8102E'; ctx.lineWidth = 14; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke(); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(100, 0, 56, h); ctx.fillRect(0, 100, w, 56); ctx.fillStyle = '#C8102E'; ctx.fillRect(112, 0, 32, h); ctx.fillRect(0, 112, w, 32); break;
+        case "Nigeria": ctx.fillStyle = '#008751'; ctx.fillRect(0, 0, w / 3, h); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h); ctx.fillStyle = '#008751'; ctx.fillRect((w / 3) * 2, 0, w / 3, h); break;
+        case "United States": ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, w, h); for (let s = 0; s < 13; s++) { if (s % 2 === 0) { ctx.fillStyle = '#B22234'; ctx.fillRect(0, s * (h / 13), w, Math.ceil(h / 13)); } } ctx.fillStyle = '#3C3B6E'; ctx.fillRect(0, 0, w * 0.48, h * 0.54); ctx.fillStyle = '#FFFFFF'; for (let r = 18; r < 125; r += 26) { for (let col = 16; col < 115; col += 24) { ctx.beginPath(); ctx.arc(col, r, 4, 0, Math.PI * 2); ctx.fill(); } } break;
+        case "Belgium": ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w / 3, h); ctx.fillStyle = '#FDDA24'; ctx.fillRect(w / 3, 0, w / 3, h); ctx.fillStyle = '#EF3340'; ctx.fillRect((w / 3) * 2, 0, w / 3, h); break;
+        default: ctx.fillStyle = '#22143b'; ctx.fillRect(0, 0, w, h);
       }
       ctx.restore();
       ctx.strokeStyle = '#e6c875'; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(128, 128, 123, 0, Math.PI * 2); ctx.stroke();
@@ -823,20 +778,13 @@
 
     const flagTextures = COUNTRIES.map(c => createCountryFlagTexture(c));
     const boardTileCoords = [];
-    const totalTiles = 32;
-    for (let i = 0; i < totalTiles; i++) {
-      const angle = i * 0.48;
-      const radius = 0.7 + (i * 0.135);
-      const x = Math.cos(angle) * radius;
-      const z = 1.8 + (Math.sin(angle) * (radius * 0.88));
+    for (let i = 0; i < 32; i++) {
+      const angle = i * 0.48; const radius = 0.7 + (i * 0.135);
+      const x = Math.cos(angle) * radius; const z = 1.8 + (Math.sin(angle) * (radius * 0.88));
       boardTileCoords.push({ x, z, country: COUNTRIES[i % COUNTRIES.length] });
       const tile = new THREE.Mesh(
         new THREE.CylinderGeometry(0.28, 0.30, 0.08, 24),
-        [
-          new THREE.MeshStandardMaterial({ color: 0x241e33, metalness: 0.6, roughness: 0.3 }),
-          new THREE.MeshBasicMaterial({ map: flagTextures[i % flagTextures.length] }),
-          new THREE.MeshBasicMaterial({ color: 0x110d1c })
-        ]
+        [new THREE.MeshStandardMaterial({ color: 0x241e33, metalness: 0.6, roughness: 0.3 }), new THREE.MeshBasicMaterial({ map: flagTextures[i % flagTextures.length] }), new THREE.MeshBasicMaterial({ color: 0x110d1c })]
       );
       tile.position.set(x, 0.48, z); miniDiorama.add(tile);
     }
@@ -845,17 +793,12 @@
     function updatePawnNameBadge(pawnGroup, displayName) {
       if (!pawnGroup || !pawnGroup.userData || !pawnGroup.userData.badgeCanvas) return;
       const c = pawnGroup.userData.badgeCanvas; const ctx = c.getContext('2d');
-      const w = c.width; const h = c.height;
-      ctx.clearRect(0, 0, w, h);
-      const r = 24;
-      ctx.fillStyle = '#0a0314'; ctx.strokeStyle = pawnGroup.userData.tagColor; ctx.lineWidth = 8;
-      ctx.beginPath();
-      ctx.moveTo(r, 4); ctx.lineTo(w - r, 4); ctx.quadraticCurveTo(w - 4, 4, w - 4, r);
+      const w = c.width; const h = c.height; ctx.clearRect(0, 0, w, h);
+      const r = 24; ctx.fillStyle = '#0a0314'; ctx.strokeStyle = pawnGroup.userData.tagColor; ctx.lineWidth = 8;
+      ctx.beginPath(); ctx.moveTo(r, 4); ctx.lineTo(w - r, 4); ctx.quadraticCurveTo(w - 4, 4, w - 4, r);
       ctx.lineTo(w - 4, h - r); ctx.quadraticCurveTo(w - 4, h - 4, w - r, h - 4);
-      ctx.lineTo(r, h - 4); ctx.quadraticCurveTo(4, h - 4, 4, h - r);
-      ctx.lineTo(4, r); ctx.quadraticCurveTo(4, 4, r, 4); ctx.closePath();
+      ctx.lineTo(r, h - 4); ctx.quadraticCurveTo(4, h - 4, 4, h - r); ctx.lineTo(4, r); ctx.quadraticCurveTo(4, 4, r, 4); ctx.closePath();
       ctx.fill(); ctx.stroke();
-
       ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       const cleanName = (displayName || "PLAYER").toUpperCase().trim();
       let fontSize = cleanName.length > 12 ? 28 : (cleanName.length > 8 ? 36 : 48);
@@ -869,7 +812,6 @@
       const base = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.10, 0.04, 16), baseMat); base.position.y = 0.02; pawn.add(base);
       const body = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.16, 16), baseMat); body.position.y = 0.12; pawn.add(body);
       const head = new THREE.Mesh(new THREE.SphereGeometry(0.055, 16, 16), baseMat); head.position.y = 0.22; pawn.add(head);
-
       const bCanvas = document.createElement('canvas'); bCanvas.width = 256; bCanvas.height = 96;
       const bTex = new THREE.CanvasTexture(bCanvas);
       const badgeMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.13), new THREE.MeshBasicMaterial({ map: bTex, transparent: true, side: THREE.DoubleSide, depthWrite: false }));
@@ -886,7 +828,6 @@
       if (fromIdx === toIdx) return;
       const stepDirection = toIdx > fromIdx ? 1 : -1;
       let currentHopIdx = fromIdx;
-
       function hopNextStep() {
         if (currentHopIdx === toIdx) return;
         const nextHopIdx = currentHopIdx + stepDirection;
@@ -894,22 +835,17 @@
         const endPos = { x: boardTileCoords[nextHopIdx].x + offsetX, y: 0.52, z: boardTileCoords[nextHopIdx].z };
         const hopStartTime = performance.now();
         playTone(320 + Math.random() * 80, 'sine', 0.06, 0.03);
-
         function stepFrame(now) {
-          const elapsed = now - hopStartTime;
-          const progress = Math.min(1.0, elapsed / hopDurationMs);
+          const elapsed = now - hopStartTime; const progress = Math.min(1.0, elapsed / hopDurationMs);
           const jumpArc = 4.0 * 0.35 * progress * (1.0 - progress);
-
           pawn.position.x = startPos.x + (endPos.x - startPos.x) * progress;
           pawn.position.y = 0.52 + jumpArc;
           pawn.position.z = startPos.z + (endPos.z - startPos.z) * progress;
-
           if (progress < 1.0) requestAnimationFrame(stepFrame);
           else {
             pawn.position.set(endPos.x, 0.52, endPos.z);
             playTone(220, 'triangle', 0.05, 0.02);
-            currentHopIdx = nextHopIdx;
-            setTimeout(hopNextStep, 50);
+            currentHopIdx = nextHopIdx; setTimeout(hopNextStep, 50);
           }
         }
         requestAnimationFrame(stepFrame);
@@ -917,11 +853,10 @@
       hopNextStep();
     }
 
-    // Dynamic 3D Stage Question Board
+    // 3D Question Board
     const qBoardCanvas = document.createElement('canvas'); qBoardCanvas.width = 512; qBoardCanvas.height = 384;
     const qBoardCtx = qBoardCanvas.getContext('2d');
     const qBoardTex = new THREE.CanvasTexture(qBoardCanvas);
-
     function renderStageQuestionBoard() {
       qBoardCtx.fillStyle = '#120726'; qBoardCtx.fillRect(0, 0, 512, 384);
       qBoardCtx.strokeStyle = '#00f0ff'; qBoardCtx.lineWidth = 6; qBoardCtx.strokeRect(3, 3, 506, 378);
@@ -934,8 +869,6 @@
         qBoardCtx.fillText(` COUNTRY: ${activeRecap.country.toUpperCase()}`, 256, 78);
         qBoardCtx.fillStyle = '#00f0ff'; qBoardCtx.fillRect(36, 94, 440, 2);
         qBoardCtx.fillStyle = '#ffffff'; qBoardCtx.font = '16px sans-serif';
-        qBoardCtx.textAlign = 'center';
-
         const words = activeRecap.text.split(' ');
         let line = ''; let y = 140;
         for (let n = 0; n < words.length; n++) {
@@ -945,13 +878,10 @@
           } else line = testLine;
         }
         qBoardCtx.fillText(line, 256, y);
-        qBoardCtx.fillStyle = '#39ff14'; qBoardCtx.font = '14px monospace';
-        qBoardCtx.fillText("RETURNING TO RULES BEFORE NEXT ROLL...", 256, 342);
       } else if (activeQuestion) {
         qBoardCtx.fillStyle = '#ffda66'; qBoardCtx.font = 'bold 18px monospace'; qBoardCtx.textAlign = 'left';
         qBoardCtx.fillText(` ${activeQuestion.country.toUpperCase()} [${p1ContestantName.toUpperCase()}]`, 20, 36);
-
-        qBoardCtx.fillStyle = '#ffffff'; qBoardCtx.font = '15px sans-serif'; qBoardCtx.textAlign = 'left';
+        qBoardCtx.fillStyle = '#ffffff'; qBoardCtx.font = '15px sans-serif';
         const words = (activeQuestion.q || activeQuestion.text || "").split(' ');
         let line = ''; let y = 72;
         for (let n = 0; n < words.length; n++) {
@@ -961,26 +891,6 @@
           } else line = testLine;
         }
         qBoardCtx.fillText(line, 20, y);
-
-        const letters = ["A", "B", "C", "D"];
-        if (activeQuestion.options) {
-          activeQuestion.options.forEach((opt, idx) => {
-            const optY = 210 + (idx * 40);
-            const isSelected = stageSelectedOption === opt;
-            if (isSelected) {
-              qBoardCtx.fillStyle = stageOptionStatus === 'correct' ? '#00b894' : (stageOptionStatus === 'wrong' ? '#d63031' : '#6c5ce7');
-              qBoardCtx.strokeStyle = stageOptionStatus === 'correct' ? '#55efc4' : (stageOptionStatus === 'wrong' ? '#ff7675' : '#fdcb6e');
-            } else {
-              qBoardCtx.fillStyle = '#220f3d'; qBoardCtx.strokeStyle = '#a29bfe';
-            }
-            qBoardCtx.fillRect(20, optY - 24, 472, 32);
-            qBoardCtx.lineWidth = isSelected ? 4 : 2; qBoardCtx.strokeRect(20, optY - 24, 472, 32);
-            qBoardCtx.fillStyle = isSelected ? '#ffffff' : '#ffda66'; qBoardCtx.font = 'bold 16px monospace';
-            qBoardCtx.fillText(`${letters[idx]})`, 30, optY - 2);
-            qBoardCtx.fillStyle = '#ffffff'; qBoardCtx.font = '14px sans-serif';
-            qBoardCtx.fillText(opt.length > 48 ? opt.substring(0, 48) + "..." : opt, 64, optY - 2);
-          });
-        }
       } else {
         qBoardCtx.fillStyle = '#ffda66'; qBoardCtx.font = 'bold 24px sans-serif'; qBoardCtx.textAlign = 'center';
         qBoardCtx.fillText("OFFICIAL GAME RULES", 256, 44);
@@ -998,8 +908,6 @@
           qBoardCtx.fillStyle = idx % 2 === 0 ? '#ffffff' : '#ebdcf9';
           qBoardCtx.fillText(rule, 26, 96 + (idx * 34));
         });
-        qBoardCtx.fillStyle = '#39ff14'; qBoardCtx.font = 'bold 15px monospace'; qBoardCtx.textAlign = 'center';
-        qBoardCtx.fillText(studioPower ? " LIVE BROADCAST IN PROGRESS" : " BROADCAST STANDBY", 256, 342);
       }
       qBoardTex.needsUpdate = true;
     }
@@ -1009,8 +917,7 @@
     qBoardMesh.position.set(-4.8, 3.4, -3.2); qBoardMesh.rotation.y = 0.8; miniDiorama.add(qBoardMesh);
 
     // --- ACCURATE 3D PLUSHIE GENERATOR ---
-    // Modeled forward facing (-Z) so third-person camera looks forward past ears
-    function createCutePlushie3D(color) {
+    function createCutePlushie3D(color, hasUniform = false) {
       const pGroup = new THREE.Group();
       const pMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.95 });
       const earMat = new THREE.MeshStandardMaterial({ color: 0xff7675, roughness: 0.95 });
@@ -1018,9 +925,21 @@
       const pBody = new THREE.Mesh(new THREE.SphereGeometry(0.28, 14, 14), pMat); pBody.position.y = 0.28; pGroup.add(pBody);
       const pHead = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 14), pMat); pHead.position.y = 0.58; pGroup.add(pHead);
 
+      // Uniform Jacket & Gold Buttons (For Staff Plushies)
+      if (hasUniform) {
+        const jacket = new THREE.Mesh(new THREE.CylinderGeometry(0.29, 0.30, 0.26, 16), new THREE.MeshStandardMaterial({ color: 0x5a0b1d })); // Royal Burgundy
+        jacket.position.y = 0.28; pGroup.add(jacket);
+        [-0.04, 0.04].forEach(bx => {
+          const goldBtn = new THREE.Mesh(new THREE.SphereGeometry(0.02, 6, 6), new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.9 }));
+          goldBtn.position.set(bx, 0.28, -0.29); pGroup.add(goldBtn);
+        });
+      }
+
+      // Ears
       const ear1 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), pMat); ear1.position.set(-0.14, 0.74, 0);
       const ear2 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), earMat); ear2.position.set(0.14, 0.74, 0); pGroup.add(ear1, ear2);
 
+      // Face on -Z (Forward)
       const blushMat = new THREE.MeshBasicMaterial({ color: 0xff69b4 });
       const blush1 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat); blush1.position.set(-0.11, 0.54, -0.17);
       const blush2 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat); blush2.position.set(0.11, 0.54, -0.17); pGroup.add(blush1, blush2);
@@ -1040,7 +959,7 @@
       return pGroup;
     }
 
-    // Audience Stands Plushies (Orientation locked on Y to avoid tilt)
+    // Audience Stands Plushies
     const miniAudience = new THREE.Group();
     const plushColors = [0xff7675, 0x74b9ff, 0xa29bfe, 0xffbe76, 0x55efc4, 0xfd79a8, 0xf6e58d, 0x48dbfb, 0xff9ff3];
     [5.7, 6.4].forEach((radius, rowIdx) => {
@@ -1050,7 +969,6 @@
         const col = plushColors[(i + rowIdx * 3) % plushColors.length];
         const pGroup = createCutePlushie3D(col);
         pGroup.position.set(Math.sin(theta) * radius, 0.46 + rowIdx * 0.25, Math.cos(theta) * (radius * 0.95) + 0.8);
-
         const yawToStage = Math.atan2(-pGroup.position.x, -2.6 - pGroup.position.z);
         pGroup.rotation.set(0, yawToStage + Math.PI, 0);
         pGroup.userData = { initialY: pGroup.position.y, phase: Math.random() * Math.PI * 2 };
@@ -1080,7 +998,6 @@
       fctx.fillStyle = '#030108'; fctx.fillRect(0, 0, 128, 128);
       gAntOrb.material.color.setHex(isGoodySpeaking ? 0x00f0ff : 0x39ff14);
       fctx.fillStyle = '#39ff14'; fctx.strokeStyle = '#39ff14'; fctx.lineWidth = 4; fctx.lineCap = 'round'; fctx.lineJoin = 'round';
-
       fctx.beginPath(); fctx.moveTo(28, 56); fctx.lineTo(44, 38); fctx.lineTo(60, 56); fctx.stroke();
       fctx.beginPath(); fctx.moveTo(68, 56); fctx.lineTo(84, 38); fctx.lineTo(100, 56); fctx.stroke();
 
@@ -1096,11 +1013,10 @@
       faceTex.needsUpdate = true;
     }
 
-    // Backstage Screens: Hooks into live video feeds when connected
+    // Backstage Screens
     const studioScreenCanvas = document.createElement('canvas'); studioScreenCanvas.width = 512; studioScreenCanvas.height = 256;
     const sScreenCtx = studioScreenCanvas.getContext('2d');
     const studioScreenTex = new THREE.CanvasTexture(studioScreenCanvas);
-
     function drawScreenFeed(ctx, x, y, width, height, name, city, isLive, videoElem, isGuy, currentRoll) {
       ctx.fillStyle = '#05020a'; ctx.fillRect(x, y, width, height);
       ctx.strokeStyle = '#39ff14'; ctx.lineWidth = 3; ctx.strokeRect(x, y, width, height);
@@ -1113,12 +1029,10 @@
         ctx.fillStyle = isGuy ? '#4a69bd' : '#e84393'; ctx.beginPath(); ctx.ellipse(cx, cy + 25, 26, 32, 0, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#f8c291'; ctx.beginPath(); ctx.arc(cx, cy - 10, 16, 0, Math.PI * 2); ctx.fill();
       }
-
       ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(x, y + height - 26, width, 26);
       ctx.fillStyle = '#39ff14'; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
       ctx.fillText(`${isLive ? 'LIVE' : 'CALL'} ${name.toUpperCase()} [${city.toUpperCase()}]`, x + width / 2, y + height - 8);
     }
-
     function renderBackstageScreens() {
       sScreenCtx.fillStyle = '#060210'; sScreenCtx.fillRect(0, 0, 512, 256);
       drawScreenFeed(sScreenCtx, 15, 20, 225, 215, p1ContestantName, p1ContestantCity, hasLiveJakeStream, videoJake, true, p1RollVal);
@@ -1128,7 +1042,7 @@
     const studioBackScreenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshBasicMaterial({ map: studioScreenTex }));
     studioBackScreenMesh.position.set(0, 3.4, -4.5); miniDiorama.add(studioBackScreenMesh);
 
-    // Robotic Camera Rigs
+    // Robotic Camera Rigs (180deg flipped so lens faces Goody)
     function createStudioRoboticCamera(x, z) {
       const camRig = new THREE.Group(); camRig.position.set(x, 0.44, z);
       const darkMat = new THREE.MeshStandardMaterial({ color: 0x1f1f26 });
@@ -1150,14 +1064,9 @@
 
     function updateCameraAlignment() {
       if (!gHead) return;
-      const headWorldPos = new THREE.Vector3();
-      gHead.getWorldPosition(headWorldPos);
-      
-      autoCam1.headPivot.lookAt(headWorldPos);
-      autoCam1.headPivot.rotation.y += Math.PI;
-
-      autoCam2.headPivot.lookAt(headWorldPos);
-      autoCam2.headPivot.rotation.y += Math.PI;
+      const headWorldPos = new THREE.Vector3(); gHead.getWorldPosition(headWorldPos);
+      autoCam1.headPivot.lookAt(headWorldPos); autoCam1.headPivot.rotation.y += Math.PI;
+      autoCam2.headPivot.lookAt(headWorldPos); autoCam2.headPivot.rotation.y += Math.PI;
     }
 
     miniDiorama.position.set(0, 7.95, -9);
@@ -1169,50 +1078,67 @@
     }
 
     // ==========================================
-    // 6. LIMOUSINE & DOORMAN AUTOMATION (CUTSCENE)
+    // 4. WHITE STRETCH LIMOUSINE & DOORMAN
     // ==========================================
     const limoGroup = new THREE.Group();
-    limoGroup.position.set(-18, 0.4, 8.5);
+    limoGroup.position.set(-18, 0.4, 8.5); // Starts down the road, pulls up to x = 0
 
-    const limoMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0f, metalness: 0.9, roughness: 0.2 });
-    const limoBody = new THREE.Mesh(new THREE.BoxGeometry(8.5, 1.4, 2.2), limoMat);
+    // High-gloss White Pearl Body
+    const whiteLimoMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.8, roughness: 0.15 });
+    const tintedGlassMat = new THREE.MeshStandardMaterial({ color: 0x050508, roughness: 0.05 });
+    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xecf0f1, metalness: 0.95, roughness: 0.1 });
+
+    const limoBody = new THREE.Mesh(new THREE.BoxGeometry(8.5, 1.4, 2.2), whiteLimoMat);
     limoBody.position.y = 0.55; limoGroup.add(limoBody);
 
-    const limoCabin = new THREE.Mesh(new THREE.BoxGeometry(5.5, 1.0, 1.9), new THREE.MeshStandardMaterial({ color: 0x050508, roughness: 0.1 }));
+    const limoCabin = new THREE.Mesh(new THREE.BoxGeometry(5.6, 1.0, 1.95), tintedGlassMat);
     limoCabin.position.set(-0.4, 1.6, 0); limoGroup.add(limoCabin);
 
+    // Chrome Side Trim
+    const chromeTrim = new THREE.Mesh(new THREE.BoxGeometry(8.55, 0.08, 2.22), chromeMat);
+    chromeTrim.position.y = 0.35; limoGroup.add(chromeTrim);
+
+    // Front Headlights & Rear Taillights
+    const headLightL = new THREE.Mesh(new THREE.CircleGeometry(0.18, 12), new THREE.MeshBasicMaterial({ color: 0xfffae6 }));
+    headLightL.rotation.y = Math.PI / 2; headLightL.position.set(4.26, 0.65, 0.7); limoGroup.add(headLightL);
+    const headLightR = new THREE.Mesh(new THREE.CircleGeometry(0.18, 12), new THREE.MeshBasicMaterial({ color: 0xfffae6 }));
+    headLightR.rotation.y = Math.PI / 2; headLightR.position.set(4.26, 0.65, -0.7); limoGroup.add(headLightR);
+
+    // Opening Passenger Door (Hinged on passenger side facing curb)
     const limoDoorPivot = new THREE.Group();
-    limoDoorPivot.position.set(0.5, 0.55, -1.1);
-    const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.3, 0.1), limoMat);
+    limoDoorPivot.position.set(0.5, 0.55, -1.1); // Passenger side hinge
+    const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.3, 0.1), whiteLimoMat);
     doorMesh.position.set(0.6, 0, 0); limoDoorPivot.add(doorMesh);
+    const doorWindow = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.6, 0.12), tintedGlassMat);
+    doorWindow.position.set(0.6, 0.55, 0); limoDoorPivot.add(doorWindow);
     limoGroup.add(limoDoorPivot);
 
-    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
+    // Chrome Wheels
     [-3.0, -1.0, 1.0, 3.0].forEach(wx => {
-      const wL = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.3, 16), wheelMat);
+      const wL = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.28, 16), chromeMat);
       wL.rotation.x = Math.PI / 2; wL.position.set(wx, 0.2, 1.15); limoGroup.add(wL);
-      const wR = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.3, 16), wheelMat);
+      const wR = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.28, 16), chromeMat);
       wR.rotation.x = Math.PI / 2; wR.position.set(wx, 0.2, -1.15); limoGroup.add(wR);
     });
     scene.add(limoGroup);
 
-    // Doorman Staff Plushie: Faces directly toward the car across the curb (+Z)
-    const doormanPlushie = createCutePlushie3D(0x2d3436);
+    // Uniformed Doorman Staff Plushie: Stands by the red carpet facing the car (+Z)
+    const doormanPlushie = createCutePlushie3D(0x2c3e50, true);
     doormanPlushie.position.set(1.5, 0.26, 6.2);
-    doormanPlushie.rotation.y = Math.PI; // Face +Z directly toward the arriving car door
+    doormanPlushie.rotation.y = Math.PI; // Face +Z directly toward the car across the curb
     scene.add(doormanPlushie);
 
-    // Spectator's Personal Plushie
+    // Spectator's Personal Plushie (Pink Plushie)
     const myPlushie = createCutePlushie3D(0xff7675);
-    myPlushie.position.set(0, 0.26, 7.4);
+    myPlushie.position.set(0, 0.26, 7.8);
     myPlushie.visible = false;
     scene.add(myPlushie);
 
-    let playerPos = { x: 0, y: 0.26, z: 7.4 };
-    let playerYaw = 0; // Look straight down the red carpet toward foyer (-Z)
+    let playerPos = { x: 0, y: 0.26, z: 7.8 };
+    let playerYaw = 0; // Face forward down red carpet toward foyer (-Z)
     let playerPitch = -0.12;
 
-    // --- 7. CUTSCENE ANIMATION SEQUENCER ---
+    // --- 5. ARRIVAL CUTSCENE SEQUENCER ---
     let cutsceneActive = false;
     let cutsceneStartTime = 0;
 
@@ -1220,43 +1146,44 @@
       cutsceneActive = true;
       cutsceneStartTime = performance.now();
       lensOverlay.style.display = 'block';
-
-      camera.position.set(3.5, 1.8, 4.0);
+      camera.position.set(3.8, 1.8, 4.0);
       camera.lookAt(-10, 1.0, 8.5);
     }
 
     function updateCutscene(now) {
       const elapsed = (now - cutsceneStartTime) / 1000;
 
-      // Phase 1: Limo pulls up to the curb (0s - 3s)
+      // Phase 1: White Limo drives smoothly up to the curb (0s - 3s)
       if (elapsed < 3.0) {
         const t = elapsed / 3.0;
         limoGroup.position.x = -18 + (18 * Math.sin(t * Math.PI / 2));
         camera.lookAt(limoGroup.position.x, 1.0, 8.5);
       }
-      // Phase 2: Doorman steps forward facing car, opens door, turns to greet (3s - 4.5s)
+      // Phase 2: Doorman walks forward facing car, opens door, stands respectfully (3s - 4.5s)
       else if (elapsed < 4.5) {
         const t = (elapsed - 3.0) / 1.5;
-        limoDoorPivot.rotation.y = -t * 1.4;
-        // Step forward from sidewalk toward car door while facing it (+Z)
-        doormanPlushie.position.z = 6.2 + (t * 0.9);
-        // Turn smoothly toward player on red carpet
-        doormanPlushie.rotation.y = Math.PI - (t * 0.6);
-        camera.position.set(3.2 - (t * 0.6), 1.6, 4.5);
+        limoDoorPivot.rotation.y = -t * 1.4; // Door swings open
+        doormanPlushie.position.z = 6.2 + (t * 0.9); // Steps to door
+        doormanPlushie.rotation.y = Math.PI - (t * 0.5); // Turns slightly toward red carpet
+        camera.position.set(3.2 - (t * 0.5), 1.6, 4.5);
         camera.lookAt(0.5, 0.8, 7.5);
       }
-      // Phase 3: Player emerges onto red carpet (4.5s - 6.5s)
+      // Phase 3: Player plushie emerges onto the red carpet (4.5s - 6.5s)
       else if (elapsed < 6.5) {
         myPlushie.visible = true;
         const t = (elapsed - 4.5) / 2.0;
         myPlushie.position.set(0, 0.26, 8.2 - (t * 1.6));
         playerPos.z = myPlushie.position.z;
 
+        // Camera tracks right behind player's shoulders
         camera.position.lerp(new THREE.Vector3(playerPos.x, playerPos.y + 0.85, playerPos.z + 1.35), 0.08);
         camera.lookAt(playerPos.x, playerPos.y + 0.6, playerPos.z - 4.0);
       }
-      // Phase 4: Free controls unlocked
-      else {
+      // Phase 4: Doorman closes door & player takes control (6.5s+)
+      else if (elapsed < 7.2) {
+        const t = (elapsed - 6.5) / 0.7;
+        limoDoorPivot.rotation.y = -1.4 * (1.0 - t); // Door closes shut
+      } else {
         cutsceneActive = false;
         isSpectatorControlsLocked = false;
         lensOverlay.style.display = 'none';
@@ -1266,7 +1193,7 @@
       }
     }
 
-    // --- 8. TOUCH TO LOOK & D-PAD NAVIGATION ---
+    // --- 6. NAVIGATION & INTERACTION TRIGGERS ---
     let touchStartX = 0; let touchStartY = 0;
     window.addEventListener('touchstart', (e) => {
       unlockAudio();
@@ -1287,7 +1214,6 @@
     let moveInterval = null;
     function moveStep(dir) {
       if (isSpectatorControlsLocked) return;
-
       const step = 0.24;
       const fwdX = -Math.sin(playerYaw); const fwdZ = -Math.cos(playerYaw);
       const rightX = Math.cos(playerYaw); const rightZ = -Math.sin(playerYaw);
@@ -1302,60 +1228,62 @@
     }
 
     function checkZoneAndElevatorTriggers() {
-      // Street to Foyer boundary
+      // Street / Foyer Boundaries
       if (currentZone === "STREET" && playerPos.z < 4.0) {
-        currentZone = "FOYER";
-        locationPill.textContent = "LOCATION: GRAND FOYER";
+        currentZone = "FOYER"; locationPill.textContent = "LOCATION: GRAND FOYER";
       } else if (currentZone === "FOYER" && playerPos.z > 4.5) {
-        currentZone = "STREET";
-        locationPill.textContent = "LOCATION: STREET CURBSIDE";
+        currentZone = "STREET"; locationPill.textContent = "LOCATION: STREET CURBSIDE";
       }
 
-      // Elevator Entry Trigger: Step in to ride to tabletop studio
-      if (currentZone === "FOYER" && Math.abs(playerPos.x) < 1.6 && playerPos.z < -10.5) {
-        elevatorPrompt.style.display = 'block';
-        elevatorPrompt.textContent = "TAKING LIFT TO STUDIO MEZZANINE...";
+      // Restroom Sink & Mirror Proximity Check
+      if (currentZone === "FOYER" && playerPos.x > 6.0 && Math.abs(playerPos.z - (-5.0)) < 2.0) {
+        interactionPrompt.style.display = 'block';
+        interactionPrompt.textContent = " RESTROOM: WASHING & DRYING HANDS...";
+        playTone(380, 'sine', 0.15, 0.03); // Running water tone
+      }
+      // Refreshment Bar Proximity Check
+      else if (currentZone === "FOYER" && playerPos.x < -5.5 && Math.abs(playerPos.z - (-5.0)) < 2.0) {
+        interactionPrompt.style.display = 'block';
+        interactionPrompt.textContent = "🍿 CONCESSIONS: FRESH POPCORN & COLD DRINKS READY!";
+      }
+      // Elevator Lift Ride Trigger
+      else if (currentZone === "FOYER" && Math.abs(playerPos.x) < 1.6 && playerPos.z < -10.5) {
+        interactionPrompt.style.display = 'block';
+        interactionPrompt.textContent = "TAKING LIFT TO STUDIO MEZZANINE...";
         isSpectatorControlsLocked = true;
         playTone(523, 'sine', 0.2, 0.04);
 
         setTimeout(() => {
-          currentZone = "STUDIO";
-          locationPill.textContent = "LOCATION: LIVE STUDIO TABLE";
-          elevatorPrompt.style.display = 'none';
-
-          playerPos.x = 0; playerPos.y = 8.41; playerPos.z = -4.5;
-          playerYaw = 0;
+          currentZone = "STUDIO"; locationPill.textContent = "LOCATION: LIVE STUDIO TABLE";
+          interactionPrompt.style.display = 'none';
+          playerPos.x = 0; playerPos.y = 8.41; playerPos.z = -4.5; playerYaw = 0;
           isSpectatorControlsLocked = false;
           playTone(659, 'sine', 0.2, 0.04);
         }, 1200);
       }
-
-      // Tabletop Exit Trigger: Walk back to elevator to return to foyer
-      if (currentZone === "STUDIO" && playerPos.z > -2.0) {
-        elevatorPrompt.style.display = 'block';
-        elevatorPrompt.textContent = "TAKING LIFT DOWN TO GRAND FOYER...";
+      // Studio Exit back to Foyer
+      else if (currentZone === "STUDIO" && playerPos.z > -2.0) {
+        interactionPrompt.style.display = 'block';
+        interactionPrompt.textContent = "TAKING LIFT DOWN TO GRAND FOYER...";
         isSpectatorControlsLocked = true;
         playTone(659, 'sine', 0.2, 0.04);
 
         setTimeout(() => {
-          currentZone = "FOYER";
-          locationPill.textContent = "LOCATION: GRAND FOYER";
-          elevatorPrompt.style.display = 'none';
-
-          playerPos.x = 0; playerPos.y = 0.26; playerPos.z = -9.0;
-          playerYaw = Math.PI;
+          currentZone = "FOYER"; locationPill.textContent = "LOCATION: GRAND FOYER";
+          interactionPrompt.style.display = 'none';
+          playerPos.x = 0; playerPos.y = 0.26; playerPos.z = -9.0; playerYaw = Math.PI;
           isSpectatorControlsLocked = false;
           playTone(523, 'sine', 0.2, 0.04);
         }, 1200);
+      } else {
+        interactionPrompt.style.display = 'none';
       }
     }
 
     const bindDpad = (id, dir) => {
       const el = document.getElementById(id);
       const start = (e) => { 
-        unlockAudio();
-        e.preventDefault(); 
-        moveStep(dir); 
+        unlockAudio(); e.preventDefault(); moveStep(dir); 
         if (moveInterval) clearInterval(moveInterval); 
         moveInterval = setInterval(() => moveStep(dir), 90); 
       };
@@ -1371,7 +1299,7 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // --- 9. MAIN RENDER LOOP ---
+    // --- 7. MAIN RENDER LOOP ---
     let prevBroadcastTime = 0;
     function animate() {
       requestAnimationFrame(animate);
@@ -1383,20 +1311,17 @@
         myPlushie.position.set(playerPos.x, playerPos.y, playerPos.z);
         myPlushie.rotation.y = playerYaw;
 
-        const camDist = 1.35;
-        const camHeight = 0.85;
+        const camDist = 1.35; const camHeight = 0.85;
         camera.position.set(
           playerPos.x + Math.sin(playerYaw) * camDist,
           playerPos.y + camHeight,
           playerPos.z + Math.cos(playerYaw) * camDist
         );
-
-        const lookTarget = new THREE.Vector3(
+        camera.lookAt(new THREE.Vector3(
           playerPos.x - Math.sin(playerYaw) * 4.0,
           playerPos.y + camHeight + playerPitch * 3.0,
           playerPos.z - Math.cos(playerYaw) * 4.0
-        );
-        camera.lookAt(lookTarget);
+        ));
 
         if (time - prevBroadcastTime > 160) {
           prevBroadcastTime = time;
