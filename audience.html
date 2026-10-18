@@ -584,6 +584,7 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
 
+    // Multi-tier Street, Foyer, and Tabletop Lighting
     const ambientLight = new THREE.AmbientLight(0x281a42, 1.4); scene.add(ambientLight);
     const ceilingLight = new THREE.PointLight(0xffecd2, 1.2, 60); ceilingLight.position.set(0, 16.0, 0); scene.add(ceilingLight);
     const studioSpot = new THREE.SpotLight(0x00f0ff, 5.0, 30, Math.PI / 3, 0.4); studioSpot.position.set(0, 11, -9); scene.add(studioSpot);
@@ -763,7 +764,7 @@
         case "Germany":
           ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w, h / 3);
           ctx.fillStyle = '#DD0000'; ctx.fillRect(0, h / 3, w, h / 3);
-          ctx.fillStyle = '#FFCE00'; ctx.fillRect(0, (h / 3) * 2, w / 3, h);
+          ctx.fillStyle = '#FFCE00'; ctx.fillRect(0, (h / 3) * 2, w, h / 3);
           break;
         case "UK":
           ctx.fillStyle = '#012169'; ctx.fillRect(0, 0, w, h);
@@ -932,7 +933,7 @@
         qBoardCtx.fillText("RETURNING TO RULES BEFORE NEXT ROLL...", 256, 342);
       } else if (activeQuestion) {
         qBoardCtx.fillStyle = '#ffda66'; qBoardCtx.font = 'bold 18px monospace'; qBoardCtx.textAlign = 'left';
-        qBoardCtx.fillText(` ${activeQuestion.country.toUpperCase()}`, 20, 36);
+        qBoardCtx.fillText(` ${activeQuestion.country.toUpperCase()} [${p1ContestantName.toUpperCase()}]`, 20, 36);
 
         qBoardCtx.fillStyle = '#ffffff'; qBoardCtx.font = '15px sans-serif'; qBoardCtx.textAlign = 'left';
         const words = (activeQuestion.q || activeQuestion.text || "").split(' ');
@@ -992,7 +993,6 @@
     qBoardMesh.position.set(-4.8, 3.4, -3.2); qBoardMesh.rotation.y = 0.8; miniDiorama.add(qBoardMesh);
 
     // --- ACCURATE 3D PLUSHIE GENERATOR ---
-    // Modeled forward facing (-Z) so third-person camera looks forward past ears
     function createCutePlushie3D(color) {
       const pGroup = new THREE.Group();
       const pMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.95 });
@@ -1034,7 +1034,6 @@
         const pGroup = createCutePlushie3D(col);
         pGroup.position.set(Math.sin(theta) * radius, 0.46 + rowIdx * 0.25, Math.cos(theta) * (radius * 0.95) + 0.8);
 
-        // Yaw angle calculated without pitch/roll distortion
         const yawToStage = Math.atan2(-pGroup.position.x, -2.6 - pGroup.position.z);
         pGroup.rotation.set(0, yawToStage + Math.PI, 0);
         pGroup.userData = { initialY: pGroup.position.y, phase: Math.random() * Math.PI * 2 };
@@ -1180,10 +1179,10 @@
     });
     scene.add(limoGroup);
 
-    // Doorman Staff Plushie: Faces car door directly
+    // Doorman Staff Plushie: Faces towards car door initially (-X)
     const doormanPlushie = createCutePlushie3D(0x2d3436);
     doormanPlushie.position.set(2.2, 0.26, 6.2);
-    doormanPlushie.rotation.y = Math.PI / 2;
+    doormanPlushie.rotation.y = -Math.PI / 2;
     scene.add(doormanPlushie);
 
     // Spectator's Personal Plushie
@@ -1212,21 +1211,22 @@
     function updateCutscene(now) {
       const elapsed = (now - cutsceneStartTime) / 1000;
 
-      // Phase 1: Limo pulls up to the curb
+      // Phase 1: Limo pulls up to the curb (0s - 3s)
       if (elapsed < 3.0) {
         const t = elapsed / 3.0;
         limoGroup.position.x = -18 + (18 * Math.sin(t * Math.PI / 2));
         camera.lookAt(limoGroup.position.x, 1.0, 8.5);
       }
-      // Phase 2: Doorman walks forward & swings open door
+      // Phase 2: Doorman walks forward facing car & turns to greet player (3s - 4.5s)
       else if (elapsed < 4.5) {
         const t = (elapsed - 3.0) / 1.5;
         limoDoorPivot.rotation.y = -t * 1.4;
         doormanPlushie.position.x = 2.2 - (t * 0.9);
+        doormanPlushie.rotation.y = -Math.PI / 2 + (t * (Math.PI / 2));
         camera.position.set(3.2 - (t * 0.6), 1.6, 4.5);
         camera.lookAt(0.5, 0.8, 7.5);
       }
-      // Phase 3: Player emerges onto red carpet
+      // Phase 3: Player emerges onto red carpet (4.5s - 6.5s)
       else if (elapsed < 6.5) {
         myPlushie.visible = true;
         const t = (elapsed - 4.5) / 2.0;
@@ -1283,6 +1283,7 @@
     }
 
     function checkZoneAndElevatorTriggers() {
+      // Street to Foyer boundary
       if (currentZone === "STREET" && playerPos.z < 4.0) {
         currentZone = "FOYER";
         locationPill.textContent = "LOCATION: GRAND FOYER";
@@ -1291,6 +1292,7 @@
         locationPill.textContent = "LOCATION: STREET CURBSIDE";
       }
 
+      // Elevator Entry Trigger: Step in to ride to tabletop studio
       if (currentZone === "FOYER" && Math.abs(playerPos.x) < 1.6 && playerPos.z < -10.5) {
         elevatorPrompt.style.display = 'block';
         elevatorPrompt.textContent = "TAKING LIFT TO STUDIO MEZZANINE...";
@@ -1309,6 +1311,7 @@
         }, 1200);
       }
 
+      // Tabletop Exit Trigger: Walk back to elevator to return to foyer
       if (currentZone === "STUDIO" && playerPos.z > -2.0) {
         elevatorPrompt.style.display = 'block';
         elevatorPrompt.textContent = "TAKING LIFT DOWN TO GRAND FOYER...";
@@ -1385,9 +1388,11 @@
       renderGoodyFace(time);
       renderBackstageScreens();
 
+      // Billboards keep pawns legible
       if (pawn1 && pawn1.userData && pawn1.userData.badgeMesh) pawn1.userData.badgeMesh.quaternion.copy(camera.quaternion);
       if (pawn2 && pawn2.userData && pawn2.userData.badgeMesh) pawn2.userData.badgeMesh.quaternion.copy(camera.quaternion);
 
+      // Stands bounce animation
       miniAudience.children.forEach((p) => {
         p.position.y = p.userData.initialY + Math.sin(time * 0.006 + p.userData.phase) * 0.04;
       });
