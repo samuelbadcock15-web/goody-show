@@ -460,6 +460,13 @@
             addChatMessage(data.author, data.text, data.isHost ? 'is-host' : '');
           } else if (data.type === 'SPECTATOR_POS_RELAY') {
             handleRemoteSpectatorMovement(data);
+          } else if (data.type === 'HOST_EJECTED_SPECTATOR') {
+            alert(data.message || "You have been removed from the studio by the director.");
+            if (dataConn) { try { dataConn.close(); } catch(e){} }
+            if (peer) { try { peer.destroy(); } catch(e){} }
+            spectatorUi.style.display = 'none';
+            entryModal.style.display = 'flex';
+            return;
           }
         });
 
@@ -689,7 +696,7 @@
     const wallClockMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.2), new THREE.MeshBasicMaterial({ map: wallClockTex }));
     wallClockMesh.position.set(0, 6.2, -4.4); miniDiorama.add(wallClockMesh);
 
-    // Full 14-Country Clean Vector Flag Textures
+    // Full 14 Country Flags
     const COUNTRIES = [
       "France", "Netherlands", "Canada", "Sweden", "Italy", "Denmark",
       "Brazil", "Australia", "Spain", "Germany", "UK", "Nigeria",
@@ -711,7 +718,7 @@
         case "Netherlands":
           ctx.fillStyle = '#AE1C28'; ctx.fillRect(0, 0, w, h / 3);
           ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, h / 3, w, h / 3);
-          ctx.fillStyle = '#21468B'; ctx.fillRect(0, (h / 3) * 2, w, h / 3);
+          ctx.fillStyle = '#21468B'; ctx.fillRect(0, (h / 3) * 2, w / 3, h);
           break;
         case "Canada":
           ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, w, h);
@@ -770,7 +777,7 @@
           ctx.fillStyle = '#C8102E'; ctx.fillRect(112, 0, 32, h); ctx.fillRect(0, 112, w, 32);
           break;
         case "Nigeria":
-          ctx.fillStyle = '#008751'; ctx.fillRect(0, 0, w / 3, h);
+          ctx.fillStyle = '#008751'; ctx.fillRect(0, 0, w, h / 3);
           ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h);
           ctx.fillStyle = '#008751'; ctx.fillRect((w / 3) * 2, 0, w / 3, h);
           break;
@@ -1351,6 +1358,7 @@
       if (cutsceneActive) {
         updateCutscene(time);
       } else {
+        // Personal plushie faces forward; camera positioned directly behind its back
         myPlushie.position.set(playerPos.x, playerPos.y, playerPos.z);
         myPlushie.rotation.y = playerYaw;
 
@@ -1378,9 +1386,11 @@
       renderGoodyFace(time);
       renderBackstageScreens();
 
+      // Billboards keep pawns legible
       if (pawn1 && pawn1.userData && pawn1.userData.badgeMesh) pawn1.userData.badgeMesh.quaternion.copy(camera.quaternion);
       if (pawn2 && pawn2.userData && pawn2.userData.badgeMesh) pawn2.userData.badgeMesh.quaternion.copy(camera.quaternion);
 
+      // Stands bounce animation
       miniAudience.children.forEach((p) => {
         p.position.y = p.userData.initialY + Math.sin(time * 0.006 + p.userData.phase) * 0.04;
       });
