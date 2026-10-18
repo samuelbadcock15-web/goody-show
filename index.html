@@ -405,9 +405,10 @@
       "goody-contestant-2": "June"
     };
 
-    const contestantCities = {
-      "goody-contestant-1": "London",
-      "goody-contestant-2": "Nottingham"
+    // Updated: Hometown/City replaced by Country representation
+    const contestantCountries = {
+      "goody-contestant-1": "United Kingdom",
+      "goody-contestant-2": "Canada"
     };
 
     const contestantTokens = {
@@ -425,7 +426,7 @@
     let timerExpired = false;
     let droppedOutContestant = null;
     let droppedOutName = "";
-    let droppedOutCity = "";
+    let droppedOutCountry = "";
     let droppedOutSessionToken = null;
 
     let savedTurnPlayer = null;
@@ -602,7 +603,7 @@
       }
     }
 
-    // --- INTERMISSION & DROPOUT HANDLER (ROLL SCRUBBING INCLUDED) ---
+    // --- INTERMISSION & DROPOUT HANDLER (SCRUBBING STALE DICE DATA) ---
     function handleMidGameDropout(contestantId) {
       if (gameState === "GAME_OVER" || gameState === "INTERMISSION") return;
 
@@ -620,7 +621,7 @@
       if (questionInterval) clearInterval(questionInterval);
       if (matchTimerInterval) clearInterval(matchTimerInterval);
 
-      // Clean roll duel state so replacements never inherit stale dice
+      // Clean roll state so replacements never inherit stale dice
       p1RollVal = null;
       p2RollVal = null;
       isDiceRollingP1 = false;
@@ -639,7 +640,7 @@
       gameState = "INTERMISSION";
       droppedOutContestant = contestantId;
       droppedOutName = contestantNames[contestantId] || "";
-      droppedOutCity = contestantCities[contestantId] || "";
+      droppedOutCountry = contestantCountries[contestantId] || "";
       droppedOutSessionToken = contestantTokens[contestantId] || null;
 
       const droppedNum = contestantId === "goody-contestant-1" ? `1 (${droppedOutName})` : `2 (${droppedOutName})`;
@@ -691,7 +692,7 @@
       handleMidGameDropout(slotId);
     }
 
-    function handleReplacementJoined(contestantId, newName, newCity, newSessionToken) {
+    function handleReplacementJoined(contestantId, newName, newCountry, newSessionToken) {
       if (gameState !== "INTERMISSION" || contestantId !== droppedOutContestant) return;
       if (intermissionTimeout) clearTimeout(intermissionTimeout);
       producerPanel.style.display = "none";
@@ -699,23 +700,23 @@
       const numStr = contestantId === "goody-contestant-1" ? "1" : "2";
       const isSamePerson = (Boolean(droppedOutSessionToken) && droppedOutSessionToken === newSessionToken) ||
         (droppedOutName.toLowerCase().trim() === newName.toLowerCase().trim() &&
-         (!newCity || !droppedOutCity || droppedOutCity.toLowerCase().trim() === newCity.toLowerCase().trim()));
+         (!newCountry || !droppedOutCountry || droppedOutCountry.toLowerCase().trim() === newCountry.toLowerCase().trim()));
 
       contestantNames[contestantId] = newName;
-      if (newCity) contestantCities[contestantId] = newCity;
+      if (newCountry) contestantCountries[contestantId] = newCountry;
       if (newSessionToken) contestantTokens[contestantId] = newSessionToken;
 
       if (contestantId === "goody-contestant-1") updatePawnNameBadge(pawn1, newName);
       else updatePawnNameBadge(pawn2, newName);
 
-      droppedOutContestant = null; droppedOutName = ""; droppedOutCity = ""; droppedOutSessionToken = null;
+      droppedOutContestant = null; droppedOutName = ""; droppedOutCountry = ""; droppedOutSessionToken = null;
       countdownPill.innerHTML = ` <span style="color:#39ff14;">LIVE ON AIR!</span>`;
 
       if (savedGameState === "INTRO_SPEECH" || savedGameState === "IDLE") {
         gameState = "INTRO_SPEECH"; renderStageQuestionBoard();
         const speech = isSamePerson
           ? `Welcome back, ${newName}! Glad we got your connection restored! Now, where was I? Ah, yes! Welcome to the show! We need to determine who moves first! Contestants, you both have 10 seconds to roll your dice!`
-          : `Welcome back to The Goody Tonight Show! We have our replacement! Stepping into the studio as contestant number ${numStr} is ${newName} from ${contestantCities[contestantId]}! Now, where was I? Ah, yes! Welcome to the show! We need to determine who moves first! Contestants, you both have 10 seconds to roll your dice!`;
+          : `Welcome back to The Goody Tonight Show! We have our replacement! Stepping into the studio as contestant number ${numStr} is ${newName}, representing ${contestantCountries[contestantId]}! Now, where was I? Ah, yes! Welcome to the show! We need to determine who moves first! Contestants, you both have 10 seconds to roll your dice!`;
         speakGoody(speech, () => beginTenSecondDiceDuel());
         return;
       }
@@ -726,7 +727,7 @@
         renderStageQuestionBoard();
         const speech = isSamePerson
           ? `Welcome back, ${newName}! Audio and video back online! Now, where were we? Ah yes, we were about to roll to see who takes the first turn! Both contestants, get ready to roll!`
-          : `Welcome back to the show! ${newName} from ${contestantCities[contestantId]} has joined us as contestant number ${numStr}! Now, where were we? Ah yes, we were about to roll to see who takes the first turn! Both contestants, get ready to roll!`;
+          : `Welcome back to the show! ${newName}, representing ${contestantCountries[contestantId]}, has joined us as contestant number ${numStr}! Now, where were we? Ah yes, we were about to roll to see who takes the first turn! Both contestants, get ready to roll!`;
         speakGoody(speech, () => beginTenSecondDiceDuel());
         return;
       }
@@ -734,7 +735,7 @@
       gameState = "IN_PLAY"; renderStageQuestionBoard(); startTwentyMinuteMatchTimer();
       const speech = isSamePerson
         ? `Welcome back, ${newName}! Great to have you back in the game! Let's resume the race!`
-        : `Welcome back to The Goody Tonight Show! Joining us in the hot seat is ${newName} from ${contestantCities[contestantId]}, taking over contestant number ${numStr}'s spot on the board! Let's resume the race!`;
+        : `Welcome back to The Goody Tonight Show! Joining us in the hot seat is ${newName}, representing ${contestantCountries[contestantId]}, taking over contestant number ${numStr}'s spot on the board! Let's resume the race!`;
       speakGoody(speech, () => {
         if (savedActiveCountry) {
           const c = savedActiveCountry; savedActiveCountry = null;
@@ -941,7 +942,7 @@
       }, durationSeconds * 1000);
     }
 
-    function generateHostBanter(name, city, userSpeech, onComplete) {
+    function generateHostBanter(name, country, userSpeech, onComplete) {
       playTone(880, 'sine', 0.08, 0.04);
       setTimeout(() => playTone(1200, 'sine', 0.08, 0.04), 100);
       const cleaned = userSpeech.toLowerCase();
@@ -949,33 +950,33 @@
         const fallbacks = [
           `Speechless already, ${name}? I don't blame you, my studio lights are dazzling!`,
           `Saving your vocal cords for the board, ${name}? A true strategist!`,
-          `Quiet confidence from ${city}! Let's see if the dice agree with you, ${name}!`
+          `Quiet confidence representing ${country}! Let's see if the dice agree with you, ${name}!`
         ];
         onComplete(fallbacks[Math.floor(Math.random() * fallbacks.length)]);
         return;
       }
       if (cleaned.includes("ready") || cleaned.includes("win") || cleaned.includes("yes") || cleaned.includes("yeah") || cleaned.includes("good")) {
-        onComplete(`I love that winning spirit, ${name}! Let's find out if ${city} is taking home tonight's prize!`);
+        onComplete(`I love that winning spirit, ${name}! Let's find out if ${country} is taking home tonight's prize!`);
         return;
       }
       if (cleaned.includes("nervous") || cleaned.includes("scared") || cleaned.includes("worried") || cleaned.includes("no")) {
-        onComplete(`Don't let the circuits intimidate you, ${name}! Deep breaths, ${city} is cheering you on!`);
+        onComplete(`Don't let the circuits intimidate you, ${name}! Deep breaths, ${country} is cheering you on!`);
         return;
       }
-      onComplete(`Well said, ${name}! My processors love that energy from ${city}!`);
+      onComplete(`Well said, ${name}! My processors love that energy representing ${country}!`);
     }
 
     function startGoodyMonologue() {
       const p1 = contestantNames["goody-contestant-1"] || "Contestant 1";
-      const c1 = contestantCities["goody-contestant-1"] || "London";
+      const c1 = contestantCountries["goody-contestant-1"] || "United Kingdom";
       const p2 = contestantNames["goody-contestant-2"] || "Contestant 2";
-      const c2 = contestantCities["goody-contestant-2"] || "Nottingham";
+      const c2 = contestantCountries["goody-contestant-2"] || "Canada";
 
       const part1 = "Hello, good evening, and welcome to The Goody Tonight Show! " +
         "I'm your host, Goody! " +
         "You are now part of the world's first and only televised self-exclusion game show! " +
         "Now, let's meet tonight's contestants! " +
-        `Contestant number 1! This is ${p1} from ${c1}! ` +
+        `Contestant number 1! This is ${p1}, representing ${c1}! ` +
         `${p1}, your microphone is live for 6 seconds! Give a shout-out and tell us how you're feeling tonight!`;
 
       speakGoody(part1, () => {
@@ -986,7 +987,7 @@
           if (gameState !== "INTRO_SPEECH") return;
           generateHostBanter(p1, c1, p1Words, (banter1) => {
             const part2 = `${banter1} And now, let's meet contestant number 2! ` +
-              `This is ${p2} from ${c2}! ` +
+              `This is ${p2}, representing ${c2}! ` +
               `${p2}, your microphone is live for 6 seconds! Say hello to everyone watching at home!`;
             speakGoody(part2, () => {
               if (gameState !== "INTRO_SPEECH") return;
@@ -1212,7 +1213,7 @@
             }
 
             const clientName = (conn.metadata && conn.metadata.name) ? conn.metadata.name.trim() : (cId === "goody-contestant-2" ? "June" : "Jake");
-            const clientCity = (conn.metadata && conn.metadata.city) ? conn.metadata.city.trim() : (cId === "goody-contestant-2" ? "Nottingham" : "London");
+            const clientCountry = (conn.metadata && conn.metadata.country) ? conn.metadata.country.trim() : (cId === "goody-contestant-2" ? "Canada" : "United Kingdom");
             const clientToken = conn.metadata ? conn.metadata.sessionToken : null;
             const cId = conn.metadata ? conn.metadata.contestant : null;
 
@@ -1221,7 +1222,7 @@
               if (clientToken) contestantTokens["goody-contestant-1"] = clientToken;
               if (gameState !== "INTERMISSION") {
                 contestantNames["goody-contestant-1"] = clientName;
-                contestantCities["goody-contestant-1"] = clientCity;
+                contestantCountries["goody-contestant-1"] = clientCountry;
                 updatePawnNameBadge(pawn1, clientName);
               }
             }
@@ -1230,7 +1231,7 @@
               if (clientToken) contestantTokens["goody-contestant-2"] = clientToken;
               if (gameState !== "INTERMISSION") {
                 contestantNames["goody-contestant-2"] = clientName;
-                contestantCities["goody-contestant-2"] = clientCity;
+                contestantCountries["goody-contestant-2"] = clientCountry;
                 updatePawnNameBadge(pawn2, clientName);
               }
             }
@@ -1240,11 +1241,10 @@
             broadcastAudienceCount();
 
             if (!studioPower) checkBothContestantsReady();
-            else if (gameState === "INTERMISSION" && cId === droppedOutContestant) handleReplacementJoined(cId, clientName, clientCity, clientToken);
+            else if (gameState === "INTERMISSION" && cId === droppedOutContestant) handleReplacementJoined(cId, clientName, clientCountry, clientToken);
           });
 
           conn.on('data', (data) => {
-            // Relay spectator movement in lobby
             if (data.type === "SPECTATOR_MOVE") {
               connectedDataConns.forEach(c => {
                 if (c.open && c.metadata && c.metadata.role === 'AUDIENCE' && c.peer !== conn.peer) {
@@ -1263,7 +1263,6 @@
               return;
             }
 
-            // Spectator communal chat and shadowban management
             if (data.type === "AUDIENCE_CHAT_MESSAGE") {
               const senderToken = data.sessionToken;
               const senderHw = data.hardwareId;
@@ -1532,7 +1531,6 @@
       }, 1000);
     }
 
-    // --- ACCURATE DICE DUEL RESOLUTION (NO FORCED WINNER, RE-ROLL ON DRAW) ---
     function finalizeDiceDuel() {
       if (p1RollVal === null) p1RollVal = Math.floor(Math.random() * 6) + 1;
       if (p2RollVal === null) p2RollVal = Math.floor(Math.random() * 6) + 1;
@@ -1965,7 +1963,7 @@
         case "Spain": ctx.fillStyle = '#AA151B'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#F1BF00'; ctx.fillRect(0, h * 0.25, w, h * 0.5); ctx.fillStyle = '#AA151B'; ctx.beginPath(); ctx.arc(80, 128, 22, 0, Math.PI * 2); ctx.fill(); break;
         case "Germany": ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w, h / 3); ctx.fillStyle = '#DD0000'; ctx.fillRect(0, h / 3, w, h / 3); ctx.fillStyle = '#FFCE00'; ctx.fillRect(0, (h / 3) * 2, w / 3, h); break;
         case "UK": ctx.fillStyle = '#012169'; ctx.fillRect(0, 0, w, h); ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 36; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke(); ctx.strokeStyle = '#C8102E'; ctx.lineWidth = 14; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke(); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(100, 0, 56, h); ctx.fillRect(0, 100, w, 56); ctx.fillStyle = '#C8102E'; ctx.fillRect(112, 0, 32, h); ctx.fillRect(0, 112, w, 32); break;
-        case "Nigeria": ctx.fillStyle = '#008751'; ctx.fillRect(0, 0, w / 3, h); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h); ctx.fillStyle = '#008751'; ctx.fillRect((w / 3) * 2, 0, w / 3, h); break;
+        case "Nigeria": ctx.fillStyle = '#008751'; ctx.fillRect(0, 0, w, h / 3); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h); ctx.fillStyle = '#008751'; ctx.fillRect((w / 3) * 2, 0, w / 3, h); break;
         case "United States": ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, w, h); for (let s = 0; s < 13; s++) { if (s % 2 === 0) { ctx.fillStyle = '#B22234'; ctx.fillRect(0, s * (h / 13), w, Math.ceil(h / 13)); } } ctx.fillStyle = '#3C3B6E'; ctx.fillRect(0, 0, w * 0.48, h * 0.54); ctx.fillStyle = '#FFFFFF'; for (let r = 18; r < 125; r += 26) { for (let col = 16; col < 115; col += 24) { ctx.beginPath(); ctx.arc(col, r, 4, 0, Math.PI * 2); ctx.fill(); } } break;
         case "Belgium": ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w / 3, h); ctx.fillStyle = '#FDDA24'; ctx.fillRect(w / 3, 0, w / 3, h); ctx.fillStyle = '#EF3340'; ctx.fillRect((w / 3) * 2, 0, w / 3, h); break;
         default: ctx.fillStyle = '#22143b'; ctx.fillRect(0, 0, w, h);
@@ -2069,7 +2067,8 @@
         qBoardCtx.fillStyle = '#ffda66'; qBoardCtx.font = 'bold 16px monospace';
         qBoardCtx.fillText(` COUNTRY: ${activeRecap.country.toUpperCase()}`, 256, 78);
         qBoardCtx.fillStyle = '#00f0ff'; qBoardCtx.fillRect(36, 94, 440, 2);
-        qBoardCtx.fillStyle = '#ffffff'; qBoardCtx.font = '16px sans-serif'; qBoardCtx.textAlign = 'center';
+        qBoardCtx.fillStyle = '#ffffff'; qBoardCtx.font = '16px sans-serif';
+        qBoardCtx.textAlign = 'center';
 
         const words = activeRecap.text.split(' ');
         let line = ''; let y = 140;
@@ -2163,8 +2162,7 @@
             qBoardCtx.fillStyle = idx % 2 === 0 ? '#ffffff' : '#ebdcf9';
             qBoardCtx.fillText(rule, 26, 96 + (idx * 34));
           });
-          qBoardCtx.fillStyle = '#39ff14'; qBoardCtx.font = 'bold 15px monospace';
-          qBoardCtx.textAlign = 'center';
+          qBoardCtx.fillStyle = '#39ff14'; qBoardCtx.font = 'bold 15px monospace'; qBoardCtx.textAlign = 'center';
           qBoardCtx.fillText(" LIVE BROADCAST IN PROGRESS", 256, 342);
         }
       }
@@ -2175,7 +2173,6 @@
     const qBoardMesh = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 2.7), new THREE.MeshBasicMaterial({ map: qBoardTex }));
     qBoardMesh.position.set(-4.8, 3.4, -3.2); qBoardMesh.rotation.y = 0.8; miniDiorama.add(qBoardMesh);
 
-    // --- FULL ACCURATE 3D PLUSHIE GENERATOR WITH COMPLETE FACIAL DETAILS ---
     function createCutePlushie3D(color) {
       const pGroup = new THREE.Group();
       const pMat = new THREE.MeshStandardMaterial({ color, roughness: 0.95 });
@@ -2189,14 +2186,12 @@
       pHead.position.y = 0.58;
       pGroup.add(pHead);
 
-      // Ears
       const ear1 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), pMat);
       ear1.position.set(-0.14, 0.74, 0);
       const ear2 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), earMat);
       ear2.position.set(0.14, 0.74, 0);
       pGroup.add(ear1, ear2);
 
-      // Cheek Blush
       const blushMat = new THREE.MeshBasicMaterial({ color: 0xff69b4 });
       const blush1 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat);
       blush1.position.set(-0.11, 0.54, 0.17);
@@ -2204,7 +2199,6 @@
       blush2.position.set(0.11, 0.54, 0.17);
       pGroup.add(blush1, blush2);
 
-      // Eyes & Specular Highlights
       const eyeBlackMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
       const eyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
 
@@ -2220,7 +2214,6 @@
       shineR.position.set(0.06, 0.612, 0.21);
       pGroup.add(eyeR, shineR);
 
-      // Snout and Mouth
       const snout = new THREE.Mesh(new THREE.SphereGeometry(0.042, 8, 8), new THREE.MeshStandardMaterial({ color: 0xff8fab, roughness: 0.6 }));
       snout.scale.set(1.2, 0.8, 1);
       snout.position.set(0, 0.56, 0.21);
@@ -2287,7 +2280,8 @@
     const sScreenCtx = studioScreenCanvas.getContext('2d');
     const studioScreenTex = new THREE.CanvasTexture(studioScreenCanvas);
 
-    function drawScreenFeed(ctx, x, y, width, height, name, city, isLive, videoElem, isGuy, currentRoll, isRolling, isGoodyHostSlot) {
+    // Updated drawScreenFeed: Shows Country instead of City
+    function drawScreenFeed(ctx, x, y, width, height, name, country, isLive, videoElem, isGuy, currentRoll, isRolling, isGoodyHostSlot) {
       ctx.fillStyle = '#05020a'; ctx.fillRect(x, y, width, height);
       ctx.strokeStyle = isGoodyHostSlot ? '#a29bfe' : (isLive ? '#39ff14' : '#ffb300');
       ctx.lineWidth = 3; ctx.strokeRect(x, y, width, height);
@@ -2328,7 +2322,7 @@
       ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(x, y + height - 26, width, 26);
       ctx.fillStyle = isGoodyHostSlot ? '#00f0ff' : (isLive ? '#39ff14' : '#ffda66');
       ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
-      const tag = isGoodyHostSlot ? `[AI HOST: GOODY]` : `${isLive ? ' LIVE ' : ' CALL'} ${name.toUpperCase()} [${city.toUpperCase()}]`;
+      const tag = isGoodyHostSlot ? `[AI HOST: GOODY]` : `${isLive ? ' LIVE ' : ' CALL'} ${name.toUpperCase()} [${country.toUpperCase()}]`;
       ctx.fillText(tag, x + width/2, y + height - 8);
     }
 
@@ -2338,7 +2332,7 @@
         const isP1Goody = isVsGoodyMode && goodyPlayerSlot === "goody-contestant-1";
         const isP2Goody = isVsGoodyMode && goodyPlayerSlot === "goody-contestant-2";
         if (isP1Goody || showJake) {
-          drawScreenFeed(sScreenCtx, 15, 20, 225, 215, contestantNames["goody-contestant-1"], contestantCities["goody-contestant-1"], hasLiveJakeStream, videoJake, true, p1RollVal, isDiceRollingP1, isP1Goody);
+          drawScreenFeed(sScreenCtx, 15, 20, 225, 215, contestantNames["goody-contestant-1"], contestantCountries["goody-contestant-1"], hasLiveJakeStream, videoJake, true, p1RollVal, isDiceRollingP1, isP1Goody);
         } else {
           sScreenCtx.strokeStyle = '#ffb300'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(15, 20, 225, 215);
           sScreenCtx.fillStyle = '#ffda66'; sScreenCtx.font = 'bold 22px sans-serif'; sScreenCtx.textAlign = 'center';
@@ -2347,7 +2341,7 @@
         }
 
         if (isP2Goody || showJune) {
-          drawScreenFeed(sScreenCtx, 272, 20, 225, 215, contestantNames["goody-contestant-2"], contestantCities["goody-contestant-2"], hasLiveJuneStream, videoJune, false, p2RollVal, isDiceRollingP2, isP2Goody);
+          drawScreenFeed(sScreenCtx, 272, 20, 225, 215, contestantNames["goody-contestant-2"], contestantCountries["goody-contestant-2"], hasLiveJuneStream, videoJune, false, p2RollVal, isDiceRollingP2, isP2Goody);
         } else {
           sScreenCtx.strokeStyle = '#ffb300'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(272, 20, 225, 215);
           sScreenCtx.fillStyle = '#ffda66'; sScreenCtx.font = 'bold 22px sans-serif'; sScreenCtx.textAlign = 'center';
