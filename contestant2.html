@@ -6,7 +6,7 @@
   <title>Goody Tonight Show - Contestant 2</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
-   
+    
     html, body {
       width: 100%;
       height: 100%;
@@ -140,6 +140,10 @@
       touch-action: none;
       flex-shrink: 0;
       margin: 0 auto;
+      cursor: grab;
+    }
+    .screens-container:active {
+      cursor: grabbing;
     }
     #studio-stream-video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
     #local-selfie-pip {
@@ -244,7 +248,7 @@
       font-size: 0.75rem; font-weight: bold; color: #ffda66; text-transform: uppercase;
     }
     #q-timer { font-family: monospace; font-weight: bold; color: #ff7675; font-size: 0.8rem; text-align: right; }
-   
+    
     #q-text {
       font-size: 0.82rem; font-weight: 600; line-height: 1.3; color: #ffffff;
       background: rgba(0,0,0,0.35); padding: 6px; border-radius: 6px; border-left: 3px solid #00f0ff;
@@ -293,7 +297,7 @@
   <div id="setup-card">
     <div class="badge-podium">PODIUM 2</div>
     <h2 style="color: #ffda66; margin-bottom: 12px; font-size: 1.25rem;">The Goody Tonight Show</h2>
-   
+    
     <div class="form-group">
       <span class="input-label">Host Screen 4-Digit Code:</span>
       <input type="text" id="passcode-input" maxlength="4" placeholder="0000" inputmode="numeric" pattern="[0-9]*" autocomplete="off" />
@@ -321,7 +325,7 @@
     </div>
 
     <div class="screens-container" id="interactive-viewport">
-      <div class="swipe-hint"> Drag to look</div>
+      <div class="swipe-hint">🖱️ Drag to look | WASD to move</div>
       <video id="studio-stream-video" autoplay playsinline></video>
       <video id="local-selfie-pip" autoplay playsinline muted></video>
     </div>
@@ -359,7 +363,7 @@
     </div>
 
     <div class="dpad-section">
-      <div style="font-size: 0.65rem; color: #ff9ff3; font-family: monospace;"> STUDIO NAVIGATION D-PAD</div>
+      <div style="font-size: 0.65rem; color: #ff9ff3; font-family: monospace;"> STUDIO NAVIGATION (WASD / D-PAD)</div>
       <div class="dpad-grid">
         <div></div>
         <button class="dpad-btn" id="dpad-fwd">▲</button>
@@ -508,7 +512,6 @@
             audio: { echoCancellation: true, noiseSuppression: true }
           });
           localSelfiePip.srcObject = localStream;
-          // DEFAULT: Mic is muted on connect until explicitly commanded by host
           setLocalMicEnabled(false);
         }
 
@@ -563,7 +566,6 @@
               roleTag.textContent = `${contestantName.toUpperCase()} (CONTESTANT 2)`;
               statusPill.textContent = "Connected! Standby for host...";
             } else if (data.type === "SET_MIC_STATE") {
-              // Direct gated microphone command from the studio host
               setLocalMicEnabled(Boolean(data.enabled));
               if (data.enabled) {
                 statusPill.textContent = data.promptText || "🎙️ Your microphone is LIVE!";
@@ -583,7 +585,7 @@
               if (rollTimer) clearInterval(rollTimer);
               if (questionTimer) clearInterval(questionTimer);
               if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-             
+              
               choiceCard.style.display = 'none';
               btnRollDice.disabled = true;
               btnRollDice.classList.remove('active-roll');
@@ -632,7 +634,6 @@
             } else if (data.type === "UNLOCK_QUESTION_INPUT") {
               if (data.activeContestantId === CONTESTANT_ID) {
                 unlockQuestionInput();
-                // Contestant 2 deliberates out loud! Unmute mic for the 30s question window
                 setLocalMicEnabled(true);
               }
             } else if (data.type === "START_TIE_BREAKER") {
@@ -703,32 +704,63 @@
       }
     }
 
-    let touchStartX = 0;
-    let touchStartY = 0;
+    // --- LOOK CONTROLS (TOUCH + DESKTOP MOUSE DRAG) ---
+    let isMouseDown = false;
+    let lookStartX = 0;
+    let lookStartY = 0;
 
+    function handleLookDelta(dx, dy) {
+      if (dataConn && dataConn.open) {
+        dataConn.send({
+          type: "PLUSHIE_LOOK",
+          contestant: CONTESTANT_ID,
+          deltaX: -dx,
+          deltaY: dy
+        });
+      }
+    }
+
+    // Touch Support (Mobile)
     interactiveViewport.addEventListener('touchstart', (e) => {
       if (e.touches.length === 1) {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
+        lookStartX = e.touches[0].clientX;
+        lookStartY = e.touches[0].clientY;
       }
     }, { passive: true });
 
     interactiveViewport.addEventListener('touchmove', (e) => {
-      if (e.touches.length === 1 && dataConn && dataConn.open) {
-        const deltaX = e.touches[0].clientX - touchStartX;
-        const deltaY = e.touches[0].clientY - touchStartY;
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-
-        dataConn.send({
-          type: "PLUSHIE_LOOK",
-          contestant: CONTESTANT_ID,
-          deltaX: -deltaX,
-          deltaY: deltaY
-        });
+      if (e.touches.length === 1) {
+        const deltaX = e.touches[0].clientX - lookStartX;
+        const deltaY = e.touches[0].clientY - lookStartY;
+        lookStartX = e.touches[0].clientX;
+        lookStartY = e.touches[0].clientY;
+        handleLookDelta(deltaX, deltaY);
       }
     }, { passive: true });
 
+    // Mouse Drag Support (Desktop PC)
+    interactiveViewport.addEventListener('mousedown', (e) => {
+      if (e.button === 0) {
+        isMouseDown = true;
+        lookStartX = e.clientX;
+        lookStartY = e.clientY;
+      }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isMouseDown) return;
+      const deltaX = e.clientX - lookStartX;
+      const deltaY = e.clientY - lookStartY;
+      lookStartX = e.clientX;
+      lookStartY = e.clientY;
+      handleLookDelta(deltaX, deltaY);
+    });
+
+    window.addEventListener('mouseup', () => {
+      isMouseDown = false;
+    });
+
+    // --- DICE ROLLING ---
     function startTenSecondRoll() {
       hasRolled = false;
       btnRollDice.disabled = false;
@@ -779,7 +811,7 @@
       btnRollDice.style.display = 'none';
       recapCard.style.display = 'none';
       triviaCard.style.display = 'flex';
-     
+      
       qCountryTag.textContent = ` ${qData.country} (${isMyTurn ? "YOUR QUESTION" : activeName.toUpperCase() + "'S QUESTION"})`;
       qText.textContent = qData.text || qData.q || "Listen to host:";
       qTimer.textContent = " LISTENING...";
@@ -807,7 +839,7 @@
         } else {
           clearInterval(questionTimer);
           qTimer.textContent = "TIME OUT!";
-          setLocalMicEnabled(false); // Cut mic on timeout
+          setLocalMicEnabled(false);
           optButtons.forEach(b => b.disabled = true);
           if (dataConn && dataConn.open) {
             dataConn.send({ type: "PLAYER_TIMEOUT", contestant: CONTESTANT_ID });
@@ -838,7 +870,6 @@
         selectedOptionIndex = idx;
         if (questionTimer) clearInterval(questionTimer);
 
-        // INSTANT AUTOMATIC MIC MUTE UPON LOCKING IN ANSWER
         setLocalMicEnabled(false);
 
         optButtons.forEach(b => {
@@ -923,34 +954,64 @@
       btnRollDice.classList.remove('active-roll');
     }
 
+    // --- MOVEMENT ENGINE (ON-SCREEN D-PAD + DESKTOP KEYBOARD WASD) ---
     let dpadInterval = null;
+    let activeMovementDir = null;
+
     function sendPlushieMove(direction) {
       if (dataConn && dataConn.open) {
         dataConn.send({ type: "PLUSHIE_MOVE", contestant: CONTESTANT_ID, direction: direction });
       }
     }
     function startPlushieMove(direction) {
+      if (activeMovementDir === direction) return;
+      activeMovementDir = direction;
       sendPlushieMove(direction);
       if (dpadInterval) clearInterval(dpadInterval);
       dpadInterval = setInterval(() => sendPlushieMove(direction), 100);
     }
-    function stopPlushieMove() {
-      if (dpadInterval) { clearInterval(dpadInterval); dpadInterval = null; }
+    function stopPlushieMove(direction = null) {
+      if (direction === null || activeMovementDir === direction) {
+        activeMovementDir = null;
+        if (dpadInterval) { clearInterval(dpadInterval); dpadInterval = null; }
+      }
     }
 
     const bindDpad = (btnId, dir) => {
       const el = document.getElementById(btnId);
       el.addEventListener('touchstart', (e) => { e.preventDefault(); startPlushieMove(dir); });
-      el.addEventListener('touchend', (e) => { e.preventDefault(); stopPlushieMove(); });
+      el.addEventListener('touchend', (e) => { e.preventDefault(); stopPlushieMove(dir); });
       el.addEventListener('mousedown', () => startPlushieMove(dir));
-      el.addEventListener('mouseup', () => stopPlushieMove());
-      el.addEventListener('mouseleave', () => stopPlushieMove());
+      el.addEventListener('mouseup', () => stopPlushieMove(dir));
+      el.addEventListener('mouseleave', () => stopPlushieMove(dir));
     };
 
     bindDpad('dpad-fwd', 'FORWARD');
     bindDpad('dpad-back', 'BACK');
     bindDpad('dpad-left', 'LEFT');
     bindDpad('dpad-right', 'RIGHT');
+
+    // Desktop Keyboard Listeners (WASD + Arrow Keys)
+    const keyMap = {
+      'KeyW': 'FORWARD', 'ArrowUp': 'FORWARD',
+      'KeyS': 'BACK',    'ArrowDown': 'BACK',
+      'KeyA': 'LEFT',    'ArrowLeft': 'LEFT',
+      'KeyD': 'RIGHT',   'ArrowRight': 'RIGHT'
+    };
+
+    window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (keyMap[e.code]) {
+        e.preventDefault();
+        startPlushieMove(keyMap[e.code]);
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (keyMap[e.code]) {
+        stopPlushieMove(keyMap[e.code]);
+      }
+    });
   </script>
 </body>
 </html>
