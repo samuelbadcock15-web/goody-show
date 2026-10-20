@@ -280,6 +280,7 @@
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
   <script>
+    // --- HOST SECURITY PIN VERIFICATION ---
     const HOST_SECURITY_PIN = "3776";
     let isHostAuthorized = false;
 
@@ -331,11 +332,10 @@
     let showJake = false;
     let showJune = false;
 
-    // REAL CONTESTANT WEBCAM VIDEO HOLDERS
     const videoJake = document.createElement('video');
-    videoJake.autoplay = true; videoJake.playsInline = true; videoJake.muted = true;
+    videoJake.autoplay = true; videoJake.playsInline = true; videoJake.muted = false;
     const videoJune = document.createElement('video');
-    videoJune.autoplay = true; videoJune.playsInline = true; videoJune.muted = true;
+    videoJune.autoplay = true; videoJune.playsInline = true; videoJune.muted = false;
 
     let hasLiveJakeStream = false;
     let hasLiveJuneStream = false;
@@ -658,6 +658,7 @@
       });
     }
 
+    // --- RESUME 2: SAM DIRECTLY TRIGGERS 1-PLAYER SOLO ---
     function triggerOnePlayerMode() {
       if (gameState !== "INTERMISSION" && gameState !== "CONTESTANT_CHOOSING") return;
 
@@ -691,6 +692,7 @@
       });
     }
 
+    // --- RESUME 3: SAM OFFERS CHOICE TO CONTESTANT ---
     function triggerOfferChoiceMode() {
       if (gameState !== "INTERMISSION") return;
 
@@ -713,6 +715,7 @@
       });
     }
 
+    // --- RESUME 4: CONTESTANT PICKS HEAD-TO-HEAD VS GOODY ---
     function triggerVsGoodyMode() {
       isSoloMode = false;
       isVsGoodyMode = true;
@@ -1015,15 +1018,20 @@
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
 
-    // THE 2D STAGE MONITOR CANVAS
-    const studioScreenCanvas = document.createElement('canvas'); 
-    studioScreenCanvas.width = 512; 
-    studioScreenCanvas.height = 256;
-    const sScreenCtx = studioScreenCanvas.getContext('2d');
-    const studioScreenTex = new THREE.CanvasTexture(studioScreenCanvas);
+    // Off-screen canvas contexts for rendering Jake and June
+    const canvasJake = document.createElement('canvas');
+    canvasJake.width = 640; canvasJake.height = 360;
+    const rendererJake = new THREE.WebGLRenderer({ canvas: canvasJake, antialias: true });
 
-    // MASTER BROADCAST STREAM: The stage monitors themselves captured at 30fps!
-    const masterStageStream = studioScreenCanvas.captureStream(30);
+    const canvasJune = document.createElement('canvas');
+    canvasJune.width = 640; canvasJune.height = 360;
+    const rendererJune = new THREE.WebGLRenderer({ canvas: canvasJune, antialias: true });
+
+    const camJake = new THREE.PerspectiveCamera(65, 16 / 9, 0.1, 100);
+    const camJune = new THREE.PerspectiveCamera(65, 16 / 9, 0.1, 100);
+
+    const streamJake = canvasJake.captureStream(30);
+    const streamJune = canvasJune.captureStream(30);
 
     const controls = new THREE.PointerLockControls(camera, document.body);
 
@@ -1086,6 +1094,7 @@
     let studioPeer = null;
     let connectedDataConns = [];
     const connectedAudiencePeers = new Set();
+    const audienceMediaCalls = new Set();
 
     function initStudioWebRTC() {
       if (!isHostAuthorized || studioPeer) return;
@@ -1095,17 +1104,19 @@
 
         studioPeer.on('open', (id) => console.log("Master Host Registered:", id));
 
-        // --- INCOMING CALL HANDLER ---
+        // --- INCOMING CALL HANDLER (NOW SUPPORTS AUDIENCE STREAM CONSUMERS) ---
         studioPeer.on('call', (call) => {
           const isAudience = call.metadata && call.metadata.role === 'AUDIENCE';
 
-          // When Audience calls, send them the live Stage Monitors stream!
+          // If caller is an audience spectator, answer with the Jake stage video stream
           if (isAudience) {
-            call.answer(masterStageStream);
+            call.answer(streamJake);
+            audienceMediaCalls.add(call);
+            call.on('close', () => audienceMediaCalls.delete(call));
             return;
           }
 
-          // Contestants (Jake and June)
+          // Otherwise caller must be contestant Jake or June
           const passcode = call.metadata ? call.metadata.passcode : "";
           if (passcode !== studioRoomCode) {
             call.close();
@@ -1123,31 +1134,22 @@
           }
 
           const isJune = cId === "goody-contestant-2";
-          
-          // Contestants receive the master stage stream so they can see the whole studio
-          call.answer(masterStageStream);
+          const returnStream = isJune ? streamJune : streamJake;
+          call.answer(returnStream);
 
           call.on('stream', (remoteStream) => {
             if (isJune) {
               videoJune.srcObject = remoteStream;
-              videoJune.muted = true;
-              videoJune.play().then(() => {
-                hasLiveJuneStream = true; 
-                showJune = true;
-              }).catch(() => {
-                hasLiveJuneStream = true; 
-                showJune = true;
-              });
+              videoJune.muted = false;
+              videoJune.play().catch(console.error);
+              hasLiveJuneStream = true; 
+              showJune = true;
             } else {
               videoJake.srcObject = remoteStream;
-              videoJake.muted = true;
-              videoJake.play().then(() => {
-                hasLiveJakeStream = true; 
-                showJake = true;
-              }).catch(() => {
-                hasLiveJakeStream = true; 
-                showJake = true;
-              });
+              videoJake.muted = false;
+              videoJake.play().catch(console.error);
+              hasLiveJakeStream = true; 
+              showJake = true;
             }
             broadcastBoardState();
           });
@@ -1196,6 +1198,7 @@
               const secs = Math.max(0, (matchTimerSeconds % 60)).toString().padStart(2, '0');
               conn.send({ type: "SYNC_MATCH_TIMER", timeStr: `${mins}:${secs}`, secondsLeft: matchTimerSeconds });
 
+              // Immediate board state for spectator
               conn.send({
                 type: "SYNC_BOARD_STATE",
                 studioPower: studioPower,
@@ -1473,6 +1476,7 @@
       studioPower = true;
       gameState = "INTRO_SPEECH";
       updateStudioLighting(true);
+      updateCameraAlignment();
       renderStageQuestionBoard();
       broadcastBoardState();
       startGoodyMonologue();
@@ -2072,7 +2076,53 @@
     hostSpotlight.target = hostSpotTarget;
     scene.add(hostSpotlight);
 
+    const trussGroup = new THREE.Group();
+    trussGroup.position.set(0, 8.4, -9.8);
+    const trussMat = new THREE.MeshStandardMaterial({ color: 0x3d3d4e, metalness: 0.85, roughness: 0.3 });
+    const trussArch = new THREE.Mesh(new THREE.TorusGeometry(3.6, 0.08, 8, 24, Math.PI), trussMat);
+    trussArch.rotation.x = Math.PI / 2;
+    trussGroup.add(trussArch);
+
+    function createDownFacingSpotlight(colorHex, x, y, z) {
+      const fixGroup = new THREE.Group(); fixGroup.position.set(x, y, z);
+      const headPivot = new THREE.Group();
+      const can = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.24, 0.55, 16), new THREE.MeshStandardMaterial({ color: 0x15151e }));
+      can.rotation.x = Math.PI / 2; headPivot.add(can);
+      const lens = new THREE.Mesh(new THREE.CircleGeometry(0.19, 16), new THREE.MeshBasicMaterial({ color: 0x050505 }));
+      lens.position.set(0, 0, 0.28); headPivot.add(lens);
+      const spot = new THREE.SpotLight(colorHex, 0, 18, Math.PI / 3.4, 0.35);
+      spot.position.set(0, 0, 0.28); headPivot.add(spot);
+      const targetObj = new THREE.Object3D(); targetObj.position.set(x * 0.4, -4.5, -0.8);
+      scene.add(targetObj); spot.target = targetObj;
+      headPivot.rotation.x = Math.PI * 0.35;
+      fixGroup.add(headPivot); trussGroup.add(fixGroup);
+      return { spot, lens, color: colorHex, target: targetObj };
+    }
+    const fixtureCyan = createDownFacingSpotlight(0x00f0ff, -2.4, 0.0, 0.2);
+    const fixtureGold = createDownFacingSpotlight(0xffea00, 0.0, 0.2, -0.1);
+    const fixtureMagenta = createDownFacingSpotlight(0xff007f, 2.4, 0.0, 0.2);
+    scene.add(trussGroup);
+
+    function updateStudioLighting(power) {
+      const val = power ? 5.0 : 0;
+      deskLampLight.intensity = power ? 2.5 : 0;
+      hostSpotlight.intensity = power ? 9.0 : 0;
+      fixtureCyan.spot.intensity = val;
+      fixtureGold.spot.intensity = val;
+      fixtureMagenta.spot.intensity = val;
+      fixtureCyan.lens.material.color.setHex(power ? fixtureCyan.color : 0x050505);
+      fixtureGold.lens.material.color.setHex(power ? fixtureGold.color : 0x050505);
+      fixtureMagenta.lens.material.color.setHex(power ? fixtureMagenta.color : 0x050505);
+    }
+
     const bedroomGroup = new THREE.Group();
+    const bedroomFloor = new THREE.Mesh(new THREE.PlaneGeometry(36, 36), new THREE.MeshStandardMaterial({ color: 0x1f140e }));
+    bedroomFloor.rotation.x = -Math.PI / 2; bedroomGroup.add(bedroomFloor);
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x180f26 });
+    const backWall = new THREE.Mesh(new THREE.PlaneGeometry(36, 16), wallMat); backWall.position.set(0, 8, -18); bedroomGroup.add(backWall);
+    const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(36, 16), wallMat); leftWall.position.set(-18, 8, 0); leftWall.rotation.y = Math.PI / 2; bedroomGroup.add(leftWall);
+    const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(36, 16), wallMat); rightWall.position.set(18, 8, 0); rightWall.rotation.y = -Math.PI / 2; bedroomGroup.add(rightWall);
+
     const deskTop = new THREE.Mesh(new THREE.BoxGeometry(22, 1.0, 16), new THREE.MeshStandardMaterial({ color: 0x331c0e }));
     deskTop.position.set(0, 3.4, -9); bedroomGroup.add(deskTop);
     scene.add(bedroomGroup);
@@ -2180,10 +2230,16 @@
           ctx.fillStyle = '#00008B'; ctx.fillRect(0, 0, w, h);
           ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, 120, 120);
           ctx.fillStyle = '#CC0000'; ctx.fillRect(48, 0, 24, 120); ctx.fillRect(0, 48, 120, 24);
+          ctx.fillStyle = '#FFFFFF';
+          [[60, 180], [180, 70], [210, 120], [180, 190], [150, 130]].forEach(([sx, sy]) => {
+            ctx.beginPath(); ctx.arc(sx, sy, 10, 0, Math.PI * 2); ctx.fill();
+          });
           break;
         case "Spain":
           ctx.fillStyle = '#AA151B'; ctx.fillRect(0, 0, w, h);
           ctx.fillStyle = '#F1BF00'; ctx.fillRect(0, h * 0.25, w, h * 0.5);
+          ctx.fillStyle = '#AA151B';
+          ctx.beginPath(); ctx.arc(80, 128, 22, 0, Math.PI * 2); ctx.fill();
           break;
         case "Germany":
           ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w, h / 3);
@@ -2213,6 +2269,12 @@
             }
           }
           ctx.fillStyle = '#3C3B6E'; ctx.fillRect(0, 0, w * 0.48, h * 0.54);
+          ctx.fillStyle = '#FFFFFF';
+          for (let r = 18; r < 125; r += 26) {
+            for (let col = 16; col < 115; col += 24) {
+              ctx.beginPath(); ctx.arc(col, r, 4, 0, Math.PI * 2); ctx.fill();
+            }
+          }
           break;
         case "Belgium":
           ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w / 3, h);
@@ -2236,13 +2298,16 @@
     }
 
     const flagTextures = COUNTRIES.map(cName => createCountryFlagTexture(cName));
-    const boardTileCoords = [];
 
-    for (let i = 0; i < 32; i++) {
+    const boardTileCoords = [];
+    const spiralCenterZ = 1.8;
+    const totalTiles = 32;
+
+    for (let i = 0; i < totalTiles; i++) {
       const angle = i * 0.48;
       const radius = 0.7 + (i * 0.135);
       const x = Math.cos(angle) * radius;
-      const z = 1.8 + (Math.sin(angle) * (radius * 0.88));
+      const z = spiralCenterZ + (Math.sin(angle) * (radius * 0.88));
       const countryName = COUNTRIES[i % COUNTRIES.length];
 
       boardTileCoords.push({ x, z, country: countryName });
@@ -2259,6 +2324,7 @@
       miniDiorama.add(tile);
     }
 
+    // Dynamic Name Badges
     function updatePawnNameBadge(pawnGroup, displayName) {
       if (!pawnGroup || !pawnGroup.userData || !pawnGroup.userData.badgeCanvas) return;
       const canvas = pawnGroup.userData.badgeCanvas;
@@ -2598,6 +2664,94 @@
     qBoardMesh.rotation.y = 0.8;
     miniDiorama.add(qBoardMesh);
 
+    function createCutePlushie3D(color) {
+      const pGroup = new THREE.Group();
+      const pMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.95 });
+      const pBody = new THREE.Mesh(new THREE.SphereGeometry(0.28, 14, 14), pMat); pBody.position.y = 0.28; pGroup.add(pBody);
+      const pHead = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 14), pMat); pHead.position.y = 0.58; pGroup.add(pHead);
+      const ear1 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), pMat); ear1.position.set(-0.14, 0.74, 0);
+      const ear2 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), earMat); ear2.position.set(0.14, 0.74, 0); pGroup.add(ear1, ear2);
+      const blushMat = new THREE.MeshBasicMaterial({ color: 0xff69b4 });
+      const blush1 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat); blush1.position.set(-0.11, 0.54, 0.17);
+      const blush2 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat); blush2.position.set(0.11, 0.54, 0.17); pGroup.add(blush1, blush2);
+      const eyeBlackMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+      const eyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), eyeBlackMat); eyeL.position.set(-0.07, 0.60, 0.19);
+      const shineL = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 6), eyeWhiteMat); shineL.position.set(-0.08, 0.612, 0.21); pGroup.add(eyeL, shineL);
+      const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), eyeBlackMat); eyeR.position.set(0.07, 0.60, 0.19);
+      const shineR = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 6), eyeWhiteMat); shineR.position.set(0.06, 0.612, 0.21); pGroup.add(eyeR, shineR);
+      const snout = new THREE.Mesh(new THREE.SphereGeometry(0.042, 8, 8), new THREE.MeshStandardMaterial({ color: 0xff8fab, roughness: 0.6 }));
+      snout.scale.set(1.2, 0.8, 1); snout.position.set(0, 0.56, 0.21); pGroup.add(snout);
+      const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.007, 4, 8, Math.PI), new THREE.MeshBasicMaterial({ color: 0x222222 }));
+      mouth.position.set(0, 0.525, 0.21); mouth.rotation.x = Math.PI * 0.1; pGroup.add(mouth);
+      return pGroup;
+    }
+
+    const earMat = new THREE.MeshStandardMaterial({ color: 0xff7675, roughness: 0.95 });
+    const miniAudience = new THREE.Group();
+    const plushColors = [0xff7675, 0x74b9ff, 0xa29bfe, 0xffbe76, 0x55efc4, 0xfd79a8, 0xf6e58d, 0x48dbfb, 0xff9ff3];
+    let playerPlushie1 = null;
+    let playerPlushie2 = null;
+
+    [5.7, 6.4].forEach((radius, rowIdx) => {
+      const count = rowIdx === 0 ? 14 : 18;
+      for (let i = 0; i < count; i++) {
+        const theta = -Math.PI * 0.65 + (i / (count - 1)) * (Math.PI * 1.30);
+        const col = plushColors[(i + rowIdx * 3) % plushColors.length];
+        const pGroup = createCutePlushie3D(col);
+
+        const px = Math.sin(theta) * radius;
+        const pz = Math.cos(theta) * (radius * 0.95) + 0.8;
+        pGroup.position.set(px, 0.46 + rowIdx * 0.25, pz);
+        pGroup.lookAt(0, 1.8, -2.6);
+        pGroup.userData = {
+          initialY: pGroup.position.y,
+          phase: Math.random() * Math.PI * 2,
+          theta: theta,
+          radius: radius
+        };
+        miniDiorama.add(pGroup);
+
+        if (rowIdx === 0 && i === 4) playerPlushie1 = pGroup;
+        if (rowIdx === 0 && i === 9) playerPlushie2 = pGroup;
+      }
+    });
+    miniDiorama.add(miniAudience);
+
+    function handlePlushieMovement(contestant, direction) {
+      const targetPlushie = contestant === "goody-contestant-2" ? playerPlushie2 : playerPlushie1;
+      if (!targetPlushie) return;
+
+      const rot = contestantRotations[contestant] ? contestantRotations[contestant].yaw : 0;
+      const step = 0.35;
+
+      const fwdX = -Math.sin(rot);
+      const fwdZ = -Math.cos(rot);
+      const rightX = Math.cos(rot);
+      const rightZ = -Math.sin(rot);
+
+      if (direction === 'FORWARD') {
+        targetPlushie.position.x += fwdX * step;
+        targetPlushie.position.z += fwdZ * step;
+      }
+      if (direction === 'BACK') {
+        targetPlushie.position.x -= fwdX * step;
+        targetPlushie.position.z -= fwdZ * step;
+      }
+      if (direction === 'LEFT') {
+        targetPlushie.position.x -= rightX * step;
+        targetPlushie.position.z -= rightZ * step;
+      }
+      if (direction === 'RIGHT') {
+        targetPlushie.position.x += rightX * step;
+        targetPlushie.position.z += rightZ * step;
+      }
+
+      targetPlushie.position.x = Math.max(-6.8, Math.min(6.8, targetPlushie.position.x));
+      targetPlushie.position.z = Math.max(-6.8, Math.min(6.8, targetPlushie.position.z));
+      targetPlushie.position.y = 0.46;
+    }
+
     function drawDiceFace(ctx, x, y, size, value) {
       ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#222222'; ctx.lineWidth = 3;
       ctx.fillRect(x, y, size, size); ctx.strokeRect(x, y, size, size);
@@ -2611,10 +2765,12 @@
       if (value === 6) { dot(0.25, 0.5); dot(0.75, 0.5); }
     }
 
-    // --- DRAW LIVE WEBCAM VIDEO FEED DIRECTLY ON BACKSTAGE SCREENS ---
+    const studioScreenCanvas = document.createElement('canvas'); studioScreenCanvas.width = 512; studioScreenCanvas.height = 256;
+    const sScreenCtx = studioScreenCanvas.getContext('2d');
+    const studioScreenTex = new THREE.CanvasTexture(studioScreenCanvas);
+
     function drawScreenFeed(ctx, x, y, width, height, name, city, isLive, videoElem, isGuy, currentRoll, isRolling, isGoodyHostSlot) {
-      ctx.fillStyle = '#05020a'; 
-      ctx.fillRect(x, y, width, height);
+      ctx.fillStyle = '#05020a'; ctx.fillRect(x, y, width, height);
       ctx.strokeStyle = isGoodyHostSlot ? '#a29bfe' : (isLive ? '#39ff14' : '#ffb300');
       ctx.lineWidth = 3;
       ctx.strokeRect(x, y, width, height);
@@ -2622,21 +2778,46 @@
       if (isGoodyHostSlot) {
         ctx.fillStyle = '#16082b';
         ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
+
         const cx = x + width / 2;
         const cy = y + height * 0.45;
+
         ctx.fillStyle = '#cccccc';
         ctx.strokeStyle = '#00f0ff';
         ctx.lineWidth = 3;
         ctx.strokeRect(cx - 40, cy - 35, 80, 70);
-      } else if (isLive && videoElem && videoElem.videoWidth > 0) {
-        // ACTUAL LIVE FACE FROM WEBCAM
-        try {
-          ctx.drawImage(videoElem, x + 2, y + 2, width - 4, height - 4);
-        } catch(e) {
-          drawFallbackAvatar(ctx, x, y, width, height, isGuy);
+
+        ctx.strokeStyle = '#39ff14';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(cx - 24, cy - 10);
+        ctx.lineTo(cx - 14, cy - 22);
+        ctx.lineTo(cx - 4, cy - 10);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(cx + 4, cy - 10);
+        ctx.lineTo(cx + 14, cy - 22);
+        ctx.lineTo(cx + 24, cy - 10);
+        ctx.stroke();
+
+        if (isGoodySpeaking) {
+          ctx.beginPath();
+          ctx.ellipse(cx, cy + 15, 16, 8, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+          ctx.arc(cx, cy + 10, 12, 0.2, Math.PI - 0.2, false);
+          ctx.stroke();
         }
+      } else if (isLive && videoElem.readyState >= 2) {
+        ctx.save(); ctx.drawImage(videoElem, x + 2, y + 2, width - 4, height - 4); ctx.restore();
       } else {
-        drawFallbackAvatar(ctx, x, y, width, height, isGuy);
+        ctx.fillStyle = isGuy ? '#1b2a47' : '#3d1b38'; ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
+        const cx = x + width / 2; const cy = y + height * 0.58;
+        ctx.fillStyle = isGuy ? '#4a69bd' : '#e84393'; ctx.beginPath(); ctx.ellipse(cx, cy + 25, 26, 32, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#f8c291'; ctx.beginPath(); ctx.arc(cx, cy - 10, 16, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(cx - 5, cy - 10, 2, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(cx + 5, cy - 10, 2, 0, Math.PI * 2); ctx.fill();
       }
 
       if (diceCountdown > 0 && !isGoodyHostSlot) {
@@ -2667,40 +2848,35 @@
       ctx.fillText(tag, x + width/2, y + height - 8);
     }
 
-    function drawFallbackAvatar(ctx, x, y, width, height, isGuy) {
-      ctx.fillStyle = isGuy ? '#1b2a47' : '#3d1b38'; 
-      ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
-      const cx = x + width / 2; 
-      const cy = y + height * 0.58;
-      ctx.fillStyle = isGuy ? '#4a69bd' : '#e84393'; 
-      ctx.beginPath(); 
-      ctx.ellipse(cx, cy + 25, 26, 32, 0, 0, Math.PI * 2); 
-      ctx.fill();
-      ctx.fillStyle = '#f8c291'; 
-      ctx.beginPath(); 
-      ctx.arc(cx, cy - 10, 16, 0, Math.PI * 2); 
-      ctx.fill();
-    }
-
     function renderBackstageScreens() {
-      sScreenCtx.fillStyle = '#060210'; 
-      sScreenCtx.fillRect(0, 0, 512, 256);
-
+      sScreenCtx.fillStyle = '#060210'; sScreenCtx.fillRect(0, 0, 512, 256);
       if (studioPower) {
         const isP1Goody = isVsGoodyMode && goodyPlayerSlot === "goody-contestant-1";
         const isP2Goody = isVsGoodyMode && goodyPlayerSlot === "goody-contestant-2";
 
-        drawScreenFeed(sScreenCtx, 15, 20, 225, 215, contestantNames["goody-contestant-1"], contestantCities["goody-contestant-1"], hasLiveJakeStream, videoJake, true, p1RollVal, isDiceRollingP1, isP1Goody);
-        drawScreenFeed(sScreenCtx, 272, 20, 225, 215, contestantNames["goody-contestant-2"], contestantCities["goody-contestant-2"], hasLiveJuneStream, videoJune, false, p2RollVal, isDiceRollingP2, isP2Goody);
+        if (isP1Goody || showJake) {
+          drawScreenFeed(sScreenCtx, 15, 20, 225, 215, contestantNames["goody-contestant-1"], contestantCities["goody-contestant-1"], hasLiveJakeStream, videoJake, true, p1RollVal, isDiceRollingP1, isP1Goody);
+        } else {
+          sScreenCtx.strokeStyle = '#ffb300'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(15, 20, 225, 215);
+          sScreenCtx.fillStyle = '#ffda66'; sScreenCtx.font = 'bold 22px sans-serif'; sScreenCtx.textAlign = 'center';
+          sScreenCtx.fillText(isSoloMode && soloPlayerId !== "goody-contestant-1" ? "WITHDRAWN" : `CONTESTANT 1 (${(contestantNames["goody-contestant-1"] || "").toUpperCase()})`, 127, 120);
+          sScreenCtx.fillStyle = '#39ff14'; sScreenCtx.font = '14px monospace'; sScreenCtx.fillText(gameState === "INTERMISSION" ? "DISCONNECTED" : "STANDBY...", 127, 150);
+        }
+
+        if (isP2Goody || showJune) {
+          drawScreenFeed(sScreenCtx, 272, 20, 225, 215, contestantNames["goody-contestant-2"], contestantCities["goody-contestant-2"], hasLiveJuneStream, videoJune, false, p2RollVal, isDiceRollingP2, isP2Goody);
+        } else {
+          sScreenCtx.strokeStyle = '#ffb300'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(272, 20, 225, 215);
+          sScreenCtx.fillStyle = '#ffda66'; sScreenCtx.font = 'bold 22px sans-serif'; sScreenCtx.textAlign = 'center';
+          sScreenCtx.fillText(isSoloMode && soloPlayerId !== "goody-contestant-2" ? "WITHDRAWN" : `CONTESTANT 2 (${(contestantNames["goody-contestant-2"] || "").toUpperCase()})`, 384, 120);
+          sScreenCtx.fillStyle = '#39ff14'; sScreenCtx.font = '14px monospace'; sScreenCtx.fillText(gameState === "INTERMISSION" ? "DISCONNECTED" : "STANDBY...", 384, 150);
+        }
       }
       studioScreenTex.needsUpdate = true;
     }
-
     const studioBackScreenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshBasicMaterial({ map: studioScreenTex }));
-    studioBackScreenMesh.position.set(0, 3.4, -4.5); 
-    miniDiorama.add(studioBackScreenMesh);
+    studioBackScreenMesh.position.set(0, 3.4, -4.5); miniDiorama.add(studioBackScreenMesh);
 
-    // Host Robot Goody
     const miniGoody = new THREE.Group();
     const silverMetalMat = new THREE.MeshStandardMaterial({
       color: 0xcccccc,
@@ -2789,6 +2965,36 @@
       faceTex.needsUpdate = true;
     }
 
+    function createStudioRoboticCamera(x, z) {
+      const camRig = new THREE.Group(); camRig.position.set(x, 0.44, z);
+      const darkMat = new THREE.MeshStandardMaterial({ color: 0x1f1f26 });
+      const basePlate = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.42, 0.08, 16), darkMat); basePlate.position.y = 0.04; camRig.add(basePlate);
+      const outerCol = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.13, 0.55, 16), darkMat); outerCol.position.y = 0.35; camRig.add(outerCol);
+      const headPivot = new THREE.Group(); headPivot.position.y = 1.0;
+      const cameraBox = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.24, 0.42), darkMat); headPivot.add(cameraBox);
+      const lensBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.095, 0.26, 16), new THREE.MeshStandardMaterial({ color: 0x0a0a0a }));
+      lensBarrel.rotation.x = Math.PI / 2; lensBarrel.position.set(0, 0, -0.24); headPivot.add(lensBarrel);
+      const frontGlass = new THREE.Mesh(new THREE.CircleGeometry(0.08, 16), new THREE.MeshBasicMaterial({ color: 0x00f0ff }));
+      frontGlass.position.set(0, 0, -0.431); headPivot.add(frontGlass);
+      const tallyLamp = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), new THREE.MeshBasicMaterial({ color: 0x111111 }));
+      tallyLamp.position.set(0, 0.15, -0.28); headPivot.add(tallyLamp);
+      camRig.add(headPivot); miniDiorama.add(camRig);
+      return { headPivot, tallyLamp, frontGlass };
+    }
+    const autoCam1 = createStudioRoboticCamera(-2.4, 0.3);
+    const autoCam2 = createStudioRoboticCamera(2.4, 0.3);
+
+    function updateCameraAlignment() {
+      const hostHeadPos = new THREE.Vector3(0, 5.77, -11.6);
+      if (studioPower) {
+        autoCam1.headPivot.lookAt(hostHeadPos); autoCam2.headPivot.lookAt(hostHeadPos);
+        autoCam1.headPivot.rotation.y += Math.PI; autoCam2.headPivot.rotation.y += Math.PI;
+        autoCam1.tallyLamp.material.color.setHex(0xff0000); autoCam2.tallyLamp.material.color.setHex(0xff0000);
+      } else {
+        autoCam1.headPivot.rotation.set(0.6, 0.2, 0); autoCam2.headPivot.rotation.set(0.6, -0.2, 0);
+        autoCam1.tallyLamp.material.color.setHex(0x111111); autoCam2.tallyLamp.material.color.setHex(0x111111);
+      }
+    }
     scene.add(miniDiorama);
 
     const move = { forward: false, backward: false, left: false, right: false };
@@ -2809,9 +3015,53 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    function updateStudioLighting(power) {
-      hostSpotlight.intensity = power ? 9.0 : 0;
-      deskLampLight.intensity = power ? 2.5 : 0;
+    function syncContestantCameras() {
+      const dist = 1.8;
+      const height = 1.2;
+
+      if (playerPlushie1) {
+        const rot = contestantRotations["goody-contestant-1"];
+        playerPlushie1.rotation.y = rot.yaw;
+
+        const worldX = playerPlushie1.position.x;
+        const worldY = playerPlushie1.position.y + 3.95;
+        const worldZ = playerPlushie1.position.z - 9.0;
+
+        camJake.position.set(
+          worldX + Math.sin(rot.yaw) * dist,
+          worldY + height,
+          worldZ + Math.cos(rot.yaw) * dist
+        );
+
+        const lookTarget = new THREE.Vector3(
+          worldX - Math.sin(rot.yaw) * 4.0,
+          worldY + 0.5 + rot.pitch * 3.0,
+          worldZ - Math.cos(rot.yaw) * 4.0
+        );
+        camJake.lookAt(lookTarget);
+      }
+
+      if (playerPlushie2) {
+        const rot = contestantRotations["goody-contestant-2"];
+        playerPlushie2.rotation.y = rot.yaw;
+
+        const worldX = playerPlushie2.position.x;
+        const worldY = playerPlushie2.position.y + 3.95;
+        const worldZ = playerPlushie2.position.z - 9.0;
+
+        camJune.position.set(
+          worldX + Math.sin(rot.yaw) * dist,
+          worldY + height,
+          worldZ + Math.cos(rot.yaw) * dist
+        );
+
+        const lookTarget = new THREE.Vector3(
+          worldX - Math.sin(rot.yaw) * 4.0,
+          worldY + 0.5 + rot.pitch * 3.0,
+          worldZ - Math.cos(rot.yaw) * 4.0
+        );
+        camJune.lookAt(lookTarget);
+      }
     }
 
     let prevTime = performance.now();
@@ -2830,6 +3080,18 @@
         pawn2.userData.badgeMesh.quaternion.copy(camera.quaternion);
       }
 
+      if (studioPower) {
+        updateCameraAlignment();
+        fixtureCyan.target.position.x = -1.2 + Math.sin(time * 0.003) * 1.5;
+        fixtureMagenta.target.position.x = 1.2 + Math.cos(time * 0.003) * 1.5;
+
+        miniAudience.children.forEach((p) => {
+          if (p !== playerPlushie1 && p !== playerPlushie2) {
+            p.position.y = p.userData.initialY + Math.sin(time * 0.006 + p.userData.phase) * 0.04;
+          }
+        });
+      }
+
       if (controls.isLocked) {
         velocity.x -= velocity.x * 10.0 * delta; velocity.z -= velocity.z * 10.0 * delta;
         const speed = 45.0;
@@ -2839,7 +3101,25 @@
       }
 
       prevTime = time;
+
+      syncContestantCameras();
+
+      // Render the master and contestant perspective camera views
+      if (playerPlushie1) playerPlushie1.visible = false;
+      if (playerPlushie2) playerPlushie2.visible = false;
       renderer.render(scene, camera);
+
+      if (showJake) {
+        if (playerPlushie1) playerPlushie1.visible = true;
+        rendererJake.render(scene, camJake);
+        if (playerPlushie1) playerPlushie1.visible = false;
+      }
+
+      if (showJune) {
+        if (playerPlushie2) playerPlushie2.visible = true;
+        rendererJune.render(scene, camJune);
+        if (playerPlushie2) playerPlushie2.visible = false;
+      }
     }
     animate();
   </script>
