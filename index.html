@@ -458,7 +458,7 @@
       }
     }
 
-    // --- REBROADCAST BACKSTAGE MONITORS TO AUDIENCE CLIENTS ---
+    // --- BROADCAST SYNCHRONIZED BOARD STATE TO AUDIENCE CLIENTS ---
     function broadcastBoardState() {
       connectedDataConns.forEach(c => {
         if (c.open) {
@@ -468,9 +468,7 @@
             p1Name: contestantNames["goody-contestant-1"] || "Jake",
             p2Name: contestantNames["goody-contestant-2"] || "June",
             p1Index: p1Index,
-            p2Index: p2Index,
-            hasP1Cam: hasLiveJakeStream,
-            hasP2Cam: hasLiveJuneStream
+            p2Index: p2Index
           });
         }
       });
@@ -582,7 +580,6 @@
         p2PeerId = null;
       }
 
-      broadcastBoardState();
       handleMidGameDropout(slotId);
     }
 
@@ -1021,12 +1018,20 @@
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
 
-    // --- CONTINUOUS 30FPS STUDIO BROADCAST CANVAS FOR AUDIENCE ---
-    const broadcastCanvas = document.createElement('canvas');
-    broadcastCanvas.width = 512;
-    broadcastCanvas.height = 256;
-    const broadcastCtx = broadcastCanvas.getContext('2d');
-    const audienceBroadcastStream = broadcastCanvas.captureStream(30);
+    // Off-screen canvas contexts for rendering Jake and June
+    const canvasJake = document.createElement('canvas');
+    canvasJake.width = 640; canvasJake.height = 360;
+    const rendererJake = new THREE.WebGLRenderer({ canvas: canvasJake, antialias: true });
+
+    const canvasJune = document.createElement('canvas');
+    canvasJune.width = 640; canvasJune.height = 360;
+    const rendererJune = new THREE.WebGLRenderer({ canvas: canvasJune, antialias: true });
+
+    const camJake = new THREE.PerspectiveCamera(65, 16 / 9, 0.1, 100);
+    const camJune = new THREE.PerspectiveCamera(65, 16 / 9, 0.1, 100);
+
+    const streamJake = canvasJake.captureStream(30);
+    const streamJune = canvasJune.captureStream(30);
 
     const controls = new THREE.PointerLockControls(camera, document.body);
 
@@ -1089,6 +1094,7 @@
     let studioPeer = null;
     let connectedDataConns = [];
     const connectedAudiencePeers = new Set();
+    const audienceMediaCalls = new Set();
 
     function initStudioWebRTC() {
       if (!isHostAuthorized || studioPeer) return;
@@ -1098,15 +1104,19 @@
 
         studioPeer.on('open', (id) => console.log("Master Host Registered:", id));
 
+        // --- INCOMING CALL HANDLER (NOW SUPPORTS AUDIENCE STREAM CONSUMERS) ---
         studioPeer.on('call', (call) => {
           const isAudience = call.metadata && call.metadata.role === 'AUDIENCE';
 
-          // If an audience member connects, answer with the LIVE backstage monitor stream!
+          // If caller is an audience spectator, answer with the Jake stage video stream
           if (isAudience) {
-            call.answer(audienceBroadcastStream);
+            call.answer(streamJake);
+            audienceMediaCalls.add(call);
+            call.on('close', () => audienceMediaCalls.delete(call));
             return;
           }
 
+          // Otherwise caller must be contestant Jake or June
           const passcode = call.metadata ? call.metadata.passcode : "";
           if (passcode !== studioRoomCode) {
             call.close();
@@ -1124,7 +1134,8 @@
           }
 
           const isJune = cId === "goody-contestant-2";
-          call.answer(audienceBroadcastStream);
+          const returnStream = isJune ? streamJune : streamJake;
+          call.answer(returnStream);
 
           call.on('stream', (remoteStream) => {
             if (isJune) {
@@ -1187,16 +1198,14 @@
               const secs = Math.max(0, (matchTimerSeconds % 60)).toString().padStart(2, '0');
               conn.send({ type: "SYNC_MATCH_TIMER", timeStr: `${mins}:${secs}`, secondsLeft: matchTimerSeconds });
 
-              // Instant board synchronization for incoming audience member
+              // Immediate board state for spectator
               conn.send({
                 type: "SYNC_BOARD_STATE",
                 studioPower: studioPower,
                 p1Name: contestantNames["goody-contestant-1"] || "Jake",
                 p2Name: contestantNames["goody-contestant-2"] || "June",
                 p1Index: p1Index,
-                p2Index: p2Index,
-                hasP1Cam: hasLiveJakeStream,
-                hasP2Cam: hasLiveJuneStream
+                p2Index: p2Index
               });
 
               if (activeQuestion) {
@@ -2127,8 +2136,7 @@
     miniWall.position.y = 2.65; miniDiorama.add(miniWall);
 
     const wallClockCanvas = document.createElement('canvas');
-    wallClockCanvas.width = 256;
-    wallClockCanvas.height = 128;
+    wallClockCanvas.width = 256; wallClockCanvas.height = 128;
     const wallClockCtx = wallClockCanvas.getContext('2d');
     const wallClockTex = new THREE.CanvasTexture(wallClockCanvas);
 
@@ -2316,7 +2324,7 @@
       miniDiorama.add(tile);
     }
 
-    // --- DYNAMIC NAME BADGE GENERATION FOR COUNTERS ---
+    // Dynamic Name Badges
     function updatePawnNameBadge(pawnGroup, displayName) {
       if (!pawnGroup || !pawnGroup.userData || !pawnGroup.userData.badgeCanvas) return;
       const canvas = pawnGroup.userData.badgeCanvas;
@@ -2865,9 +2873,6 @@
         }
       }
       studioScreenTex.needsUpdate = true;
-
-      // Pipe rendered backstage screen directly to audience capture stream
-      broadcastCtx.drawImage(studioScreenCanvas, 0, 0);
     }
     const studioBackScreenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshBasicMaterial({ map: studioScreenTex }));
     studioBackScreenMesh.position.set(0, 3.4, -4.5); miniDiorama.add(studioBackScreenMesh);
@@ -3099,7 +3104,22 @@
 
       syncContestantCameras();
 
+      // Render the master and contestant perspective camera views
+      if (playerPlushie1) playerPlushie1.visible = false;
+      if (playerPlushie2) playerPlushie2.visible = false;
       renderer.render(scene, camera);
+
+      if (showJake) {
+        if (playerPlushie1) playerPlushie1.visible = true;
+        rendererJake.render(scene, camJake);
+        if (playerPlushie1) playerPlushie1.visible = false;
+      }
+
+      if (showJune) {
+        if (playerPlushie2) playerPlushie2.visible = true;
+        rendererJune.render(scene, camJune);
+        if (playerPlushie2) playerPlushie2.visible = false;
+      }
     }
     animate();
   </script>
