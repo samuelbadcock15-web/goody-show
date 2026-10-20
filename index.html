@@ -355,6 +355,10 @@
     let isDiceRollingP1 = false;
     let isDiceRollingP2 = false;
 
+    // Movement lock flag to prevent duplicate hop triggers
+    let isPawnMoving = false;
+    let hasPlayerRolledThisTurn = false;
+
     let matchTimerSeconds = 20 * 60;
     let matchTimerInterval = null;
     let isTimeExpired = false;
@@ -520,6 +524,9 @@
       if (diceInterval) clearInterval(diceInterval);
       if (questionInterval) clearInterval(questionInterval);
       if (matchTimerInterval) clearInterval(matchTimerInterval);
+
+      isPawnMoving = false;
+      hasPlayerRolledThisTurn = false;
 
       savedGameState = gameState;
       savedTurnPlayer = activePlayer;
@@ -795,6 +802,7 @@
       stageOptionStatus = null;
       p1RollVal = null;
       p2RollVal = null;
+      hasPlayerRolledThisTurn = false;
 
       const qPool = COUNTRY_QUESTIONS[country] || COUNTRY_QUESTIONS["UK"];
       const rawQ = qPool[Math.floor(Math.random() * qPool.length)];
@@ -847,6 +855,7 @@
       stageOptionStatus = null;
       p1RollVal = null;
       p2RollVal = null;
+      hasPlayerRolledThisTurn = false;
       renderStageQuestionBoard();
 
       broadcastMicState("goody-contestant-1", false);
@@ -871,6 +880,9 @@
     }
 
     function executeGoodyTurnRoll() {
+      if (hasPlayerRolledThisTurn || isPawnMoving) return;
+      hasPlayerRolledThisTurn = true;
+
       const isGoodyP2 = goodyPlayerSlot === "goody-contestant-2";
       if (isGoodyP2) isDiceRollingP2 = true;
       else isDiceRollingP1 = true;
@@ -1519,6 +1531,8 @@
       p2RollVal = null;
       isDiceRollingP1 = true;
       isDiceRollingP2 = true;
+      isPawnMoving = false;
+      hasPlayerRolledThisTurn = false;
 
       broadcastMicState("goody-contestant-1", false);
       broadcastMicState("goody-contestant-2", false);
@@ -1541,6 +1555,9 @@
 
     function startTurnDiceCountdown(turnPlayer, pName) {
       diceCountdown = 10;
+      hasPlayerRolledThisTurn = false;
+      isPawnMoving = false;
+
       if (turnPlayer === "goody-contestant-2") isDiceRollingP2 = true;
       else isDiceRollingP1 = true;
 
@@ -1554,8 +1571,11 @@
           playTone(440, 'triangle', 0.08, 0.03);
         } else {
           clearInterval(diceInterval);
-          const autoVal = Math.floor(Math.random() * 6) + 1;
-          handlePlayerRoll(turnPlayer, pName, autoVal);
+          // If the player has not rolled yet, the host rolls authoritatively ONCE
+          if (!hasPlayerRolledThisTurn && !isPawnMoving) {
+            const autoVal = Math.floor(Math.random() * 6) + 1;
+            handlePlayerRoll(turnPlayer, pName, autoVal);
+          }
         }
       }, 1000);
     }
@@ -1563,8 +1583,10 @@
     function handlePlayerRoll(contestant, name, roll) {
       if (gameState === "OPENING_DUEL") {
         if (contestant === "goody-contestant-2") {
+          if (p2RollVal !== null) return;
           p2RollVal = roll; isDiceRollingP2 = false;
         } else {
+          if (p1RollVal !== null) return;
           p1RollVal = roll; isDiceRollingP1 = false;
         }
         playTone(587, 'sine', 0.15, 0.08);
@@ -1574,7 +1596,10 @@
           finalizeDiceDuel();
         }
       } else if (gameState === "IN_PLAY") {
-        if (contestant !== activePlayer) return;
+        // Enforce strict lock: must be active turn player, must not already have rolled this turn, pawn must not be moving
+        if (contestant !== activePlayer || hasPlayerRolledThisTurn || isPawnMoving) return;
+        hasPlayerRolledThisTurn = true;
+        isPawnMoving = true;
         
         if (diceInterval) clearInterval(diceInterval);
         diceCountdown = 0;
@@ -1645,6 +1670,8 @@
       const finalWinningRoll = winnerNum === 1 ? p1RollVal : p2RollVal;
 
       gameState = "IN_PLAY";
+      hasPlayerRolledThisTurn = true;
+      isPawnMoving = true;
       renderStageQuestionBoard();
       startTwentyMinuteMatchTimer();
       broadcastBoardState();
@@ -1664,7 +1691,10 @@
       let currentHopIdx = fromIdx;
 
       function hopNextStep() {
-        if (gameState === "INTERMISSION") return;
+        if (gameState === "INTERMISSION") {
+          isPawnMoving = false;
+          return;
+        }
 
         if (currentHopIdx === toIdx) {
           if (onComplete) onComplete();
@@ -1687,7 +1717,10 @@
         playTone(320 + Math.random() * 80, 'sine', 0.06, 0.04);
 
         function stepFrame(now) {
-          if (gameState === "INTERMISSION") return;
+          if (gameState === "INTERMISSION") {
+            isPawnMoving = false;
+            return;
+          }
 
           const elapsed = now - hopStartTime;
           const progress = Math.min(1.0, elapsed / hopDurationMs);
@@ -1725,6 +1758,7 @@
       else p2Index = targetIdx;
 
       animatePawnHop(targetPawn, oldIdx, targetIdx, xOffset, () => {
+        isPawnMoving = false;
         broadcastBoardState();
 
         if (p1Index >= boardTileCoords.length - 1 || p2Index >= boardTileCoords.length - 1) {
@@ -1940,6 +1974,8 @@
       stageOptionStatus = null;
       p1RollVal = null;
       p2RollVal = null;
+      hasPlayerRolledThisTurn = false;
+      isPawnMoving = false;
       renderStageQuestionBoard();
 
       if (activePlayer === goodyPlayerSlot) {
