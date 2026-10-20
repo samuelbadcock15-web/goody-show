@@ -377,7 +377,6 @@
 
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script>
-    // AUTOMATIC SESSION TOKEN FAIL-SAFE
     let playerSessionToken = sessionStorage.getItem("goody_session_token_c2");
     if (!playerSessionToken) {
       playerSessionToken = "s2_" + Math.random().toString(36).substring(2, 9);
@@ -720,7 +719,6 @@
       }
     }
 
-    // Touch Support (Mobile)
     interactiveViewport.addEventListener('touchstart', (e) => {
       if (e.touches.length === 1) {
         lookStartX = e.touches[0].clientX;
@@ -738,7 +736,6 @@
       }
     }, { passive: true });
 
-    // Mouse Drag Support (Desktop PC)
     interactiveViewport.addEventListener('mousedown', (e) => {
       if (e.button === 0) {
         isMouseDown = true;
@@ -777,7 +774,11 @@
           statusPill.textContent = ` ROLL TIMER: ${timeLeft}s`;
         } else {
           clearInterval(rollTimer);
-          if (!hasRolled) executeRoll(true);
+          // When countdown reaches 0, lock client controls and wait for authoritative host roll
+          btnRollDice.disabled = true;
+          btnRollDice.classList.remove('active-roll');
+          btnRollDice.textContent = "TIME EXPIRED";
+          statusPill.textContent = "Time expired! Host auto-rolling...";
         }
       }, 1000);
     }
@@ -991,7 +992,6 @@
     bindDpad('dpad-left', 'LEFT');
     bindDpad('dpad-right', 'RIGHT');
 
-    // Desktop Keyboard Listeners (WASD + Arrow Keys)
     const keyMap = {
       'KeyW': 'FORWARD', 'ArrowUp': 'FORWARD',
       'KeyS': 'BACK',    'ArrowDown': 'BACK',
