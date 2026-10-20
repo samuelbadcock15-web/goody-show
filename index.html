@@ -18,7 +18,6 @@
     }
     #crosshair.hover-active { transform: translate(-50%, -50%) scale(2.2); background: #ff69b4; }
 
-    /* DIRECTOR AUTHENTICATION MODAL */
     #director-gate {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       background: #06020c; display: flex; flex-direction: column;
@@ -66,39 +65,18 @@
     p { color: #ebdcf9; font-size: 0.92rem; line-height: 1.5; margin: 8px 0; }
     .key { background: #391563; padding: 2px 7px; border-radius: 4px; border: 1px solid #9c4dd6; font-weight: bold; color: #ff69b4; }
     .room-code-display {
-      font-size: 3.2rem;
-      font-weight: 900;
-      letter-spacing: 12px;
-      color: #39ff14;
-      font-family: monospace;
-      margin: 12px 0 6px 0;
-      text-shadow: 0 0 16px rgba(57, 255, 20, 0.6);
+      font-size: 3.2rem; font-weight: 900; letter-spacing: 12px; color: #39ff14;
+      font-family: monospace; margin: 12px 0 6px 0; text-shadow: 0 0 16px rgba(57, 255, 20, 0.6);
     }
     #producer-panel {
-      margin-top: 14px;
-      padding: 12px;
-      background: #0d041a;
-      border: 2px dashed #00f0ff;
-      border-radius: 12px;
-      display: none;
+      margin-top: 14px; padding: 12px; background: #0d041a; border: 2px dashed #00f0ff;
+      border-radius: 12px; display: none;
     }
-    .producer-btn-row {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin-top: 10px;
-    }
+    .producer-btn-row { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
     .btn-producer {
-      border: 2px solid;
-      color: #fff;
-      font-family: monospace;
-      font-weight: bold;
-      padding: 10px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 0.82rem;
-      text-transform: uppercase;
-      transition: background 0.2s;
+      border: 2px solid; color: #fff; font-family: monospace; font-weight: bold;
+      padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 0.82rem;
+      text-transform: uppercase; transition: background 0.2s;
     }
     .btn-producer-solo { background: #d63031; border-color: #ff7675; }
     .btn-producer-solo:hover { background: #e17055; }
@@ -114,109 +92,53 @@
     #match-clock-hud { margin-top: 4px; font-weight: bold; color: #00f0ff; font-size: 0.95rem; }
     #audience-pill { margin-top: 4px; font-weight: bold; color: #39ff14; }
 
-    /* AUDIENCE ROSTER & MODERATION TRAY */
     #mod-tray {
-      margin-top: 14px;
-      width: 100%;
-      background: rgba(10, 4, 22, 0.95);
-      border: 1.5px solid #a29bfe;
-      border-radius: 12px;
-      padding: 10px;
-      color: #fff;
-      text-align: left;
-      cursor: default;
+      margin-top: 14px; width: 100%; background: rgba(10, 4, 22, 0.95);
+      border: 1.5px solid #a29bfe; border-radius: 12px; padding: 10px;
+      color: #fff; text-align: left; cursor: default;
     }
     #mod-tray-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.78rem;
-      font-weight: bold;
-      color: #ffda66;
-      border-bottom: 1px solid #331555;
-      padding-bottom: 4px;
-      margin-bottom: 6px;
-      font-family: monospace;
+      display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem;
+      font-weight: bold; color: #ffda66; border-bottom: 1px solid #331555; padding-bottom: 4px;
+      margin-bottom: 6px; font-family: monospace;
     }
-    .mod-tabs-row {
-      display: flex; gap: 8px; margin-bottom: 6px;
-    }
+    .mod-tabs-row { display: flex; gap: 8px; margin-bottom: 6px; }
     .mod-tab-btn {
       background: #1c0a32; border: 1px solid #9c4dd6; color: #ebdcf9;
       padding: 3px 8px; font-size: 0.70rem; font-family: monospace;
       border-radius: 4px; cursor: pointer;
     }
-    .mod-tab-btn.active {
-      background: #6c5ce7; border-color: #a29bfe; color: #fff; font-weight: bold;
-    }
+    .mod-tab-btn.active { background: #6c5ce7; border-color: #a29bfe; color: #fff; font-weight: bold; }
     #mod-chat-stream, #mod-spectator-list {
-      height: 100px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      font-size: 0.74rem;
-      padding-right: 4px;
+      height: 100px; overflow-y: auto; display: flex; flex-direction: column;
+      gap: 4px; font-size: 0.74rem; padding-right: 4px;
     }
     .mod-chat-row, .mod-user-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 6px;
-      background: rgba(255, 255, 255, 0.05);
-      padding: 4px 6px;
-      border-radius: 4px;
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 6px; background: rgba(255, 255, 255, 0.05); padding: 4px 6px; border-radius: 4px;
     }
-    .mod-chat-row.is-shadowbanned {
-      opacity: 0.55;
-      background: rgba(214, 48, 49, 0.2);
-      border-left: 2px solid #ff7675;
-    }
+    .mod-chat-row.is-shadowbanned { opacity: 0.55; background: rgba(214, 48, 49, 0.2); border-left: 2px solid #ff7675; }
     .mod-btn-action {
-      background: #2b1154;
-      border: 1px solid #a29bfe;
-      color: #fff;
-      font-size: 0.65rem;
-      font-family: monospace;
-      padding: 2px 5px;
-      border-radius: 4px;
-      cursor: pointer;
-      flex-shrink: 0;
+      background: #2b1154; border: 1px solid #a29bfe; color: #fff;
+      font-size: 0.65rem; font-family: monospace; padding: 2px 5px; border-radius: 4px;
+      cursor: pointer; flex-shrink: 0;
     }
     .mod-btn-action:hover { background: #6c5ce7; }
-    .mod-btn-kick {
-      background: #c0392b;
-      border-color: #e74c3c;
-    }
+    .mod-btn-kick { background: #c0392b; border-color: #e74c3c; }
     .mod-btn-kick:hover { background: #e74c3c; }
     .mod-controls-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 6px;
-      padding-top: 4px;
-      border-top: 1px solid #331555;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 6px; padding-top: 4px; border-top: 1px solid #331555;
     }
     .btn-emergency-mute {
-      background: #27ae60;
-      border: 1px solid #2ecc71;
-      color: #fff;
-      font-family: monospace;
-      font-size: 0.70rem;
-      padding: 3px 8px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
+      background: #27ae60; border: 1px solid #2ecc71; color: #fff; font-family: monospace;
+      font-size: 0.70rem; padding: 3px 8px; border-radius: 6px; cursor: pointer; font-weight: bold;
     }
-    .btn-emergency-mute.muted-state {
-      background: #d63031;
-      border-color: #ff7675;
-    }
+    .btn-emergency-mute.muted-state { background: #d63031; border-color: #ff7675; }
   </style>
 </head>
 <body>
 
-  <!-- DIRECTOR AUTHENTICATION GATE -->
   <div id="director-gate">
     <div class="gate-card">
       <div class="gate-badge">DIRECTOR SECURITY CHECKPOINT</div>
@@ -246,7 +168,6 @@
       <p><strong>Click Anywhere to Enter Control Mode</strong></p>
       <p><span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> &nbsp;Walk around freely</p>
 
-      <!-- PRODUCER OVERRIDE PANEL -->
       <div id="producer-panel">
         <div style="color: #ffda66; font-weight: bold; font-family: monospace;">PRODUCER OVERRIDE: INTERMISSION ACTIVE</div>
         <p id="producer-status-txt" style="font-size: 0.8rem; margin: 4px 0;">Looking for contestant...</p>
@@ -260,7 +181,6 @@
         </div>
       </div>
 
-      <!-- DIRECTOR LIVE EJECT CONTROLS -->
       <div id="host-eject-panel" style="margin-top: 14px; padding: 10px; background: #0a0314; border: 1.5px solid #ff7675; border-radius: 10px;">
         <div style="font-size: 0.75rem; font-family: monospace; color: #ff7675; font-weight: bold; text-transform: uppercase; margin-bottom: 6px;">
           Studio Director: Live Kick Controls
@@ -275,7 +195,6 @@
         </div>
       </div>
 
-      <!-- SCREENSAVER AUDIENCE ROSTER & MODERATION TRAY -->
       <div id="mod-tray" onclick="event.stopPropagation();">
         <div id="mod-tray-header">
           <span>AUDIENCE MODERATOR</span>
@@ -296,7 +215,6 @@
           <button id="btn-toggle-all-chat" class="btn-emergency-mute" onclick="toggleGlobalAudienceChat()">CHAT: UNLOCKED</button>
         </div>
       </div>
-
     </div>
   </div>
 
@@ -341,10 +259,8 @@
     document.getElementById('entry-code').textContent = studioRoomCode;
     document.getElementById('hud-code-val').textContent = studioRoomCode;
 
-    let currentMode = 'BEDROOM';
     let studioPower = false;
     let isGoodySpeaking = false;
-
     let showJake = false;
     let showJune = false;
 
@@ -371,6 +287,7 @@
     let isDiceRollingP1 = false;
     let isDiceRollingP2 = false;
     let isAdvancingPawn = false;
+    let turnRollLocked = false;
 
     let matchTimerSeconds = 20 * 60;
     let matchTimerInterval = null;
@@ -405,7 +322,6 @@
       "goody-contestant-2": "June"
     };
 
-    // Updated: Hometown/City replaced by Country representation
     const contestantCountries = {
       "goody-contestant-1": "United Kingdom",
       "goody-contestant-2": "Canada"
@@ -434,7 +350,245 @@
     let savedActiveCountry = null;
     let savedGameState = null;
 
-    // --- SPECTATOR ROSTER & MODERATION STATE ---
+    // --- CASCADING QUESTION ENGINE INTEGRATION ---
+    const JURISDICTIONS = [
+      {
+        id: "DE", name: "Germany", bucket: 1, capital: "Berlin", population: "84.5 million", legalAge: "18",
+        regulator: "GGL (Gemeinsame Glücksspielbehörde der Länder)",
+        regulatorRecap: "The GGL is Germany's joint gambling authority of the federal states, operating the OASIS national exclusion register.",
+        ageRecap: "Under Germany's Interstate Treaty on Gambling, 18 is the mandatory legal age across both physical venues and online gambling verified via OASIS.",
+        schemes: { unified: { name: "OASIS", acronym: "OASIS", standsFor: "Onlineabfrage Spielerstatus (Online Player Status Query)" } }
+      },
+      {
+        id: "BE", name: "Belgium", bucket: 1, capital: "Brussels", population: "11.8 million", legalAge: "21",
+        regulator: "Kansspelcommissie (Gaming Commission)",
+        regulatorRecap: "The Kansspelcommissie operates under the Federal Public Service Justice, overseeing the EPIS exclusion system across Belgium.",
+        ageRecap: "Under Belgian statutory law, the legal age for commercial casinos, amusement arcades, and online betting is 21, checked at entry against the EPIS register.",
+        schemes: { unified: { name: "EPIS", acronym: "EPIS", standsFor: "Excluded Persons Information System" } }
+      },
+      {
+        id: "DK", name: "Denmark", bucket: 1, capital: "Copenhagen", population: "6.0 million", legalAge: "18",
+        regulator: "Spillemyndigheden (Danish Gambling Authority)",
+        regulatorRecap: "Spillemyndigheden directly manages ROFUS and all national gambling licenses.",
+        ageRecap: "The Danish Gambling Act sets 18 as the minimum age for all commercial casino gaming, betting, and ROFUS registration.",
+        schemes: { unified: { name: "ROFUS", acronym: "ROFUS", standsFor: "Register Over Frivilligt Udelukkede Spillere (Register of Voluntarily Excluded Players)" } }
+      },
+      {
+        id: "NL", name: "Netherlands", bucket: 1, capital: "Amsterdam", population: "18.0 million", legalAge: "18",
+        regulator: "Kansspelautoriteit (KSA)",
+        regulatorRecap: "The Kansspelautoriteit (KSA) regulates games of chance and maintains the Cruks register in the Netherlands.",
+        ageRecap: "Under the Dutch Remote Gambling Act, the minimum legal age for both online gambling and Holland Casino entry is 18.",
+        schemes: { unified: { name: "Cruks", acronym: "Cruks", standsFor: "Centraal Register Uitsluiting Kansspelen (Central Register for Exclusion of Games of Chance)" } }
+      },
+      {
+        id: "ES", name: "Spain", bucket: 1, capital: "Madrid", population: "48.5 million", legalAge: "18",
+        regulator: "DGOJ (Dirección General de Ordenación del Juego)",
+        regulatorRecap: "The DGOJ maintains the RGIAJ register across Spain.",
+        ageRecap: "Spanish Gambling Law (Law 13/2011) mandates 18 as the statutory minimum age to access physical casinos and online gaming portals.",
+        schemes: { unified: { name: "RGIAJ", acronym: "RGIAJ", standsFor: "Registro General de Interdicciones de Acceso al Juego (General Register of Prohibitions on Gaming Access)" } }
+      },
+      {
+        id: "SE", name: "Sweden", bucket: 1, capital: "Stockholm", population: "10.6 million", legalAge: "18",
+        regulator: "Spelinspektionen (Swedish Gambling Authority)",
+        regulatorRecap: "Spelinspektionen operates under the Ministry of Finance, ensuring legal compliance and direct operational supervision over Spelpaus.",
+        ageRecap: "Under the Swedish Gambling Act, 18 is the general statutory minimum for licensed online gambling and Spelpaus registration.",
+        schemes: { unified: { name: "Spelpaus", acronym: null } }
+      },
+      {
+        id: "FR", name: "France", bucket: 1, capital: "Paris", population: "68.5 million", legalAge: "18",
+        regulator: "ANJ (Autorité Nationale des Jeux)",
+        regulatorRecap: "The ANJ oversees gambling regulation and the Interdictions de Jeux file.",
+        ageRecap: "Under the French Internal Security Code, minors under 18 are prohibited from entering casinos or opening online betting accounts.",
+        schemes: { unified: { name: "Interdictions de Jeux", acronym: null } }
+      },
+      {
+        id: "UK", name: "United Kingdom", bucket: 2, capital: "London", population: "69.0 million", legalAge: "18",
+        regulator: "UK Gambling Commission (UKGC)",
+        regulatorRecap: "The UK Gambling Commission licenses operators and legally mandates integration with GAMSTOP as a condition of licensing.",
+        ageRecap: "Under the UK Gambling Act 2005, the statutory minimum age for commercial casinos, arcades, betting shops, and GAMSTOP registration is 18.",
+        schemes: {
+          online: { name: "GAMSTOP", acronym: null },
+          retail: { name: "SENSE", acronym: "SENSE", venueType: "physical casinos", standsFor: "Self-Enrolment National Self-Exclusion" },
+          retailMechanismVenue: "betting shops",
+          retailMechanismDescription: "require registration via a separate retail multi-operator scheme (MOSES) or direct shop enrollment"
+        }
+      },
+      {
+        id: "AU", name: "Australia", bucket: 2, capital: "Canberra", population: "27.2 million", legalAge: "18",
+        regulator: "ACMA (Australian Communications and Media Authority)",
+        regulatorRecap: "ACMA oversees the national online exclusion register BetStop under the Interactive Gambling Act 2001.",
+        ageRecap: "Under Australian statutory state and federal laws, 18 is the strict minimum legal age to place bets online via BetStop or enter licensed venues.",
+        schemes: {
+          online: { name: "BetStop", acronym: null },
+          retail: { name: "ClubSAFE", acronym: null, venueType: "clubs and pubs" },
+          retailMechanismVenue: "poker machine venues and pubs",
+          retailMechanismDescription: "remain fragmented across state lines, requiring enrollment through state club deeds or venue-by-venue forms"
+        }
+      },
+      {
+        id: "IT", name: "Italy", bucket: 2, capital: "Rome", population: "58.7 million", legalAge: "18",
+        regulator: "ADM (Agenzia delle Dogane e dei Monopoli)",
+        regulatorRecap: "The ADM directly manages the RUA for all Italian online concessions.",
+        ageRecap: "Under the Balduzzi Decree and ADM rules, 18 is the national minimum age to open online accounts or enter land-based gaming areas.",
+        schemes: {
+          online: { name: "RUA", acronym: "RUA", standsFor: "Registro Unico degli Autoesclusi (Single Register of the Self-Excluded)" },
+          retail: { name: "Independent Casino Registers", acronym: null, venueType: "casinos" },
+          retailMechanismVenue: "land-based casinos",
+          retailMechanismDescription: "operate autonomously and require separate exclusion filings directly with each individual casino house"
+        }
+      },
+      {
+        id: "CA_ON", name: "Canada", bucket: 2, capital: "Ottawa", population: "15.9 million", legalAge: "19",
+        regulator: "AGCO (Alcohol and Gaming Commission of Ontario)",
+        regulatorRecap: "The AGCO regulates Ontario's gaming and iGaming sectors, mandating centralized player protections via BetGuard alongside OLG's My PlayBreak.",
+        ageRecap: "In Ontario, the statutory minimum age to enter commercial casinos and access regulated online iGaming is 19.",
+        schemes: {
+          online: { name: "BetGuard", acronym: null },
+          retail: { name: "My PlayBreak", acronym: null, venueType: "charitable gaming halls and physical casinos" },
+          retailMechanismVenue: "land-based casinos",
+          retailMechanismDescription: "require separate registration via OLG's provincial My PlayBreak system"
+        }
+      },
+      {
+        id: "BR", name: "Brazil", bucket: 3, capital: "Brasília", population: "218.0 million", legalAge: "18",
+        regulator: null,
+        ageRecap: "Under Brazil's Federal Law No. 14,790/2023, 18 is the statutory minimum age for regulated online sports betting and fixed-odds gaming.",
+        schemes: { online: { name: "Plataforma Centralizada de Autoexclusão (Centralized Self-Exclusion Platform)" } }
+      },
+      {
+        id: "US", name: "United States", bucket: 3, capital: "Washington, D.C.", population: "342.0 million", legalAge: "21",
+        regulator: null,
+        ageRecap: "The prevailing statutory baseline across commercial casino resorts, online sportsbooks, and state self-exclusion registers in the US is 21.",
+        schemes: { online: { name: "State-Level Registers (e.g. NJ DGE, PA PGCB)" } }
+      },
+      {
+        id: "NG", name: "Nigeria", bucket: 3, capital: "Abuja", population: "230.0 million", legalAge: "18",
+        regulator: null,
+        ageRecap: "Under the National Lottery Act 2005 and NLRC frameworks, the statutory minimum age for commercial betting and gaming is 18.",
+        schemes: { online: { name: "SafePlay / Regional Authority Portals" } }
+      }
+    ];
+
+    const CAPITAL_DISTRACTORS = {
+      "Berlin": ["Munich", "Frankfurt", "Hamburg"], "Brussels": ["Antwerp", "Ghent", "Bruges"],
+      "Copenhagen": ["Aarhus", "Odense", "Aalborg"], "Amsterdam": ["Rotterdam", "The Hague", "Utrecht"],
+      "Madrid": ["Barcelona", "Seville", "Valencia"], "Stockholm": ["Gothenburg", "Malmö", "Uppsala"],
+      "Paris": ["Lyon", "Marseille", "Toulouse"], "London": ["Manchester", "Edinburgh", "Birmingham"],
+      "Canberra": ["Sydney", "Melbourne", "Brisbane"], "Rome": ["Milan", "Naples", "Turin"],
+      "Ottawa": ["Toronto", "Montreal", "Vancouver"], "Brasília": ["Rio de Janeiro", "São Paulo", "Salvador"],
+      "Washington, D.C.": ["New York", "Los Angeles", "Chicago"], "Abuja": ["Lagos", "Kano", "Ibadan"]
+    };
+
+    const POPULATION_DISTRACTORS = {
+      "84.5 million": ["65.2 million", "98.0 million", "72.4 million"], "11.8 million": ["8.5 million", "16.2 million", "22.4 million"],
+      "6.0 million": ["3.8 million", "9.4 million", "12.1 million"], "18.0 million": ["12.5 million", "24.0 million", "14.2 million"],
+      "48.5 million": ["35.0 million", "62.0 million", "41.5 million"], "10.6 million": ["7.2 million", "14.8 million", "18.3 million"],
+      "68.5 million": ["54.0 million", "82.0 million", "61.2 million"], "69.0 million": ["52.5 million", "84.0 million", "59.8 million"],
+      "27.2 million": ["18.5 million", "36.0 million", "22.1 million"], "58.7 million": ["45.0 million", "71.2 million", "51.4 million"],
+      "15.9 million": ["10.2 million", "22.5 million", "12.8 million"], "218.0 million": ["175.0 million", "265.0 million", "190.0 million"],
+      "342.0 million": ["280.0 million", "395.0 million", "310.0 million"], "230.0 million": ["160.0 million", "295.0 million", "185.0 million"]
+    };
+
+    const REGULATOR_DISTRACTORS = {
+      "GGL (Gemeinsame Glücksspielbehörde der Länder)": ["BaFin", "BNetzA", "BKA"],
+      "Kansspelcommissie (Gaming Commission)": ["FSMA", "FPS Finance", "IBPT"],
+      "Spillemyndigheden (Danish Gambling Authority)": ["Finanstilsynet", "Datatilsynet", "Erhvervsstyrelsen"],
+      "Kansspelautoriteit (KSA)": ["AFM", "ACM", "DNB"],
+      "DGOJ (Dirección General de Ordenación del Juego)": ["CNMC", "CNMV", "Agencia Tributaria"],
+      "Spelinspektionen (Swedish Gambling Authority)": ["Finansinspektionen", "Konsumentverket", "PTS"],
+      "ANJ (Autorité Nationale des Jeux)": ["AMF", "ARCOM", "CNIL"],
+      "UK Gambling Commission (UKGC)": ["FCA", "Ofcom", "CMA"],
+      "ACMA (Australian Communications and Media Authority)": ["ACCC", "ASIC", "APRA"],
+      "ADM (Agenzia delle Dogane e dei Monopoli)": ["AGCOM", "CONSOB", "AGCM"],
+      "AGCO (Alcohol and Gaming Commission of Ontario)": ["OSC", "CRTC", "FSRA"]
+    };
+
+    const ACRONYM_DISTRACTORS = {
+      OASIS: ["Online Aufsicht für Sicheres Internet-Spiel", "Offizielles Ausweissystem für Spielbanken", "Organisation zur Abfrage von Spielersperren"],
+      EPIS: ["European Player Identification Standard", "Electronic Protection in Sportsbooks", "Enforcement Protocol for Internet Schemes"],
+      ROFUS: ["Regionale Ordning For Udelukkelse af Spil", "Register Over Forbudte Udenlandske Sider", "Rigsombudsfællesskabets Frivillige Udelukkelsessystem"],
+      Cruks: ["Centrale Registratie van Unieke Kansspelkenners", "Coöperatief Register voor Uitsluiting en Kansspelbeheer", "Centraal Referentiekader voor Uitsluitende Kansspelen"],
+      RGIAJ: ["Registro Gubernamental de Infracciones y Apuestas de Juego", "Red General de Inspección y Autoexclusión Jurídica", "Registro Global de Intervenciones Administrativas del Juego"],
+      RUA: ["Registro Unificato Apparecchi", "Rete Utenti Autoesclusi", "Registro Utenti Autorizzati"],
+      SENSE: ["Standardized Exclusion Network for Security and Enforcement", "Single Enrolment National Safe Environment", "System for Electronic National Security and Exclusion"]
+    };
+
+    function shuffleOptions(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    const ENGINE_TEMPLATES = [
+      {
+        id: "T01", applies: () => true,
+        generate: (c) => {
+          const schemeName = c.bucket === 1 ? c.schemes.unified.name : c.schemes.online.name;
+          const correct = c.bucket === 1 ? "Unified national register covering both online gambling and physical venues" : (c.bucket === 2 ? "Centralised national online-only exclusion register" : "Decentralised sub-national or jurisdictionally isolated register");
+          const allModels = ["Unified national register covering both online gambling and physical venues", "Centralised national online-only exclusion register", "Multi-operator sector-specific land-based scheme", "Decentralised sub-national or jurisdictionally isolated register"];
+          return { q: `${c.name}'s ${schemeName} is an example of which type of self-exclusion model?`, ans: correct, options: shuffleOptions([correct, ...allModels.filter(m => m !== correct)]), recap: `${c.name} operates under a ${correct.toLowerCase()}.` };
+        }
+      },
+      {
+        id: "T02", applies: (c) => Boolean(c.capital),
+        generate: (c) => ({ q: `What is the capital city of ${c.name}?`, ans: c.capital, options: shuffleOptions([c.capital, ...CAPITAL_DISTRACTORS[c.capital]]), recap: `${c.capital} is the official capital city of ${c.name}.` })
+      },
+      {
+        id: "T03", applies: (c) => Boolean(c.population),
+        generate: (c) => ({ q: `According to United Nations demographic data, what is the approximate population of ${c.name}?`, ans: c.population, options: shuffleOptions([c.population, ...POPULATION_DISTRACTORS[c.population]]), recap: `United Nations data places the population of ${c.name} at approximately ${c.population}.` })
+      },
+      {
+        id: "T04", applies: (c) => Boolean(c.legalAge),
+        generate: (c) => {
+          const allAges = ["18", "19", "20", "21"];
+          return { q: `According to statutory gambling laws, what is the minimum legal age to access commercial casino and online gambling in ${c.name}?`, ans: c.legalAge, options: shuffleOptions([c.legalAge, ...allAges.filter(a => a !== c.legalAge)]), recap: c.ageRecap };
+        }
+      },
+      {
+        id: "T13", applies: (c) => Boolean(c.regulator),
+        generate: (c) => ({ q: `Which national regulatory authority is responsible for statutory oversight of self-exclusion in ${c.name}?`, ans: c.regulator, options: shuffleOptions([c.regulator, ...REGULATOR_DISTRACTORS[c.regulator]]), recap: c.regulatorRecap })
+      },
+      {
+        id: "T05", applies: (c) => c.bucket === 1 && Boolean(c.schemes?.unified?.name),
+        generate: (c) => {
+          const pool = ["OASIS", "EPIS", "ROFUS", "Cruks", "RGIAJ", "Spelpaus", "Interdictions de Jeux"];
+          return { q: `What is the name of ${c.name}'s national self-exclusion scheme covering both online and land-based gambling?`, ans: c.schemes.unified.name, options: shuffleOptions([c.schemes.unified.name, ...pool.filter(s => s !== c.schemes.unified.name).slice(0, 3)]), recap: `${c.schemes.unified.name} is the unified national self-exclusion register across ${c.name}.` };
+        }
+      },
+      {
+        id: "T06", applies: (c) => c.bucket === 1 && Boolean(c.schemes?.unified?.acronym),
+        generate: (c) => ({ q: `What does the acronym ${c.schemes.unified.acronym} stand for in ${c.name}'s national self-exclusion scheme?`, ans: c.schemes.unified.standsFor, options: shuffleOptions([c.schemes.unified.standsFor, ...ACRONYM_DISTRACTORS[c.schemes.unified.acronym]]), recap: `In ${c.name}, ${c.schemes.unified.acronym} stands for ${c.schemes.unified.standsFor}.` })
+      },
+      {
+        id: "T09", applies: (c) => c.bucket === 2 && Boolean(c.schemes?.retail?.venueType),
+        generate: (c) => {
+          const pool = ["GAMSTOP", "BetStop", "MOSES", "SafePlay", "ClubSAFE", "My PlayBreak", "SENSE"];
+          return { q: `In ${c.name}, what is the name of the land-based self-exclusion scheme that covers ${c.schemes.retail.venueType}?`, ans: c.schemes.retail.name, options: shuffleOptions([c.schemes.retail.name, ...pool.filter(s => s !== c.schemes.retail.name).slice(0, 3)]), recap: `${c.schemes.retail.name} is the multi-operator scheme managing self-exclusion for ${c.schemes.retail.venueType} in ${c.name}.` };
+        }
+      },
+      {
+        id: "T10", applies: (c) => c.bucket === 2 && Boolean(c.schemes?.retailMechanismVenue),
+        generate: (c) => {
+          const correct = `Players must register separately: physical ${c.schemes.retailMechanismVenue} ${c.schemes.retailMechanismDescription}.`;
+          const distractors = [`Enrollment in ${c.schemes.online.name} automatically bars the player at all retail doors nationwide.`, "Physical retail self-exclusion is managed directly through national police registers.", "Commercial retail venues are prohibited by law from maintaining self-exclusion lists."];
+          return { q: `${c.name}'s ${c.schemes.online.name} provides online exclusion. How does land-based self-exclusion work for ${c.schemes.retailMechanismVenue}?`, ans: correct, options: shuffleOptions([correct, ...distractors]), recap: `In ${c.name}, online and physical exclusion remain separate systems requiring distinct registrations.` };
+        }
+      }
+    ];
+
+    function getRandomJurisdictionQuestion(countryName) {
+      let c = JURISDICTIONS.find(j => j.name.toLowerCase() === countryName.toLowerCase());
+      if (!c) c = JURISDICTIONS[7]; // Fallback to UK
+      const validT = ENGINE_TEMPLATES.filter(t => t.applies(c));
+      const picked = validT[Math.floor(Math.random() * validT.length)];
+      const res = picked.generate(c);
+      return { country: c.name, q: res.q, text: res.q, ans: res.ans, options: res.options, recap: res.recap };
+    }
+
+    // --- MODERATION LOGIC ---
     const connectedSpectatorData = new Map();
     const shadowbannedTokens = new Set();
     const shadowbannedHardwareIds = new Set();
@@ -464,20 +618,12 @@
     function kickSpectator(peerId) {
       const spec = connectedSpectatorData.get(peerId);
       const name = spec ? spec.name : "Spectator";
-      
-      const confirmKick = confirm(`Are you sure you want to eject ${name} from the studio?`);
-      if (!confirmKick) return;
+      if (!confirm(`Are you sure you want to eject ${name} from the studio?`)) return;
 
       if (spec && spec.conn && spec.conn.open) {
-        spec.conn.send({
-          type: "HOST_EJECTED_SPECTATOR",
-          message: "You have been removed from the broadcast by the director."
-        });
-        setTimeout(() => {
-          try { spec.conn.close(); } catch(e){}
-        }, 200);
+        spec.conn.send({ type: "HOST_EJECTED_SPECTATOR", message: "You have been removed from the broadcast by the director." });
+        setTimeout(() => { try { spec.conn.close(); } catch(e){} }, 200);
       }
-
       connectedSpectatorData.delete(peerId);
       connectedAudiencePeers.delete(peerId);
       broadcastAudienceCount();
@@ -506,35 +652,23 @@
         modSpectatorList.innerHTML = '<div style="color:#888; font-style:italic;">No audience members connected.</div>';
         return;
       }
-
       connectedSpectatorData.forEach((spec, pId) => {
         const isBanned = isSenderShadowbanned(spec.sessionToken, spec.hardwareId);
         const row = document.createElement('div');
         row.className = `mod-user-row ${isBanned ? 'is-shadowbanned' : ''}`;
-
-        const nameSpan = document.createElement('span');
-        nameSpan.innerHTML = `<strong style="color:${isBanned ? '#ff7675' : '#00f0ff'};">${spec.name}</strong> ${isBanned ? '<em style="color:#ff7675;">(Muted)</em>' : ''}`;
-        row.appendChild(nameSpan);
-
+        row.innerHTML = `<span><strong style="color:${isBanned ? '#ff7675' : '#00f0ff'};">${spec.name}</strong> ${isBanned ? '<em style="color:#ff7675;">(Muted)</em>' : ''}</span>`;
         const btnGroup = document.createElement('div');
-        btnGroup.style.display = 'flex';
-        btnGroup.style.gap = '4px';
+        btnGroup.style.display = 'flex'; btnGroup.style.gap = '4px';
 
         const muteBtn = document.createElement('button');
-        muteBtn.className = 'mod-btn-action';
-        muteBtn.textContent = isBanned ? 'Unmute' : 'Mute';
-        muteBtn.onclick = () => {
-          if (isBanned) unshadowbanSpectator(spec.sessionToken, spec.hardwareId, spec.name);
-          else shadowbanSpectator(spec.sessionToken, spec.hardwareId, spec.name);
-        };
+        muteBtn.className = 'mod-btn-action'; muteBtn.textContent = isBanned ? 'Unmute' : 'Mute';
+        muteBtn.onclick = () => isBanned ? unshadowbanSpectator(spec.sessionToken, spec.hardwareId, spec.name) : shadowbanSpectator(spec.sessionToken, spec.hardwareId, spec.name);
 
         const kickBtn = document.createElement('button');
-        kickBtn.className = 'mod-btn-action mod-btn-kick';
-        kickBtn.textContent = 'Kick';
+        kickBtn.className = 'mod-btn-action mod-btn-kick'; kickBtn.textContent = 'Kick';
         kickBtn.onclick = () => kickSpectator(pId);
 
-        btnGroup.appendChild(muteBtn);
-        btnGroup.appendChild(kickBtn);
+        btnGroup.appendChild(muteBtn); btnGroup.appendChild(kickBtn);
         row.appendChild(btnGroup);
         modSpectatorList.appendChild(row);
       });
@@ -542,9 +676,7 @@
 
     function addModeratorLog(text) {
       const row = document.createElement('div');
-      row.style.color = '#ff7675';
-      row.style.fontSize = '0.70rem';
-      row.style.fontFamily = 'monospace';
+      row.style.color = '#ff7675'; row.style.fontSize = '0.70rem'; row.style.fontFamily = 'monospace';
       row.textContent = text;
       modChatStream.appendChild(row);
       modChatStream.scrollTop = modChatStream.scrollHeight;
@@ -552,15 +684,9 @@
 
     function toggleGlobalAudienceChat() {
       isAudienceChatGlobalMuted = !isAudienceChatGlobalMuted;
-      if (isAudienceChatGlobalMuted) {
-        btnToggleAllChat.textContent = "CHAT: MUTED (ALL)";
-        btnToggleAllChat.className = "btn-emergency-mute muted-state";
-        addModeratorLog("[HOST] Audience chatroom locked.");
-      } else {
-        btnToggleAllChat.textContent = "CHAT: UNLOCKED";
-        btnToggleAllChat.className = "btn-emergency-mute";
-        addModeratorLog("[HOST] Audience chatroom unlocked.");
-      }
+      btnToggleAllChat.textContent = isAudienceChatGlobalMuted ? "CHAT: MUTED (ALL)" : "CHAT: UNLOCKED";
+      btnToggleAllChat.className = `btn-emergency-mute ${isAudienceChatGlobalMuted ? 'muted-state' : ''}`;
+      addModeratorLog(isAudienceChatGlobalMuted ? "[HOST] Audience chatroom locked." : "[HOST] Audience chatroom unlocked.");
     }
 
     let autoStartSeconds = 10;
@@ -603,39 +729,28 @@
       }
     }
 
-    // --- INTERMISSION & DROPOUT HANDLER (SCRUBBING STALE DICE DATA) ---
     function handleMidGameDropout(contestantId) {
       if (gameState === "GAME_OVER" || gameState === "INTERMISSION") return;
 
-      if (goodyUtterance) {
-        goodyUtterance.onend = null;
-        goodyUtterance.onerror = null;
-      }
+      if (goodyUtterance) { goodyUtterance.onend = null; goodyUtterance.onerror = null; }
       window.speechSynthesis.cancel();
       isGoodySpeaking = false;
-
-      broadcastMicState("goody-contestant-1", false);
-      broadcastMicState("goody-contestant-2", false);
 
       if (diceInterval) clearInterval(diceInterval);
       if (questionInterval) clearInterval(questionInterval);
       if (matchTimerInterval) clearInterval(matchTimerInterval);
 
-      // Clean roll state so replacements never inherit stale dice
-      p1RollVal = null;
-      p2RollVal = null;
-      isDiceRollingP1 = false;
-      isDiceRollingP2 = false;
+      p1RollVal = null; p2RollVal = null;
+      isDiceRollingP1 = false; isDiceRollingP2 = false;
       isAdvancingPawn = false;
+      turnRollLocked = false;
 
       savedGameState = gameState;
       savedTurnPlayer = activePlayer;
       savedActiveCountry = activeQuestion ? activeQuestion.country : null;
 
-      activeQuestion = null;
-      activeRecap = null;
-      stageSelectedOption = null;
-      stageOptionStatus = null;
+      activeQuestion = null; activeRecap = null;
+      stageSelectedOption = null; stageOptionStatus = null;
 
       gameState = "INTERMISSION";
       droppedOutContestant = contestantId;
@@ -653,8 +768,7 @@
         if (c.open) c.send({ type: "INTERMISSION_PAUSE", droppedContestant: contestantId });
       });
 
-      const speech = `Ladies and gentlemen, it appears contestant number ${droppedNum} has lost connection! We are now taking a short intermission while our studio crew gets them back online! Please stay tuned!`;
-      speakGoody(speech);
+      speakGoody(`Ladies and gentlemen, contestant number ${droppedNum} has lost connection! We are taking a short intermission while our crew gets them back online!`);
 
       if (intermissionTimeout) clearTimeout(intermissionTimeout);
       intermissionTimeout = setTimeout(() => {
@@ -668,16 +782,12 @@
       const targetPeerId = isP1 ? p1PeerId : p2PeerId;
       const playerName = contestantNames[slotId] || (isP1 ? "Contestant 1" : "Contestant 2");
 
-      if (!isConnected && gameState !== "INTERMISSION") {
-        alert(`${playerName} is not currently connected.`);
-        return;
-      }
-      const confirmKick = confirm(`Are you sure you want to eject ${playerName} from the broadcast?`);
-      if (!confirmKick) return;
+      if (!isConnected && gameState !== "INTERMISSION") return alert(`${playerName} is not currently connected.`);
+      if (!confirm(`Are you sure you want to eject ${playerName} from the broadcast?`)) return;
 
       connectedDataConns.forEach(conn => {
-        if (conn.peer === targetPeerId) {
-          if (conn.open) conn.send({ type: "HOST_EJECTED_PLAYER", message: "You were disconnected by the studio director." });
+        if (conn.peer === targetPeerId && conn.open) {
+          conn.send({ type: "HOST_EJECTED_PLAYER", message: "You were disconnected by the studio director." });
           setTimeout(() => { try { conn.close(); } catch(e) {} }, 200);
         }
       });
@@ -697,46 +807,27 @@
       if (intermissionTimeout) clearTimeout(intermissionTimeout);
       producerPanel.style.display = "none";
 
-      const numStr = contestantId === "goody-contestant-1" ? "1" : "2";
       const isSamePerson = (Boolean(droppedOutSessionToken) && droppedOutSessionToken === newSessionToken) ||
-        (droppedOutName.toLowerCase().trim() === newName.toLowerCase().trim() &&
-         (!newCountry || !droppedOutCountry || droppedOutCountry.toLowerCase().trim() === newCountry.toLowerCase().trim()));
+        (droppedOutName.toLowerCase().trim() === newName.toLowerCase().trim());
 
       contestantNames[contestantId] = newName;
       if (newCountry) contestantCountries[contestantId] = newCountry;
       if (newSessionToken) contestantTokens[contestantId] = newSessionToken;
 
-      if (contestantId === "goody-contestant-1") updatePawnNameBadge(pawn1, newName);
-      else updatePawnNameBadge(pawn2, newName);
+      updatePawnNameBadge(contestantId === "goody-contestant-1" ? pawn1 : pawn2, newName);
 
       droppedOutContestant = null; droppedOutName = ""; droppedOutCountry = ""; droppedOutSessionToken = null;
       countdownPill.innerHTML = ` <span style="color:#39ff14;">LIVE ON AIR!</span>`;
 
-      if (savedGameState === "INTRO_SPEECH" || savedGameState === "IDLE") {
-        gameState = "INTRO_SPEECH"; renderStageQuestionBoard();
-        const speech = isSamePerson
-          ? `Welcome back, ${newName}! Glad we got your connection restored! Now, where was I? Ah, yes! Welcome to the show! We need to determine who moves first! Contestants, you both have 10 seconds to roll your dice!`
-          : `Welcome back to The Goody Tonight Show! We have our replacement! Stepping into the studio as contestant number ${numStr} is ${newName}, representing ${contestantCountries[contestantId]}! Now, where was I? Ah, yes! Welcome to the show! We need to determine who moves first! Contestants, you both have 10 seconds to roll your dice!`;
-        speakGoody(speech, () => beginTenSecondDiceDuel());
-        return;
-      }
-      if (savedGameState === "OPENING_DUEL") {
-        gameState = "OPENING_DUEL";
-        p1RollVal = null;
-        p2RollVal = null;
+      if (savedGameState === "INTRO_SPEECH" || savedGameState === "OPENING_DUEL" || savedGameState === "IDLE") {
+        gameState = "OPENING_DUEL"; p1RollVal = null; p2RollVal = null;
         renderStageQuestionBoard();
-        const speech = isSamePerson
-          ? `Welcome back, ${newName}! Audio and video back online! Now, where were we? Ah yes, we were about to roll to see who takes the first turn! Both contestants, get ready to roll!`
-          : `Welcome back to the show! ${newName}, representing ${contestantCountries[contestantId]}, has joined us as contestant number ${numStr}! Now, where were we? Ah yes, we were about to roll to see who takes the first turn! Both contestants, get ready to roll!`;
-        speakGoody(speech, () => beginTenSecondDiceDuel());
+        speakGoody(`Welcome back! We are ready to roll for first turn! Contestants, 10 seconds to roll!`, () => beginTenSecondDiceDuel());
         return;
       }
 
       gameState = "IN_PLAY"; renderStageQuestionBoard(); startTwentyMinuteMatchTimer();
-      const speech = isSamePerson
-        ? `Welcome back, ${newName}! Great to have you back in the game! Let's resume the race!`
-        : `Welcome back to The Goody Tonight Show! Joining us in the hot seat is ${newName}, representing ${contestantCountries[contestantId]}, taking over contestant number ${numStr}'s spot on the board! Let's resume the race!`;
-      speakGoody(speech, () => {
+      speakGoody(`Welcome back ${newName}! Let's resume the race!`, () => {
         if (savedActiveCountry) {
           const c = savedActiveCountry; savedActiveCountry = null;
           resumeWithFreshQuestion(savedTurnPlayer, c);
@@ -752,15 +843,12 @@
       producerPanel.style.display = "none";
       isSoloMode = true; isVsGoodyMode = false;
       soloPlayerId = isP1Connected ? "goody-contestant-1" : "goody-contestant-2";
-      const soloNum = soloPlayerId === "goody-contestant-1" ? "1" : "2";
-      const soloName = contestantNames[soloPlayerId];
       activePlayer = soloPlayerId;
 
       countdownPill.innerHTML = ` <span style="color:#39ff14;">SOLO RACE ACTIVE!</span>`;
       gameState = "IN_PLAY"; renderStageQuestionBoard(); startTwentyMinuteMatchTimer();
 
-      const speech = `Welcome back to the show! We have been unable to reconnect our missing contestant, but not to worry! Contestant number ${soloNum}, ${soloName}, will now race the board alone to see if they can reach the end before the 20-minute show clock expires! If they reach tile 32, they take home the prize. If time runs out, tonight's prize rolls over to next week and we will invite ${soloName} back! Let's play!`;
-      speakGoody(speech, () => {
+      speakGoody(`${contestantNames[soloPlayerId]} will now race solo against the 20-minute show clock! Let's play!`, () => {
         if (savedActiveCountry && savedTurnPlayer === soloPlayerId) {
           const c = savedActiveCountry; savedActiveCountry = null;
           resumeWithFreshQuestion(soloPlayerId, c);
@@ -782,8 +870,7 @@
       countdownPill.innerHTML = ` <span style="color:#ffda66;">WAITING FOR ${remainingName.toUpperCase()}'S CHOICE...</span>`;
       renderStageQuestionBoard();
 
-      const speech = `Welcome back to The Goody Tonight Show! Unfortunately, we have been unable to find a replacement contestant. But the show must go on! So ${remainingName}, we are placing the power in your hands! You have two choices: You can choose to go it alone as a solo race to see if you can reach tile 32 before the 20-minute timer expires—remember, if time runs out, nobody wins and the prize rolls over! Or, you can choose to go head-to-head with me, Goody! I will take over the board right where your opponent left off! ${remainingName}, make your choice now!`;
-      speakGoody(speech, () => {
+      speakGoody(`${remainingName}, you have two choices: race solo against the 20-minute timer, or go head-to-head with me, Goody! Make your selection now!`, () => {
         connectedDataConns.forEach(c => { if (c.open) c.send({ type: "OFFER_CONTESTANT_CHOICE" }); });
       });
     }
@@ -793,23 +880,13 @@
       goodyPlayerSlot = droppedOutContestant;
       contestantNames[goodyPlayerSlot] = "Goody";
 
-      if (goodyPlayerSlot === "goody-contestant-1") updatePawnNameBadge(pawn1, "Goody");
-      else updatePawnNameBadge(pawn2, "Goody");
-
+      updatePawnNameBadge(goodyPlayerSlot === "goody-contestant-1" ? pawn1 : pawn2, "Goody");
       const humanId = isP1Connected ? "goody-contestant-1" : "goody-contestant-2";
-      const humanName = contestantNames[humanId];
-      countdownPill.innerHTML = ` <span style="color:#00f0ff;">GOODY VS ${humanName.toUpperCase()}!</span>`;
 
-      if (savedGameState === "INTRO_SPEECH" || savedGameState === "OPENING_DUEL" || savedGameState === "IDLE") {
-        gameState = "OPENING_DUEL"; renderStageQuestionBoard();
-        const speech = `A bold choice, ${humanName}! You have chosen to battle me, Goody! I am taking over the board! Now, where were we? Ah yes, let's roll our dice to determine who goes first!`;
-        speakGoody(speech, () => beginTenSecondDiceDuel());
-        return;
-      }
-
+      countdownPill.innerHTML = ` <span style="color:#00f0ff;">GOODY VS ${contestantNames[humanId].toUpperCase()}!</span>`;
       gameState = "IN_PLAY"; renderStageQuestionBoard(); startTwentyMinuteMatchTimer();
-      const speech = `A bold choice, ${humanName}! You have chosen to battle me, Goody! I am now taking over the controls and hopping into the hot seat! Let's resume!`;
-      speakGoody(speech, () => {
+
+      speakGoody(`You have chosen to battle me, Goody! Let's resume!`, () => {
         if (savedActiveCountry) {
           const c = savedActiveCountry; savedActiveCountry = null;
           resumeWithFreshQuestion(savedTurnPlayer, c);
@@ -825,17 +902,14 @@
       activeRecap = null; stageSelectedOption = null; stageOptionStatus = null;
       p1RollVal = null; p2RollVal = null;
 
-      const qPool = COUNTRY_QUESTIONS[country] || COUNTRY_QUESTIONS["UK"];
-      const rawQ = qPool[Math.floor(Math.random() * qPool.length)];
-      activeQuestion = { country, text: rawQ.q, q: rawQ.q, options: rawQ.options, ans: rawQ.ans, recap: rawQ.recap };
+      activeQuestion = getRandomJurisdictionQuestion(country);
 
       connectedDataConns.forEach(c => {
         if (c.open) c.send({ type: "SHOW_QUESTION_LOCKED", question: activeQuestion, activeContestantId: activePlayer, activeContestantName: pName });
       });
       renderStageQuestionBoard();
 
-      const speech = `Resuming on ${country} for ${pName}! Here is your fresh question: ${activeQuestion.q}... You have 30 seconds to lock in!`;
-      speakGoody(speech, () => {
+      speakGoody(`Resuming on ${country} for ${pName}! Here is your question: ${activeQuestion.q}... You have 30 seconds!`, () => {
         if (gameState === "INTERMISSION") return;
         if (activePlayer === goodyPlayerSlot) {
           executeGoodyAnswer();
@@ -843,7 +917,6 @@
           connectedDataConns.forEach(c => {
             if (c.open) c.send({ type: "UNLOCK_QUESTION_INPUT", activeContestantId: activePlayer, activeContestantName: pName });
           });
-          broadcastMicState(activePlayer, true, "🎙️ Thinking out loud? Your mic is LIVE!");
           startQuestionCountdown();
         }
       });
@@ -851,16 +924,14 @@
 
     function startTurnCleanly(turnPlayer) {
       activePlayer = turnPlayer;
+      turnRollLocked = false;
       const pName = contestantNames[activePlayer];
       activeQuestion = null; activeRecap = null; stageSelectedOption = null; stageOptionStatus = null;
       p1RollVal = null; p2RollVal = null;
       renderStageQuestionBoard();
 
-      broadcastMicState("goody-contestant-1", false);
-      broadcastMicState("goody-contestant-2", false);
-
       if (activePlayer === goodyPlayerSlot) {
-        speakGoody(`It is my turn! Goody is rolling the dice!`, () => setTimeout(executeGoodyTurnRoll, 1000));
+        speakGoody(`It is my turn! Goody is rolling!`, () => setTimeout(executeGoodyTurnRoll, 1000));
       } else {
         speakGoody(`It is now ${pName}'s turn! You have 10 seconds to roll your dice!`, () => {
           startTurnDiceCountdown(activePlayer, pName);
@@ -872,8 +943,7 @@
     }
 
     function executeGoodyTurnRoll() {
-      const isGoodyP2 = goodyPlayerSlot === "goody-contestant-2";
-      if (isGoodyP2) isDiceRollingP2 = true; else isDiceRollingP1 = true;
+      if (goodyPlayerSlot === "goody-contestant-2") isDiceRollingP2 = true; else isDiceRollingP1 = true;
       const rollVal = Math.floor(Math.random() * 6) + 1;
       setTimeout(() => handlePlayerRoll(goodyPlayerSlot, "Goody", rollVal), 1200);
     }
@@ -885,12 +955,7 @@
         if (humanRatio > 0.7) accuracy += 0.15;
         if (humanRatio < 0.4) accuracy -= 0.15;
       }
-      const humanIdx = goodyPlayerSlot === "goody-contestant-1" ? p2Index : p1Index;
-      const goodyIdx = goodyPlayerSlot === "goody-contestant-1" ? p1Index : p2Index;
-      const leadGap = goodyIdx - humanIdx;
-      if (leadGap >= 4) accuracy -= 0.25;
-      else if (leadGap <= -4) accuracy += 0.20;
-      return Math.max(0.30, Math.min(0.90, accuracy));
+      return Math.max(0.35, Math.min(0.85, accuracy));
     }
 
     function executeGoodyAnswer() {
@@ -911,163 +976,21 @@
       }, 2500);
     }
 
-    function broadcastMicState(targetSlot, enabled, promptText = "") {
-      connectedDataConns.forEach(c => {
-        if (c.open && c.metadata && c.metadata.contestant === targetSlot) {
-          c.send({ type: "SET_MIC_STATE", enabled, promptText });
-        }
-      });
-    }
-
-    let speechRecognizer = null;
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      speechRecognizer = new SR();
-      speechRecognizer.continuous = false;
-      speechRecognizer.interimResults = false;
-      speechRecognizer.lang = 'en-GB';
-    }
-
-    function listenToContestantVoice(durationSeconds, onResult) {
-      if (!speechRecognizer) { setTimeout(() => onResult(""), durationSeconds * 1000); return; }
-      let capturedText = ""; let hasEnded = false;
-      speechRecognizer.onresult = (event) => { if (event.results.length > 0) capturedText = event.results[0][0].transcript; };
-      speechRecognizer.onerror = () => {}; speechRecognizer.onend = () => {};
-      try { speechRecognizer.start(); } catch(e) {}
-      setTimeout(() => {
-        if (hasEnded) return;
-        hasEnded = true;
-        try { speechRecognizer.stop(); } catch(e) {}
-        onResult(capturedText.trim());
-      }, durationSeconds * 1000);
-    }
-
-    function generateHostBanter(name, country, userSpeech, onComplete) {
-      playTone(880, 'sine', 0.08, 0.04);
-      setTimeout(() => playTone(1200, 'sine', 0.08, 0.04), 100);
-      const cleaned = userSpeech.toLowerCase();
-      if (!cleaned || cleaned.length < 2) {
-        const fallbacks = [
-          `Speechless already, ${name}? I don't blame you, my studio lights are dazzling!`,
-          `Saving your vocal cords for the board, ${name}? A true strategist!`,
-          `Quiet confidence representing ${country}! Let's see if the dice agree with you, ${name}!`
-        ];
-        onComplete(fallbacks[Math.floor(Math.random() * fallbacks.length)]);
-        return;
-      }
-      if (cleaned.includes("ready") || cleaned.includes("win") || cleaned.includes("yes") || cleaned.includes("yeah") || cleaned.includes("good")) {
-        onComplete(`I love that winning spirit, ${name}! Let's find out if ${country} is taking home tonight's prize!`);
-        return;
-      }
-      if (cleaned.includes("nervous") || cleaned.includes("scared") || cleaned.includes("worried") || cleaned.includes("no")) {
-        onComplete(`Don't let the circuits intimidate you, ${name}! Deep breaths, ${country} is cheering you on!`);
-        return;
-      }
-      onComplete(`Well said, ${name}! My processors love that energy representing ${country}!`);
-    }
-
+    // High energy broadcast intro that avoids local speech-to-text glitches
     function startGoodyMonologue() {
       const p1 = contestantNames["goody-contestant-1"] || "Contestant 1";
       const c1 = contestantCountries["goody-contestant-1"] || "United Kingdom";
       const p2 = contestantNames["goody-contestant-2"] || "Contestant 2";
       const c2 = contestantCountries["goody-contestant-2"] || "Canada";
 
-      const part1 = "Hello, good evening, and welcome to The Goody Tonight Show! " +
-        "I'm your host, Goody! " +
-        "You are now part of the world's first and only televised self-exclusion game show! " +
-        "Now, let's meet tonight's contestants! " +
-        `Contestant number 1! This is ${p1}, representing ${c1}! ` +
-        `${p1}, your microphone is live for 6 seconds! Give a shout-out and tell us how you're feeling tonight!`;
+      const monologue = `Hello, good evening, and welcome to The Goody Tonight Show! ` +
+        `I am your host, Goody! You are watching the world's first televised self-exclusion game show! ` +
+        `On Podium 1, representing ${c1}, we have ${p1}! ` +
+        `And on Podium 2, representing ${c2}, we have ${p2}! ` +
+        `Contestants, warm up those buzzers! It is time to determine who takes Turn 1! Both contestants, you have 10 seconds to roll your dice!`;
 
-      speakGoody(part1, () => {
-        if (gameState !== "INTRO_SPEECH") return;
-        broadcastMicState("goody-contestant-1", true, "🎙️ ON AIR: Shout out to Goody now!");
-        listenToContestantVoice(6, (p1Words) => {
-          broadcastMicState("goody-contestant-1", false);
-          if (gameState !== "INTRO_SPEECH") return;
-          generateHostBanter(p1, c1, p1Words, (banter1) => {
-            const part2 = `${banter1} And now, let's meet contestant number 2! ` +
-              `This is ${p2}, representing ${c2}! ` +
-              `${p2}, your microphone is live for 6 seconds! Say hello to everyone watching at home!`;
-            speakGoody(part2, () => {
-              if (gameState !== "INTRO_SPEECH") return;
-              broadcastMicState("goody-contestant-2", true, "🎙️ ON AIR: Shout out to Goody now!");
-              listenToContestantVoice(6, (p2Words) => {
-                broadcastMicState("goody-contestant-2", false);
-                if (gameState !== "INTRO_SPEECH") return;
-                generateHostBanter(p2, c2, p2Words, (banter2) => {
-                  const part3 = `${banter2} Now we need to determine who moves first! Contestants, you both have 10 seconds to roll your dice!`;
-                  speakGoody(part3, () => beginTenSecondDiceDuel());
-                });
-              });
-            });
-          });
-        });
-      });
+      speakGoody(monologue, () => beginTenSecondDiceDuel());
     }
-
-    let currentSubtitle = "STUDIO STANDBY - POWER OFF";
-
-    const COUNTRY_QUESTIONS = {
-      "UK": [
-        { q: "In the UK, before the 2019 stake reduction, what was the maximum stake per spin on a Fixed-Odds-Betting-Terminal?", options: ["£2", "£50", "£100", "£500"], ans: "£100", recap: "In April 2019, the UK reduced the maximum FOBT stake per spin from £100 down to £2 to combat severe harms." },
-        { q: "In the UK, before the 2019 stake reduction, what was the maximum amount a person could stake every 20 seconds on a Fixed-Odds-Betting-Terminal?", options: ["£2 every 20 seconds", "£50 every 20 seconds", "£100 every 20 seconds", "£500 every 20 seconds"], ans: "£100 every 20 seconds", recap: "Prior to 2019, FOBTs permitted £100 every 20 seconds, allowing catastrophic loss speeds." },
-        { q: "In the UK, what is the name of the land-based self-exclusion scheme that covers Adult Gaming Centres (Arcades)?", options: ["Bingo Association", "SENSE", "Bacta", "Moses"], ans: "Bacta", recap: "Bacta manages the multi-operator arcade self-exclusion scheme across Great Britain." },
-        { q: "In the UK, what is the name of the land-based self-exclusion scheme that covers Casinos?", options: ["Bacta", "SENSE", "Moses", "Bingo Association"], ans: "SENSE", recap: "SENSE allows players to enroll once to be excluded from all UK commercial casinos." },
-        { q: "In the UK, what is the name of the land-based self-exclusion scheme that covers Bingo Halls?", options: ["Bingo Association", "SENSE", "Bacta", "SmartExclusion"], ans: "Bingo Association", recap: "The Bingo Association operates the multi-operator exclusion database across land-based bingo premises." },
-        { q: "In the UK, what is the name of the land-based self-exclusion scheme that covers Service Stations?", options: ["Bingo Association", "Moses", "Bacta", "SmartExclusion"], ans: "SmartExclusion", recap: "SmartExclusion provides digital exclusion tools across motorway service venues and arcades." },
-        { q: "In the UK, what is the name of the land-based self-exclusion scheme that covers Betting Shops (Bookies)?", options: ["Bingo Association", "SENSE", "Bacta", "Moses"], ans: "Moses", recap: "MOSES allows people to self-exclude across high street bookmakers in their chosen localities." },
-        { q: "What does the acronym SENSE stand for in the UK's land-based casino self-exclusion scheme?", options: ["Self-Enrollment National Self Exclusion", "Safe Entry National Security Exclusion", "Single Exclusion National Support Exchange", "Social Entertainment National Safety Exchange"], ans: "Self-Enrollment National Self Exclusion", recap: "SENSE stands for Self-Enrollment National Self Exclusion." },
-        { q: "In 2025, approximately how many self-excluded people were still able to enter a UK betting shop and gamble?", options: ["668", "3,288", "4,789", "8,700"], ans: "3,288", recap: "Around 3,288 self-excluded individuals were able to enter and gamble in UK betting shop premises." },
-        { q: "In which year did the statutory £2 maximum stake on UK FOBTs officially come into force?", options: ["2016", "2017", "2018", "2019"], ans: "2019", recap: "The statutory £2 stake cap officially came into force on April 1st, 2019." }
-      ],
-      "Canada": [
-        { q: "In Ontario, what is the name of the land-based self-exclusion scheme that covers Casinos?", options: ["SENSE", "MyPlay Break", "Bacta", "BetGuard"], ans: "MyPlay Break", recap: "MyPlay Break is Ontario's official casino self-exclusion initiative managed by OLG." },
-        { q: "What is the name of Ontario's national online self-exclusion scheme?", options: ["BetGuard", "RUA", "GamStop", "Oasis"], ans: "BetGuard", recap: "BetGuard centralizes online exclusion across licensed iGaming Ontario operators." }
-      ],
-      "Brazil": [
-        { q: "Which country introduced a near total ban on gambling advertising, sponsorship, and promotional communications in 2018?", options: ["United Kingdom", "Italy", "Spain", "None of the above"], ans: "Italy", recap: "Italy introduced a near total ban on all gambling advertising under the 2018 Dignity Decree." },
-        { q: "What is the capital city of Brazil?", options: ["Rio de Janeiro", "São Paulo", "Brasília", "Salvador"], ans: "Brasília", recap: "Brasília was inaugurated as the federal capital of Brazil in 1960." },
-        { q: "What is the name of Brazil's national online self-exclusion scheme?", options: ["Spelpaus", "Plataforma Centralizada de Autoexclusão", "Rofus", "RGIAJ"], ans: "Plataforma Centralizada de Autoexclusão", recap: "Brazil uses the Plataforma Centralizada de Autoexclusão across its regulated betting system." }
-      ],
-      "United States": [
-        { q: "Which city in Nevada is world-famous for gambling?", options: ["Las Vegas", "Atlantic City", "Macau", "Monte Carlo"], ans: "Las Vegas", recap: "Las Vegas, Nevada is internationally renowned for its casino entertainment corridors." }
-      ],
-      "Italy": [
-        { q: "How does land-based casino self-exclusion work in Italy compared to online RUA?", options: ["One national register covers all casinos", "Players must use individual casino self-exclusion procedures", "RUA automatically blocks all physical venues", "Regional authorities manage separate lists"], ans: "Players must use individual casino self-exclusion procedures", recap: "Unlike digital RUA, Italian physical casinos require separate individual venue enrollments." },
-        { q: "What is the name of Italy's national online self-exclusion scheme?", options: ["Spelpaus", "RUA", "GamStop", "Oasis"], ans: "RUA", recap: "RUA (Registro Unico degli Autoesclusi) covers all licensed online platforms in Italy." }
-      ],
-      "Belgium": [
-        { q: "Belgium's EPIS system is an example of which type of self-exclusion model?", options: ["Separate exclusion at every venue", "National centralised self-exclusion register", "Online-only exclusion", "Casino-only exclusion"], ans: "National centralised self-exclusion register", recap: "EPIS is a unified nationwide registry checking IDs across physical and online venues." },
-        { q: "What is the name of Belgium's national self-exclusion scheme covering both online and land-based gambling?", options: ["Rofus", "EPIS", "Oasis", "GamStop"], ans: "EPIS", recap: "EPIS (Excluded Persons Information System) covers all regulated gambling in Belgium." }
-      ],
-      "Germany": [
-        { q: "What is the name of Germany's national self-exclusion scheme covering both online and land-based gambling?", options: ["Spelpaus", "Oasis", "Rofus", "GamStop"], ans: "Oasis", recap: "OASIS is Germany's mandatory federal exclusion register across arcades, casinos, and web gaming." }
-      ],
-      "Denmark": [
-        { q: "What is the name of Denmark's national self-exclusion scheme covering both online and land-based gambling?", options: ["Rofus", "Oasis", "GamStop", "EPIS"], ans: "Rofus", recap: "ROFUS is managed by the Danish Gambling Authority to enforce cross-platform player protection." }
-      ],
-      "Australia": [
-        { q: "What is the capital of Australia?", options: ["Melbourne", "Sydney", "Canberra", "Brisbane"], ans: "Canberra", recap: "Canberra is the federal capital territory of Australia." },
-        { q: "What is the name of Australia's national online self-exclusion scheme?", options: ["Oasis", "Rofus", "BetStop", "SafePlay"], ans: "BetStop", recap: "BetStop is Australia's National Self-Exclusion Register for licensed online and telephone wagering." },
-        { q: "What is Australia's 2023 landmark parliamentary gambling inquiry report commonly known as?", options: ["The Murphy Report", "The Jones Report", "The Harris Report", "The Australian Gambling Reduction Report"], ans: "The Murphy Report", recap: "Chaired by the late Peta Murphy MP, the landmark 2023 inquiry is known as The Murphy Report." }
-      ],
-      "Nigeria": [
-        { q: "What is the capital city of Nigeria?", options: ["Lagos", "Abuja", "Kano", "Port Harcourt"], ans: "Abuja", recap: "Abuja is the federal capital of Nigeria." }
-      ],
-      "Sweden": [
-        { q: "What is the name of Sweden's centralized national self-exclusion system?", options: ["Spelpaus", "ROFUS", "BetStop", "EPIS"], ans: "Spelpaus", recap: "Spelpaus allows individuals in Sweden to block themselves across all licensed gaming." }
-      ],
-      "France": [
-        { q: "What is the national gambling exclusion register called in France?", options: ["Interdictions de Jeux", "Oasis", "RUA", "SENSE"], ans: "Interdictions de Jeux", recap: "Interdictions de Jeux is administered across casinos and licensed online wagering in France." }
-      ],
-      "Spain": [
-        { q: "What is the acronym for Spain's national register of gaming access prohibitions?", options: ["RGIAJ", "RUA", "EPIS", "OASIS"], ans: "RGIAJ", recap: "RGIAJ enforces exclusion across physical and online gaming in Spain." }
-      ],
-      "Netherlands": [
-        { q: "What is the name of the central register for the exclusion of gaming in the Netherlands?", options: ["Cruks", "GamStop", "ROFUS", "Spelpaus"], ans: "Cruks", recap: "Cruks (Centraal Register Uitsluiting Kansspelen) is mandatory across all Dutch gaming operators." }
-      ]
-    };
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x040208);
@@ -1106,32 +1029,24 @@
     function initStudioWebRTC() {
       try {
         studioPeer = new Peer("goody-main-studio");
-        studioPeer.on('open', (id) => console.log("Master Host Registered:", id));
+        studioPeer.on('open', (id) => console.log("Studio Registered:", id));
 
         studioPeer.on('call', (call) => {
           const isAudience = call.metadata && call.metadata.role === 'AUDIENCE';
-
           if (!isAudience) {
-            const passcode = call.metadata ? call.metadata.passcode : "";
-            if (passcode !== studioRoomCode) { call.close(); return; }
-
-            const cId = call.metadata ? call.metadata.contestant : null;
-            if (cId === "goody-contestant-1" && isP1Connected && p1PeerId && p1PeerId !== call.peer) { call.close(); return; }
-            if (cId === "goody-contestant-2" && isP2Connected && p2PeerId && p2PeerId !== call.peer) { call.close(); return; }
-
-            const isJune = cId === "goody-contestant-2";
-            const returnStream = isJune ? streamJune : streamJake;
-            call.answer(returnStream);
+            if ((call.metadata ? call.metadata.passcode : "") !== studioRoomCode) return call.close();
+            const isJune = call.metadata && call.metadata.contestant === "goody-contestant-2";
+            call.answer(isJune ? streamJune : streamJake);
 
             call.on('stream', (remoteStream) => {
               if (isJune) {
                 liveJuneMediaStream = remoteStream;
-                videoJune.srcObject = remoteStream; videoJune.muted = false; videoJune.play().catch(console.error);
+                videoJune.srcObject = remoteStream; videoJune.play().catch(console.error);
                 hasLiveJuneStream = true; showJune = true;
                 forwardMediaToSpectators("goody-contestant-2", remoteStream);
               } else {
                 liveJakeMediaStream = remoteStream;
-                videoJake.srcObject = remoteStream; videoJake.muted = false; videoJake.play().catch(console.error);
+                videoJake.srcObject = remoteStream; videoJake.play().catch(console.error);
                 hasLiveJakeStream = true; showJake = true;
                 forwardMediaToSpectators("goody-contestant-1", remoteStream);
               }
@@ -1141,29 +1056,9 @@
 
         studioPeer.on('connection', (conn) => {
           const isAudience = conn.metadata && conn.metadata.role === 'AUDIENCE';
-
-          if (!isAudience) {
-            const passcode = conn.metadata ? conn.metadata.passcode : "";
-            if (passcode !== studioRoomCode) {
-              conn.on('open', () => { conn.send({ type: "AUTH_FAILED", message: "Invalid 4-digit code." }); setTimeout(() => conn.close(), 500); });
-              return;
-            }
-            const cId = conn.metadata ? conn.metadata.contestant : null;
-            const isSlot1Taken = (cId === "goody-contestant-1" && isP1Connected && p1PeerId && p1PeerId !== conn.peer);
-            const isSlot2Taken = (cId === "goody-contestant-2" && isP2Connected && p2PeerId && p2PeerId !== conn.peer);
-            if (isSlot1Taken || isSlot2Taken) {
-              conn.on('open', () => {
-                conn.send({
-                  type: "SLOT_TAKEN",
-                  takenNum: cId === "goody-contestant-1" ? "1" : "2",
-                  slotName: contestantNames[cId] || "Occupied",
-                  altNum: cId === "goody-contestant-1" ? "2" : "1",
-                  altSlotName: contestantNames[cId === "goody-contestant-1" ? "goody-contestant-2" : "goody-contestant-1"] || "Contestant"
-                });
-                setTimeout(() => conn.close(), 600);
-              });
-              return;
-            }
+          if (!isAudience && (conn.metadata ? conn.metadata.passcode : "") !== studioRoomCode) {
+            conn.on('open', () => { conn.send({ type: "AUTH_FAILED" }); setTimeout(() => conn.close(), 500); });
+            return;
           }
 
           connectedDataConns.push(conn);
@@ -1171,150 +1066,59 @@
           conn.on('open', () => {
             if (isAudience) {
               connectedAudiencePeers.add(conn.peer);
-              connectedSpectatorData.set(conn.peer, {
-                name: conn.metadata.name || "Spectator",
-                sessionToken: conn.metadata.sessionToken,
-                hardwareId: conn.metadata.hardwareId,
-                conn: conn
-              });
-
+              connectedSpectatorData.set(conn.peer, { name: conn.metadata.name || "Spectator", sessionToken: conn.metadata.sessionToken, hardwareId: conn.metadata.hardwareId, conn });
               broadcastAudienceCount();
               renderSpectatorRoster();
 
               const mins = Math.max(0, Math.floor(matchTimerSeconds / 60)).toString().padStart(2, '0');
               const secs = Math.max(0, (matchTimerSeconds % 60)).toString().padStart(2, '0');
               conn.send({ type: "SYNC_MATCH_TIMER", timeStr: `${mins}:${secs}`, secondsLeft: matchTimerSeconds });
+              conn.send({ type: "SYNC_BOARD_STATE", studioPower, p1Index, p2Index, p1Name: contestantNames["goody-contestant-1"], p2Name: contestantNames["goody-contestant-2"] });
 
-              conn.send({
-                type: "SYNC_BOARD_STATE",
-                studioPower: studioPower,
-                p1Index: p1Index,
-                p2Index: p2Index,
-                p1Name: contestantNames["goody-contestant-1"],
-                p2Name: contestantNames["goody-contestant-2"]
-              });
-
-              if (activeQuestion) {
-                conn.send({
-                  type: "SHOW_QUESTION_LOCKED",
-                  question: activeQuestion,
-                  activeContestantId: activePlayer,
-                  activeContestantName: contestantNames[activePlayer]
-                });
-              }
-
-              if (liveJakeMediaStream) {
-                try { studioPeer.call(conn.peer, liveJakeMediaStream, { metadata: { contestant: "goody-contestant-1" } }); } catch(e){}
-              }
-              if (liveJuneMediaStream) {
-                try { studioPeer.call(conn.peer, liveJuneMediaStream, { metadata: { contestant: "goody-contestant-2" } }); } catch(e){}
-              }
+              if (activeQuestion) conn.send({ type: "SHOW_QUESTION_LOCKED", question: activeQuestion, activeContestantId: activePlayer, activeContestantName: contestantNames[activePlayer] });
+              if (liveJakeMediaStream) { try { studioPeer.call(conn.peer, liveJakeMediaStream, { metadata: { contestant: "goody-contestant-1" } }); } catch(e){} }
+              if (liveJuneMediaStream) { try { studioPeer.call(conn.peer, liveJuneMediaStream, { metadata: { contestant: "goody-contestant-2" } }); } catch(e){} }
               return;
             }
 
+            const cId = conn.metadata ? conn.metadata.contestant : null;
             const clientName = (conn.metadata && conn.metadata.name) ? conn.metadata.name.trim() : (cId === "goody-contestant-2" ? "June" : "Jake");
             const clientCountry = (conn.metadata && conn.metadata.country) ? conn.metadata.country.trim() : (cId === "goody-contestant-2" ? "Canada" : "United Kingdom");
-            const clientToken = conn.metadata ? conn.metadata.sessionToken : null;
-            const cId = conn.metadata ? conn.metadata.contestant : null;
 
-            if (cId === "goody-contestant-1") {
-              isP1Connected = true; p1PeerId = conn.peer;
-              if (clientToken) contestantTokens["goody-contestant-1"] = clientToken;
-              if (gameState !== "INTERMISSION") {
-                contestantNames["goody-contestant-1"] = clientName;
-                contestantCountries["goody-contestant-1"] = clientCountry;
-                updatePawnNameBadge(pawn1, clientName);
-              }
-            }
-            if (cId === "goody-contestant-2") {
-              isP2Connected = true; p2PeerId = conn.peer;
-              if (clientToken) contestantTokens["goody-contestant-2"] = clientToken;
-              if (gameState !== "INTERMISSION") {
-                contestantNames["goody-contestant-2"] = clientName;
-                contestantCountries["goody-contestant-2"] = clientCountry;
-                updatePawnNameBadge(pawn2, clientName);
-              }
-            }
+            if (cId === "goody-contestant-1") { isP1Connected = true; p1PeerId = conn.peer; contestantNames[cId] = clientName; contestantCountries[cId] = clientCountry; updatePawnNameBadge(pawn1, clientName); }
+            if (cId === "goody-contestant-2") { isP2Connected = true; p2PeerId = conn.peer; contestantNames[cId] = clientName; contestantCountries[cId] = clientCountry; updatePawnNameBadge(pawn2, clientName); }
 
             conn.send({ type: "AUTH_SUCCESS" });
-            connectedAudiencePeers.add(conn.peer);
             broadcastAudienceCount();
 
             if (!studioPower) checkBothContestantsReady();
-            else if (gameState === "INTERMISSION" && cId === droppedOutContestant) handleReplacementJoined(cId, clientName, clientCountry, clientToken);
+            else if (gameState === "INTERMISSION" && cId === droppedOutContestant) handleReplacementJoined(cId, clientName, clientCountry, conn.metadata.sessionToken);
           });
 
           conn.on('data', (data) => {
             if (data.type === "SPECTATOR_MOVE") {
               connectedDataConns.forEach(c => {
                 if (c.open && c.metadata && c.metadata.role === 'AUDIENCE' && c.peer !== conn.peer) {
-                  c.send({
-                    type: 'SPECTATOR_POS_RELAY',
-                    peerId: data.peerId,
-                    name: data.name,
-                    x: data.x,
-                    y: data.y,
-                    z: data.z,
-                    yaw: data.yaw,
-                    zone: data.zone
-                  });
+                  c.send({ type: 'SPECTATOR_POS_RELAY', peerId: data.peerId, name: data.name, x: data.x, y: data.y, z: data.z, yaw: data.yaw, zone: data.zone });
                 }
               });
               return;
             }
-
             if (data.type === "AUDIENCE_CHAT_MESSAGE") {
-              const senderToken = data.sessionToken;
-              const senderHw = data.hardwareId;
-              const authorName = data.author || "Guest";
-              const rawText = data.text || "";
-
-              const alreadyBanned = isSenderShadowbanned(senderToken, senderHw);
-              const tripsFilter = profanityTripwireRegex.test(rawText);
-
-              if (tripsFilter && !alreadyBanned) {
-                shadowbanSpectator(senderToken, senderHw, authorName);
-              }
-              const isShadowbanned = alreadyBanned || tripsFilter;
+              const alreadyBanned = isSenderShadowbanned(data.sessionToken, data.hardwareId);
+              const trips = profanityTripwireRegex.test(data.text || "");
+              if (trips && !alreadyBanned) shadowbanSpectator(data.sessionToken, data.hardwareId, data.author);
+              const isShadow = alreadyBanned || trips;
 
               const chatRow = document.createElement('div');
-              chatRow.className = `mod-chat-row ${isShadowbanned ? 'is-shadowbanned' : ''}`;
-              const textSpan = document.createElement('span');
-              textSpan.innerHTML = `<strong style="color:${isShadowbanned ? '#ff7675' : '#00f0ff'};">${authorName}:</strong> ${rawText} ${isShadowbanned ? '<em style="color:#ff7675;">[SHADOWBANNED]</em>' : ''}`;
-              chatRow.appendChild(textSpan);
-
-              const btnGroup = document.createElement('div');
-              btnGroup.style.display = 'flex';
-              btnGroup.style.gap = '4px';
-
-              if (!isShadowbanned) {
-                const banBtn = document.createElement('button');
-                banBtn.className = 'mod-btn-action';
-                banBtn.textContent = 'Mute';
-                banBtn.onclick = () => {
-                  shadowbanSpectator(senderToken, senderHw, authorName);
-                  chatRow.classList.add('is-shadowbanned');
-                  textSpan.innerHTML += ' <em style="color:#ff7675;">[MUTED]</em>';
-                  banBtn.remove();
-                };
-                btnGroup.appendChild(banBtn);
-              }
-
-              const kickBtn = document.createElement('button');
-              kickBtn.className = 'mod-btn-action mod-btn-kick';
-              kickBtn.textContent = 'Kick';
-              kickBtn.onclick = () => kickSpectator(conn.peer);
-              btnGroup.appendChild(kickBtn);
-
-              chatRow.appendChild(btnGroup);
+              chatRow.className = `mod-chat-row ${isShadow ? 'is-shadowbanned' : ''}`;
+              chatRow.innerHTML = `<span><strong style="color:${isShadow ? '#ff7675' : '#00f0ff'};">${data.author}:</strong> ${data.text} ${isShadow ? '<em style="color:#ff7675;">[MUTED]</em>' : ''}</span>`;
               modChatStream.appendChild(chatRow);
               modChatStream.scrollTop = modChatStream.scrollHeight;
 
-              if (!isShadowbanned && !isAudienceChatGlobalMuted) {
+              if (!isShadow && !isAudienceChatGlobalMuted) {
                 connectedDataConns.forEach(c => {
-                  if (c.open && c.metadata && c.metadata.role === 'AUDIENCE') {
-                    c.send({ type: "AUDIENCE_CHAT_BROADCAST", author: authorName, text: rawText });
-                  }
+                  if (c.open && c.metadata && c.metadata.role === 'AUDIENCE') c.send({ type: "AUDIENCE_CHAT_BROADCAST", author: data.author, text: data.text });
                 });
               }
               return;
@@ -1329,7 +1133,6 @@
             } else if (data.type === "PLAYER_ROLLED_DICE") {
               handlePlayerRoll(data.contestant, data.name, data.roll);
             } else if (data.type === "PLAYER_ANSWERED") {
-              broadcastMicState(data.contestant, false);
               if (isTieBreakerActive) { handleTieBreakerAnswer(data.contestant, data.chosenAnswer); return; }
               stageSelectedOption = data.chosenAnswer; stageOptionStatus = 'selected';
               renderStageQuestionBoard();
@@ -1339,7 +1142,6 @@
               });
               setTimeout(() => evaluateAnswer(data.contestant, data.chosenAnswer), 1200);
             } else if (data.type === "PLAYER_TIMEOUT") {
-              broadcastMicState(data.contestant, false);
               if (isTieBreakerActive) return;
               handleQuestionTimeout(data.contestant);
             } else if (data.type === "PLUSHIE_MOVE") {
@@ -1364,22 +1166,10 @@
             if (cId === "goody-contestant-2" && p2PeerId === conn.peer) { isP2Connected = false; p2PeerId = null; }
 
             if (!studioPower && timerExpired) checkReadyOrWait();
-            else if (studioPower && (gameState === "IN_PLAY" || gameState === "OPENING_DUEL" || gameState === "INTRO_SPEECH" || gameState === "IDLE") && !isSoloMode && !isVsGoodyMode) {
+            else if (studioPower && (gameState === "IN_PLAY" || gameState === "OPENING_DUEL" || gameState === "INTRO_SPEECH") && !isSoloMode && !isVsGoodyMode) {
               if (cId === "goody-contestant-1" || cId === "goody-contestant-2") handleMidGameDropout(cId);
             }
           });
-        });
-
-        studioPeer.on('error', (err) => {
-          if (err.type === 'unavailable-id') {
-            const viewerPeer = new Peer();
-            viewerPeer.on('open', () => {
-              const dataConn = viewerPeer.connect("goody-main-studio");
-              dataConn.on('data', (data) => {
-                if (data.type === "AUDIENCE_COUNT") audienceCountEl.textContent = data.count;
-              });
-            });
-          }
         });
       } catch(e) { console.error(e); }
     }
@@ -1408,6 +1198,7 @@
       if (videoJake.srcObject) videoJake.play();
       if (videoJune.srcObject) videoJune.play();
     }
+
     function playTone(freq, type, duration, gainVal = 0.05) {
       if (!audioCtx) return;
       try {
@@ -1427,12 +1218,7 @@
       goodyUtterance = new SpeechSynthesisUtterance(text);
       goodyUtterance.rate = 0.95; goodyUtterance.pitch = 1.25;
       goodyUtterance.onstart = () => { isGoodySpeaking = true; };
-      goodyUtterance.onboundary = (e) => {
-        isGoodySpeaking = true;
-        const chunk = text.substring(e.charIndex, e.charIndex + 65);
-        currentSubtitle = chunk.length > 55 ? chunk.substring(0, 55) + "..." : chunk;
-        playTone(460 + Math.random() * 200, 'triangle', 0.05, 0.02);
-      };
+      goodyUtterance.onboundary = () => { isGoodySpeaking = true; playTone(460 + Math.random() * 200, 'triangle', 0.05, 0.02); };
       goodyUtterance.onend = () => { isGoodySpeaking = false; if (onComplete) onComplete(); };
       goodyUtterance.onerror = () => { isGoodySpeaking = false; if (onComplete) onComplete(); };
       window.speechSynthesis.speak(goodyUtterance);
@@ -1453,12 +1239,8 @@
       gameState = "OPENING_DUEL";
       renderStageQuestionBoard();
       diceCountdown = 10;
-      p1RollVal = null;
-      p2RollVal = null;
-      isDiceRollingP1 = true;
-      isDiceRollingP2 = true;
-      broadcastMicState("goody-contestant-1", false);
-      broadcastMicState("goody-contestant-2", false);
+      p1RollVal = null; p2RollVal = null;
+      isDiceRollingP1 = true; isDiceRollingP2 = true;
 
       connectedDataConns.forEach(c => { if (c.open) c.send({ type: "START_DICE_COUNTDOWN" }); });
 
@@ -1476,19 +1258,22 @@
     function startTurnDiceCountdown(turnPlayer, pName) {
       diceCountdown = 10;
       if (turnPlayer === "goody-contestant-2") isDiceRollingP2 = true; else isDiceRollingP1 = true;
-      broadcastMicState("goody-contestant-1", false); broadcastMicState("goody-contestant-2", false);
       if (diceInterval) clearInterval(diceInterval);
       diceInterval = setInterval(() => {
         diceCountdown--;
         if (diceCountdown > 0) playTone(440, 'triangle', 0.08, 0.03);
         else {
           clearInterval(diceInterval);
-          const autoVal = Math.floor(Math.random() * 6) + 1;
-          handlePlayerRoll(turnPlayer, pName, autoVal);
+          // Auto-roll fallback is handled authoritatively on contestant mobile or here if dropped
+          if (!turnRollLocked) {
+            const autoVal = Math.floor(Math.random() * 6) + 1;
+            handlePlayerRoll(turnPlayer, pName, autoVal);
+          }
         }
       }, 1000);
     }
 
+    // STRICT LOCK: Prevents double-packet hops
     function handlePlayerRoll(contestant, name, roll) {
       if (gameState === "OPENING_DUEL") {
         if (contestant === "goody-contestant-2") { p2RollVal = roll; isDiceRollingP2 = false; }
@@ -1500,14 +1285,16 @@
           finalizeDiceDuel();
         }
       } else if (gameState === "IN_PLAY") {
-        if (contestant !== activePlayer) return;
+        if (contestant !== activePlayer || turnRollLocked) return;
+        turnRollLocked = true; // LOCK INSTANTLY
         if (diceInterval) clearInterval(diceInterval);
         diceCountdown = 0;
+
         if (contestant === "goody-contestant-2") { p2RollVal = roll; isDiceRollingP2 = false; }
         else { p1RollVal = roll; isDiceRollingP1 = false; }
         playTone(587, 'sine', 0.15, 0.08);
 
-        const speech = contestant === goodyPlayerSlot ? `I rolled a ${roll}! Moving forwards ${roll} spaces!` : `${name} rolled a ${roll}! Moving ${roll} spaces.`;
+        const speech = contestant === goodyPlayerSlot ? `I rolled a ${roll}! Moving ${roll} spaces!` : `${name} rolled a ${roll}! Moving ${roll} spaces.`;
         speakGoody(speech, () => advanceTurnPlayer(contestant, roll));
       }
     }
@@ -1534,15 +1321,11 @@
     function finalizeDiceDuel() {
       if (p1RollVal === null) p1RollVal = Math.floor(Math.random() * 6) + 1;
       if (p2RollVal === null) p2RollVal = Math.floor(Math.random() * 6) + 1;
-      isDiceRollingP1 = false;
-      isDiceRollingP2 = false;
+      isDiceRollingP1 = false; isDiceRollingP2 = false;
 
-      // Handle ties naturally without incrementing or picking one arbitrarily
       if (p1RollVal === p2RollVal) {
-        const tieVal = p1RollVal;
-        speakGoody(`We have a tie! Both contestants rolled a ${tieVal}! Let's roll again to see who moves first!`, () => {
-          p1RollVal = null;
-          p2RollVal = null;
+        speakGoody(`We have a tie! Both contestants rolled a ${p1RollVal}! Rolling again!`, () => {
+          p1RollVal = null; p2RollVal = null;
           beginTenSecondDiceDuel();
         });
         return;
@@ -1556,7 +1339,7 @@
       renderStageQuestionBoard();
       startTwentyMinuteMatchTimer();
 
-      speakGoody(`Contestant number ${winnerNum} wins the roll and goes first! The 20-minute show clock has begun! Moving ${winRoll} spaces.`, () => {
+      speakGoody(`Contestant number ${winnerNum} wins the roll! The 20-minute show clock starts now! Moving ${winRoll} spaces.`, () => {
         advanceTurnPlayer(activePlayer, winRoll);
       });
     }
@@ -1609,9 +1392,8 @@
       const targetPawn = isP1 ? pawn1 : pawn2;
       const xOffset = isP1 ? -0.08 : 0.08;
 
-      if (isP1) p1Index = targetIdx; else p2Index = targetIdx;
-
       animatePawnHop(targetPawn, oldIdx, targetIdx, xOffset, () => {
+        if (isP1) p1Index = targetIdx; else p2Index = targetIdx;
         isAdvancingPawn = false;
 
         connectedDataConns.forEach(c => {
@@ -1629,9 +1411,7 @@
 
         const currentTileIdx = isP1 ? p1Index : p2Index;
         const landedCountry = boardTileCoords[currentTileIdx].country;
-        const qPool = COUNTRY_QUESTIONS[landedCountry] || COUNTRY_QUESTIONS["UK"];
-        const rawQ = qPool[Math.floor(Math.random() * qPool.length)];
-        activeQuestion = { country: landedCountry, text: rawQ.q, q: rawQ.q, options: rawQ.options, ans: rawQ.ans, recap: rawQ.recap };
+        activeQuestion = getRandomJurisdictionQuestion(landedCountry);
         activeRecap = null; stageSelectedOption = null; stageOptionStatus = null;
         const activeName = contestantNames[activePlayer];
 
@@ -1641,8 +1421,9 @@
         renderStageQuestionBoard();
 
         const speech = activePlayer === goodyPlayerSlot
-          ? `I landed on ${landedCountry}! Here is my question: ${activeQuestion.q}... Let me process this in my circuits!`
+          ? `I landed on ${landedCountry}! Here is my question: ${activeQuestion.q}... Let me process this!`
           : `${activeName} landed on ${landedCountry}! Here is your question: ${activeQuestion.q}... You have 30 seconds to lock in!`;
+
         speakGoody(speech, () => {
           if (gameState === "INTERMISSION") return;
           if (activePlayer === goodyPlayerSlot) executeGoodyAnswer();
@@ -1650,7 +1431,6 @@
             connectedDataConns.forEach(c => {
               if (c.open) c.send({ type: "UNLOCK_QUESTION_INPUT", activeContestantId: activePlayer, activeContestantName: activeName });
             });
-            broadcastMicState(activePlayer, true, "🎙️ Thinking out loud? Your mic is LIVE!");
             startQuestionCountdown();
           }
         });
@@ -1665,7 +1445,6 @@
         questionTimer--; renderStageQuestionBoard();
         if (questionTimer <= 0) {
           clearInterval(questionInterval);
-          broadcastMicState(activePlayer, false);
           handleQuestionTimeout(activePlayer);
         }
       }, 1000);
@@ -1673,7 +1452,6 @@
 
     function evaluateAnswer(contestant, chosen) {
       if (questionInterval) clearInterval(questionInterval);
-      broadcastMicState(contestant, false);
       const isCorrect = chosen === activeQuestion.ans;
 
       if (contestant !== goodyPlayerSlot) {
@@ -1695,17 +1473,16 @@
 
       const isGoody = contestant === goodyPlayerSlot;
       if (isCorrect) {
-        const speech = isGoody ? `My circuits calculated correctly! That is correct! Here is what we learned: ${activeQuestion.recap}` : `Well done, that's correct! Here is what we learned: ${activeQuestion.recap}`;
+        const speech = isGoody ? `Correct! Here is what we learned: ${activeQuestion.recap}` : `Well done, that's correct! Here is what we learned: ${activeQuestion.recap}`;
         speakGoody(speech, () => transitionToRulesAndNextTurn());
       } else {
-        const speech = isGoody ? `Oh no! A system malfunction in my memory bank! I got it wrong! I must go back to the start! Here is what we learned: ${activeQuestion.recap}` : `Unlucky, that's incorrect. You must go back to the start! Here is what we learned: ${activeQuestion.recap}`;
+        const speech = isGoody ? `Oh no, I got it wrong! Back to the start! What we learned: ${activeQuestion.recap}` : `Incorrect! You must go back to the start! What we learned: ${activeQuestion.recap}`;
         speakGoody(speech, () => resetPlayerToStart(contestant, () => transitionToRulesAndNextTurn()));
       }
     }
 
     function handleQuestionTimeout(contestant) {
       if (questionInterval) clearInterval(questionInterval);
-      broadcastMicState(contestant, false);
       if (contestant !== goodyPlayerSlot) playerStats.asked++;
       stageOptionStatus = 'wrong'; renderStageQuestionBoard();
 
@@ -1719,7 +1496,7 @@
         renderStageQuestionBoard();
       }, 1400);
 
-      speakGoody(`I'm sorry, you ran out of time! You must go back to the start! Here is what we learned: ${activeQuestion.recap}`, () => {
+      speakGoody(`Time out! You must go back to the start! What we learned: ${activeQuestion.recap}`, () => {
         resetPlayerToStart(contestant, () => transitionToRulesAndNextTurn());
       });
     }
@@ -1727,7 +1504,7 @@
     function transitionToRulesAndNextTurn() {
       activeRecap = null; activeQuestion = null; renderStageQuestionBoard();
       if (isTimeExpired) { setTimeout(() => evaluateFinalShowdown(), 2000); return; }
-      setTimeout(() => nextTurn(), 3000);
+      setTimeout(() => nextTurn(), 2500);
     }
 
     function resetPlayerToStart(contestant, onComplete) {
@@ -1736,9 +1513,8 @@
       const pawnToMove = isP1 ? pawn1 : pawn2;
       const xOffset = isP1 ? -0.08 : 0.08;
 
-      if (isP1) p1Index = 0; else p2Index = 0;
-
       animatePawnHop(pawnToMove, startFromIdx, 0, xOffset, () => {
+        if (isP1) p1Index = 0; else p2Index = 0;
         connectedDataConns.forEach(c => {
           if (c.open && c.metadata && c.metadata.role === 'AUDIENCE') {
             c.send({ type: "SYNC_BOARD_STATE", studioPower, p1Index, p2Index, p1Name: contestantNames["goody-contestant-1"], p2Name: contestantNames["goody-contestant-2"] });
@@ -1753,15 +1529,16 @@
       if (isSoloMode) activePlayer = soloPlayerId;
       else activePlayer = activePlayer === "goody-contestant-1" ? "goody-contestant-2" : "goody-contestant-1";
 
+      turnRollLocked = false;
       const pName = contestantNames[activePlayer];
       activeQuestion = null; activeRecap = null; stageSelectedOption = null; stageOptionStatus = null;
       p1RollVal = null; p2RollVal = null;
       renderStageQuestionBoard();
 
       if (activePlayer === goodyPlayerSlot) {
-        speakGoody(`It is my turn! Goody is rolling the dice!`, () => setTimeout(executeGoodyTurnRoll, 1000));
+        speakGoody(`It is my turn! Goody is rolling!`, () => setTimeout(executeGoodyTurnRoll, 1000));
       } else {
-        speakGoody(`It is now ${pName}'s turn! You have 10 seconds to roll your dice!`, () => {
+        speakGoody(`It is now ${pName}'s turn! 10 seconds to roll!`, () => {
           startTurnDiceCountdown(activePlayer, pName);
           connectedDataConns.forEach(c => {
             if (c.open) c.send({ type: "ENABLE_TURN_ROLL", activeContestantId: activePlayer, activeContestantName: pName });
@@ -1773,22 +1550,18 @@
     function evaluateFinalShowdown() {
       if (diceInterval) clearInterval(diceInterval);
       if (questionInterval) clearInterval(questionInterval);
-      broadcastMicState("goody-contestant-1", false);
-      broadcastMicState("goody-contestant-2", false);
 
       if (isSoloMode) {
         gameState = "GAME_OVER";
         const soloName = contestantNames[soloPlayerId];
-        const speech = `The 20-minute timer has expired! Unfortunately, ${soloName} was unable to complete the board in time! Tonight's prize rolls over, and we will invite ${soloName} back to our next show! Shows are at 9 PM most days! Goodnight everyone!`;
-        speakGoody(speech);
+        speakGoody(`The 20-minute timer has expired! ${soloName} did not reach the finish in time! Tonight's prize rolls over! Goodnight!`);
         broadcastGameOver("NOBODY", "SOLO_TIME_EXPIRED");
         return;
       }
 
       if (p1Index === 0 && p2Index === 0) {
         gameState = "GAME_OVER";
-        const speech = "The 20-minute show timer has run out, and both contestants are still on the starting square! Nobody wins tonight, so the prize rolls over to our next game! Thank you for watching The Goody Tonight Show. Shows are at 9 PM most days. Goodnight everyone!";
-        speakGoody(speech);
+        speakGoody("The 20-minute show timer has expired and both contestants are at Tile 0! Nobody wins tonight, and the prize rolls over to the next broadcast! Goodnight!");
         broadcastGameOver("NOBODY", "ROLLOVER_START_SQUARE");
         return;
       }
@@ -1798,20 +1571,17 @@
       gameState = "GAME_OVER";
       const winner = p1Index > p2Index ? contestantNames["goody-contestant-1"] : contestantNames["goody-contestant-2"];
       const loser = p1Index > p2Index ? contestantNames["goody-contestant-2"] : contestantNames["goody-contestant-1"];
-      const speech = `The 20-minute timer is over! Well done to our winner ${winner}, and commiserations to ${loser}! Thanks for watching, come again next show, shows are at 9 PM most days! Goodnight!`;
-      speakGoody(speech);
+      speakGoody(`The 20-minute timer is over! Congratulations to our winner ${winner}, and commiserations to ${loser}! Goodnight!`);
       broadcastGameOver(winner, "TIME_EXPIRED_LEADER");
     }
 
     function triggerTieBreakerDuel() {
       isTieBreakerActive = true; tieBreakerAnswered = false;
-      const tiePool = COUNTRY_QUESTIONS["UK"];
-      const rawQ = tiePool[Math.floor(Math.random() * tiePool.length)];
-      activeQuestion = { country: "TIE-BREAKER", text: rawQ.q, q: rawQ.q, options: rawQ.options, ans: rawQ.ans, recap: rawQ.recap };
+      activeQuestion = getRandomJurisdictionQuestion("United Kingdom");
       stageSelectedOption = null; stageOptionStatus = null;
       renderStageQuestionBoard();
 
-      speakGoody("We have a dead heat draw! Both contestants finished on the exact same tile! We are going to a sudden death tie-breaker question! First contestant to answer correctly wins the game! But beware, if you get it wrong, your opponent wins automatically! Here is the tie-breaker!", () => {
+      speakGoody("Dead heat draw! We are entering a sudden death tie-breaker question! First to buzz and answer correctly wins! An incorrect answer awards victory directly to the opponent!", () => {
         connectedDataConns.forEach(c => {
           if (c.open) c.send({ type: "START_TIE_BREAKER", question: activeQuestion });
         });
@@ -1826,9 +1596,9 @@
     function handleTieBreakerAnswer(contestant, chosen) {
       if (tieBreakerAnswered) return;
       tieBreakerAnswered = true; isTieBreakerActive = false;
-      const isJake = contestant === "goody-contestant-1";
-      const answeringName = isJake ? contestantNames["goody-contestant-1"] : contestantNames["goody-contestant-2"];
-      const opponentName = isJake ? contestantNames["goody-contestant-2"] : contestantNames["goody-contestant-1"];
+      const isP1 = contestant === "goody-contestant-1";
+      const answeringName = isP1 ? contestantNames["goody-contestant-1"] : contestantNames["goody-contestant-2"];
+      const opponentName = isP1 ? contestantNames["goody-contestant-2"] : contestantNames["goody-contestant-1"];
       const isCorrect = chosen === activeQuestion.ans;
 
       stageSelectedOption = chosen; stageOptionStatus = isCorrect ? 'correct' : 'wrong';
@@ -1843,8 +1613,8 @@
       });
 
       const speech = isCorrect
-        ? `That is correct! Well done to our winner ${winner}, and commiserations to ${loser}! Thanks for watching, come again next show, shows are at 9 PM most days! Goodnight!`
-        : `That is incorrect! By default, well done to our winner ${winner}, and commiserations to ${loser}! Thanks for watching, come again next show, shows are at 9 PM most days! Goodnight!`;
+        ? `That is correct! Well done to our winner ${winner}, and commiserations to ${loser}! Goodnight!`
+        : `That is incorrect! By default, victory goes to ${winner}! Commiserations to ${loser}! Goodnight!`;
       speakGoody(speech);
       broadcastGameOver(winner, "TIE_BREAKER_DECISION");
     }
@@ -1854,12 +1624,10 @@
       if (matchTimerInterval) clearInterval(matchTimerInterval);
       if (questionInterval) clearInterval(questionInterval);
       if (diceInterval) clearInterval(diceInterval);
-      broadcastMicState("goody-contestant-1", false);
-      broadcastMicState("goody-contestant-2", false);
 
       const speech = isSoloMode
-        ? `Unbelievable! ${winnerName} has reached the final square and completed the solo challenge! Well done to our champion ${winnerName}! Thanks for watching, shows are at 9 PM most days! Goodnight!`
-        : `Unbelievable! ${winnerName} has reached the final square and completed the floor! Well done to our winner ${winnerName}, and commiserations to ${loserName}! Thanks for watching, come again next show, shows are at 9 PM most days! Goodnight!`;
+        ? `Unbelievable! ${winnerName} has reached the final square and completed the solo challenge! Well done to our champion ${winnerName}! Goodnight!`
+        : `Unbelievable! ${winnerName} has reached Tile 32! Well done to our champion ${winnerName}, and commiserations to ${loserName}! Goodnight!`;
       speakGoody(speech);
       broadcastGameOver(winnerName, "REACHED_THE_END");
     }
@@ -1945,7 +1713,7 @@
     const wallClockMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.2), new THREE.MeshBasicMaterial({ map: wallClockTex }));
     wallClockMesh.position.set(0, 6.2, -4.4); miniDiorama.add(wallClockMesh);
 
-    const COUNTRIES = ["France", "Netherlands", "Canada", "Sweden", "Italy", "Denmark", "Brazil", "Australia", "Spain", "Germany", "UK", "Nigeria", "United States", "Belgium"];
+    const COUNTRIES = ["France", "Netherlands", "Canada", "Sweden", "Italy", "Denmark", "Brazil", "Australia", "Spain", "Germany", "United Kingdom", "Nigeria", "United States", "Belgium"];
     function createCountryFlagTexture(countryName) {
       const c = document.createElement('canvas'); c.width = 256; c.height = 256;
       const ctx = c.getContext('2d'); const w = 256; const h = 256;
@@ -1955,16 +1723,16 @@
         case "France": ctx.fillStyle = '#002654'; ctx.fillRect(0, 0, w / 3, h); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h); ctx.fillStyle = '#ED2939'; ctx.fillRect((w / 3) * 2, 0, w / 3, h); break;
         case "Netherlands": ctx.fillStyle = '#AE1C28'; ctx.fillRect(0, 0, w, h / 3); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, h / 3, w, h / 3); ctx.fillStyle = '#21468B'; ctx.fillRect(0, (h / 3) * 2, w / 3, h); break;
         case "Canada": ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FF0000'; ctx.fillRect(0, 0, w * 0.28, h); ctx.fillRect(w * 0.72, 0, w * 0.28, h); ctx.beginPath(); ctx.arc(128, 128, 36, 0, Math.PI * 2); ctx.fill(); break;
-        case "Brazil": ctx.fillStyle = '#009739'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FEDD00'; ctx.beginPath(); ctx.moveTo(128, 24); ctx.lineTo(236, 128); ctx.lineTo(128, 232); ctx.lineTo(20, 128); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#012169'; ctx.beginPath(); ctx.arc(128, 128, 52, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(128, 134, 46, 3.4, 6.0); ctx.stroke(); break;
+        case "Brazil": ctx.fillStyle = '#009739'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FEDD00'; ctx.beginPath(); ctx.moveTo(128, 24); ctx.lineTo(236, 128); ctx.lineTo(128, 232); ctx.lineTo(20, 128); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#012169'; ctx.beginPath(); ctx.arc(128, 128, 52, 0, Math.PI * 2); ctx.fill(); break;
         case "Sweden": ctx.fillStyle = '#006AA7'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FECC00'; ctx.fillRect(75, 0, 36, h); ctx.fillRect(0, 110, w, 36); break;
         case "Italy": ctx.fillStyle = '#009246'; ctx.fillRect(0, 0, w / 3, h); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h); ctx.fillStyle = '#CE2B37'; ctx.fillRect((w / 3) * 2, 0, w / 3, h); break;
         case "Denmark": ctx.fillStyle = '#C60C30'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(80, 0, 34, h); ctx.fillRect(0, 111, w, 34); break;
-        case "Australia": ctx.fillStyle = '#00008B'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, 120, 120); ctx.fillStyle = '#CC0000'; ctx.fillRect(48, 0, 24, 120); ctx.fillRect(0, 48, 120, 24); ctx.fillStyle = '#FFFFFF'; [[60, 180], [180, 70], [210, 120], [180, 190], [150, 130]].forEach(([sx, sy]) => { ctx.beginPath(); ctx.arc(sx, sy, 10, 0, Math.PI * 2); ctx.fill(); }); break;
-        case "Spain": ctx.fillStyle = '#AA151B'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#F1BF00'; ctx.fillRect(0, h * 0.25, w, h * 0.5); ctx.fillStyle = '#AA151B'; ctx.beginPath(); ctx.arc(80, 128, 22, 0, Math.PI * 2); ctx.fill(); break;
+        case "Australia": ctx.fillStyle = '#00008B'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, 120, 120); ctx.fillStyle = '#CC0000'; ctx.fillRect(48, 0, 24, 120); ctx.fillRect(0, 48, 120, 24); break;
+        case "Spain": ctx.fillStyle = '#AA151B'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#F1BF00'; ctx.fillRect(0, h * 0.25, w, h * 0.5); break;
         case "Germany": ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w, h / 3); ctx.fillStyle = '#DD0000'; ctx.fillRect(0, h / 3, w, h / 3); ctx.fillStyle = '#FFCE00'; ctx.fillRect(0, (h / 3) * 2, w / 3, h); break;
-        case "UK": ctx.fillStyle = '#012169'; ctx.fillRect(0, 0, w, h); ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 36; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke(); ctx.strokeStyle = '#C8102E'; ctx.lineWidth = 14; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke(); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(100, 0, 56, h); ctx.fillRect(0, 100, w, 56); ctx.fillStyle = '#C8102E'; ctx.fillRect(112, 0, 32, h); ctx.fillRect(0, 112, w, 32); break;
-        case "Nigeria": ctx.fillStyle = '#008751'; ctx.fillRect(0, 0, w, h / 3); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h); ctx.fillStyle = '#008751'; ctx.fillRect((w / 3) * 2, 0, w / 3, h); break;
-        case "United States": ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, w, h); for (let s = 0; s < 13; s++) { if (s % 2 === 0) { ctx.fillStyle = '#B22234'; ctx.fillRect(0, s * (h / 13), w, Math.ceil(h / 13)); } } ctx.fillStyle = '#3C3B6E'; ctx.fillRect(0, 0, w * 0.48, h * 0.54); ctx.fillStyle = '#FFFFFF'; for (let r = 18; r < 125; r += 26) { for (let col = 16; col < 115; col += 24) { ctx.beginPath(); ctx.arc(col, r, 4, 0, Math.PI * 2); ctx.fill(); } } break;
+        case "United Kingdom": ctx.fillStyle = '#012169'; ctx.fillRect(0, 0, w, h); ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 36; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke(); ctx.strokeStyle = '#C8102E'; ctx.lineWidth = 14; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke(); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(100, 0, 56, h); ctx.fillRect(0, 100, w, 56); ctx.fillStyle = '#C8102E'; ctx.fillRect(112, 0, 32, h); ctx.fillRect(0, 112, w, 32); break;
+        case "Nigeria": ctx.fillStyle = '#008751'; ctx.fillRect(0, 0, w / 3, h); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h); ctx.fillStyle = '#008751'; ctx.fillRect((w / 3) * 2, 0, w / 3, h); break;
+        case "United States": ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, w, h); for (let s = 0; s < 13; s++) { if (s % 2 === 0) { ctx.fillStyle = '#B22234'; ctx.fillRect(0, s * (h / 13), w, Math.ceil(h / 13)); } } ctx.fillStyle = '#3C3B6E'; ctx.fillRect(0, 0, w * 0.48, h * 0.54); break;
         case "Belgium": ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w / 3, h); ctx.fillStyle = '#FDDA24'; ctx.fillRect(w / 3, 0, w / 3, h); ctx.fillStyle = '#EF3340'; ctx.fillRect((w / 3) * 2, 0, w / 3, h); break;
         default: ctx.fillStyle = '#22143b'; ctx.fillRect(0, 0, w, h);
       }
@@ -1972,6 +1740,7 @@
       ctx.strokeStyle = '#e6c875'; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(128, 128, 123, 0, Math.PI * 2); ctx.stroke();
       const tex = new THREE.CanvasTexture(c); tex.needsUpdate = true; return tex;
     }
+
     const flagTextures = COUNTRIES.map(cName => createCountryFlagTexture(cName));
     const boardTileCoords = [];
     const totalTiles = 32;
@@ -1990,13 +1759,10 @@
 
     function updatePawnNameBadge(pawnGroup, displayName) {
       if (!pawnGroup || !pawnGroup.userData || !pawnGroup.userData.badgeCanvas) return;
-      const canvas = pawnGroup.userData.badgeCanvas; const ctx = canvas.getContext('2d');
-      const w = canvas.width; const h = canvas.height;
-      ctx.clearRect(0, 0, w, h);
-      const r = 24;
-      ctx.fillStyle = '#0a0314'; ctx.strokeStyle = pawnGroup.userData.tagColor || '#00d2d3'; ctx.lineWidth = 8;
-      ctx.beginPath();
-      ctx.moveTo(r, 4); ctx.lineTo(w - r, 4); ctx.quadraticCurveTo(w - 4, 4, w - 4, r);
+      const c = pawnGroup.userData.badgeCanvas; const ctx = c.getContext('2d');
+      const w = c.width; const h = c.height; ctx.clearRect(0, 0, w, h);
+      const r = 24; ctx.fillStyle = '#0a0314'; ctx.strokeStyle = pawnGroup.userData.tagColor || '#00d2d3'; ctx.lineWidth = 8;
+      ctx.beginPath(); ctx.moveTo(r, 4); ctx.lineTo(w - r, 4); ctx.quadraticCurveTo(w - 4, 4, w - 4, r);
       ctx.lineTo(w - 4, h - r); ctx.quadraticCurveTo(w - 4, h - 4, w - r, h - 4);
       ctx.lineTo(r, h - 4); ctx.quadraticCurveTo(4, h - 4, 4, h - r);
       ctx.lineTo(4, r); ctx.quadraticCurveTo(4, 4, r, 4); ctx.closePath();
@@ -2032,6 +1798,7 @@
     const qBoardCanvas = document.createElement('canvas'); qBoardCanvas.width = 512; qBoardCanvas.height = 384;
     const qBoardCtx = qBoardCanvas.getContext('2d');
     const qBoardTex = new THREE.CanvasTexture(qBoardCanvas);
+
     function renderStageQuestionBoard() {
       qBoardCtx.fillStyle = '#120726'; qBoardCtx.fillRect(0, 0, 512, 384);
       qBoardCtx.strokeStyle = '#00f0ff'; qBoardCtx.lineWidth = 6; qBoardCtx.strokeRect(3, 3, 506, 378);
@@ -2042,24 +1809,9 @@
         qBoardCtx.fillStyle = '#00f0ff'; qBoardCtx.fillRect(36, 88, 440, 2);
         qBoardCtx.fillStyle = '#ffda66'; qBoardCtx.font = 'bold 18px monospace';
         const missingName = contestantNames[droppedOutContestant] || (droppedOutContestant === "goody-contestant-1" ? "Contestant 1" : "Contestant 2");
-        const missingNum = droppedOutContestant === "goody-contestant-1" ? `1 (${missingName.toUpperCase()})` : `2 (${missingName.toUpperCase()})`;
-        qBoardCtx.fillText(`LOST CONNECTION TO CONTESTANT ${missingNum}`, 256, 140);
+        qBoardCtx.fillText(`LOST CONNECTION TO ${missingName.toUpperCase()}`, 256, 140);
         qBoardCtx.fillStyle = '#ffffff'; qBoardCtx.font = '16px sans-serif';
-        qBoardCtx.fillText("WAITING FOR CONTESTANT TO REJOIN...", 256, 195);
-        qBoardCtx.fillText("PLEASE STAND BY AS WE RESOLVE TECHNICAL ISSUES.", 256, 235);
-        qBoardCtx.fillStyle = '#39ff14'; qBoardCtx.font = 'bold 16px monospace';
-        qBoardCtx.fillText("BROADCAST WILL RESUME SHORTLY", 256, 290);
-      } else if (gameState === "CONTESTANT_CHOOSING") {
-        qBoardCtx.fillStyle = '#ffda66'; qBoardCtx.font = 'bold 24px sans-serif'; qBoardCtx.textAlign = 'center';
-        qBoardCtx.fillText("DECISION TIME IN PROGRESS", 256, 70);
-        qBoardCtx.fillStyle = '#00f0ff'; qBoardCtx.fillRect(36, 88, 440, 2);
-        qBoardCtx.fillStyle = '#ffffff'; qBoardCtx.font = '18px sans-serif';
-        qBoardCtx.fillText("AWAITING REMAINING CONTESTANT DECISION:", 256, 150);
-        qBoardCtx.fillStyle = '#3498db'; qBoardCtx.font = 'bold 18px monospace';
-        qBoardCtx.fillText("[1] RACE SOLO AGAINST 20-MIN CLOCK", 256, 210);
-        qBoardCtx.fillStyle = '#9b59b6'; qBoardCtx.fillText("[2] BATTLE GOODY HEAD-TO-HEAD", 256, 255);
-        qBoardCtx.fillStyle = '#39ff14'; qBoardCtx.font = 'bold 15px monospace';
-        qBoardCtx.fillText("MAKING SELECTION ON COMPANION DEVICE...", 256, 320);
+        qBoardCtx.fillText("WAITING FOR RECONNECT...", 256, 195);
       } else if (activeRecap) {
         qBoardCtx.fillStyle = activeRecap.isCorrect ? '#00b894' : '#ff7675';
         qBoardCtx.font = 'bold 22px sans-serif'; qBoardCtx.textAlign = 'center';
@@ -2068,7 +1820,6 @@
         qBoardCtx.fillText(` COUNTRY: ${activeRecap.country.toUpperCase()}`, 256, 78);
         qBoardCtx.fillStyle = '#00f0ff'; qBoardCtx.fillRect(36, 94, 440, 2);
         qBoardCtx.fillStyle = '#ffffff'; qBoardCtx.font = '16px sans-serif';
-        qBoardCtx.textAlign = 'center';
 
         const words = activeRecap.text.split(' ');
         let line = ''; let y = 140;
@@ -2079,8 +1830,6 @@
           } else line = testLine;
         }
         qBoardCtx.fillText(line, 256, y);
-        qBoardCtx.fillStyle = '#39ff14'; qBoardCtx.font = '14px monospace';
-        qBoardCtx.fillText("RETURNING TO RULES BEFORE NEXT ROLL...", 256, 342);
       } else if (activeQuestion) {
         const pName = isTieBreakerActive ? "SUDDEN DEATH TIE-BREAKER" : `${contestantNames[activePlayer].toUpperCase()}'S TURN`;
         qBoardCtx.fillStyle = '#ffda66'; qBoardCtx.font = 'bold 18px monospace'; qBoardCtx.textAlign = 'left';
@@ -2118,53 +1867,23 @@
           qBoardCtx.fillText(opt.length > 48 ? opt.substring(0, 48) + "..." : opt, 64, optY - 2);
         });
       } else {
-        if (!studioPower) {
-          qBoardCtx.fillStyle = '#ffda66'; qBoardCtx.font = 'bold 26px sans-serif'; qBoardCtx.textAlign = 'center';
-          qBoardCtx.fillText("THE GOODY TONIGHT SHOW", 256, 110);
-          if (autoStartSeconds > 0) {
-            qBoardCtx.fillStyle = '#ffffff'; qBoardCtx.font = 'bold 18px monospace'; qBoardCtx.fillText("BROADCAST COUNTDOWN", 256, 170);
-            qBoardCtx.fillStyle = '#ff7675'; qBoardCtx.font = 'bold 54px monospace';
-            const mins = Math.floor(autoStartSeconds / 60).toString().padStart(2, '0');
-            const secs = (autoStartSeconds % 60).toString().padStart(2, '0');
-            qBoardCtx.fillText(`${mins}:${secs}`, 256, 240);
-          } else {
-            qBoardCtx.fillStyle = '#ff7675'; qBoardCtx.font = 'bold 22px monospace'; qBoardCtx.fillText("STANDBY FOR BROADCAST", 256, 170);
-            const missing = [];
-            if (!isP1Connected) missing.push(`CONTESTANT 1 (${(contestantNames["goody-contestant-1"] || "VACANT").toUpperCase()})`);
-            if (!isP2Connected) missing.push(`CONTESTANT 2 (${(contestantNames["goody-contestant-2"] || "VACANT").toUpperCase()})`);
-            qBoardCtx.fillStyle = '#ffda66'; qBoardCtx.font = 'bold 15px monospace';
-            qBoardCtx.fillText("WAITING FOR CONTESTANTS TO JOIN...", 256, 220);
-            qBoardCtx.fillStyle = '#39ff14'; qBoardCtx.font = 'bold 14px monospace';
-            qBoardCtx.fillText(`MISSING: ${missing.join(' & ')}`, 256, 260);
-          }
-        } else {
-          const headerTxt = isSoloMode ? " SOLO RACE ACTIVE " : (isVsGoodyMode ? " GOODY HEAD-TO-HEAD BATTLE " : " OFFICIAL GAME RULES ");
-          qBoardCtx.fillStyle = '#ffda66'; qBoardCtx.font = 'bold 24px sans-serif'; qBoardCtx.textAlign = 'center';
-          qBoardCtx.fillText(headerTxt, 256, 44);
-          qBoardCtx.fillStyle = '#00f0ff'; qBoardCtx.fillRect(36, 56, 440, 2);
-          const rules = isSoloMode ? [
-            " 1. Contestant plays solo against the 20-minute clock.",
-            " 2. You have 10 seconds to roll your dice every turn.",
-            " 3. Land on a tile to trigger that country's trivia.",
-            " 4. Correct answer secures your position on the tile.",
-            " 5. Incorrect answer sends you straight back to START!",
-            " 6. Reach tile 32 before 20:00 to WIN THE SHOW PRIZE!"
-          ] : [
-            " 1. You have 10 seconds to roll your dice when active.",
-            " 2. Land on a tile to trigger that country's trivia.",
-            " 3. You have 30 seconds to lock in your final answer.",
-            " 4. Correct answer secures your position on the tile.",
-            " 5. Incorrect answer or timeout sends you to START!",
-            " 6. Reach tile 32 or be furthest ahead at 20:00 to WIN!"
-          ];
-          qBoardCtx.font = '14px monospace'; qBoardCtx.textAlign = 'left';
-          rules.forEach((rule, idx) => {
-            qBoardCtx.fillStyle = idx % 2 === 0 ? '#ffffff' : '#ebdcf9';
-            qBoardCtx.fillText(rule, 26, 96 + (idx * 34));
-          });
-          qBoardCtx.fillStyle = '#39ff14'; qBoardCtx.font = 'bold 15px monospace'; qBoardCtx.textAlign = 'center';
-          qBoardCtx.fillText(" LIVE BROADCAST IN PROGRESS", 256, 342);
-        }
+        const headerTxt = isSoloMode ? " SOLO RACE ACTIVE " : (isVsGoodyMode ? " GOODY HEAD-TO-HEAD BATTLE " : " OFFICIAL GAME RULES ");
+        qBoardCtx.fillStyle = '#ffda66'; qBoardCtx.font = 'bold 24px sans-serif'; qBoardCtx.textAlign = 'center';
+        qBoardCtx.fillText(headerTxt, 256, 44);
+        qBoardCtx.fillStyle = '#00f0ff'; qBoardCtx.fillRect(36, 56, 440, 2);
+        const rules = [
+          " 1. You have 10 seconds to roll your dice when active.",
+          " 2. Land on a tile to trigger that country's trivia.",
+          " 3. You have 30 seconds to lock in your final answer.",
+          " 4. Correct answer secures your position on the tile.",
+          " 5. Incorrect answer or timeout sends you to START!",
+          " 6. Reach tile 32 or be furthest ahead at 20:00 to WIN!"
+        ];
+        qBoardCtx.font = '14px monospace'; qBoardCtx.textAlign = 'left';
+        rules.forEach((rule, idx) => {
+          qBoardCtx.fillStyle = idx % 2 === 0 ? '#ffffff' : '#ebdcf9';
+          qBoardCtx.fillText(rule, 26, 96 + (idx * 34));
+        });
       }
       qBoardTex.needsUpdate = true;
     }
@@ -2178,59 +1897,20 @@
       const pMat = new THREE.MeshStandardMaterial({ color, roughness: 0.95 });
       const earMat = new THREE.MeshStandardMaterial({ color: 0xff7675, roughness: 0.95 });
 
-      const pBody = new THREE.Mesh(new THREE.SphereGeometry(0.28, 14, 14), pMat);
-      pBody.position.y = 0.28;
-      pGroup.add(pBody);
+      const pBody = new THREE.Mesh(new THREE.SphereGeometry(0.28, 14, 14), pMat); pBody.position.y = 0.28; pGroup.add(pBody);
+      const pHead = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 14), pMat); pHead.position.y = 0.58; pGroup.add(pHead);
 
-      const pHead = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 14), pMat);
-      pHead.position.y = 0.58;
-      pGroup.add(pHead);
-
-      const ear1 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), pMat);
-      ear1.position.set(-0.14, 0.74, 0);
-      const ear2 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), earMat);
-      ear2.position.set(0.14, 0.74, 0);
-      pGroup.add(ear1, ear2);
-
-      const blushMat = new THREE.MeshBasicMaterial({ color: 0xff69b4 });
-      const blush1 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat);
-      blush1.position.set(-0.11, 0.54, 0.17);
-      const blush2 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat);
-      blush2.position.set(0.11, 0.54, 0.17);
-      pGroup.add(blush1, blush2);
-
-      const eyeBlackMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
-      const eyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-
-      const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), eyeBlackMat);
-      eyeL.position.set(-0.07, 0.60, 0.19);
-      const shineL = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 6), eyeWhiteMat);
-      shineL.position.set(-0.08, 0.612, 0.21);
-      pGroup.add(eyeL, shineL);
-
-      const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), eyeBlackMat);
-      eyeR.position.set(0.07, 0.60, 0.19);
-      const shineR = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 6), eyeWhiteMat);
-      shineR.position.set(0.06, 0.612, 0.21);
-      pGroup.add(eyeR, shineR);
+      const ear1 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), pMat); ear1.position.set(-0.14, 0.74, 0);
+      const ear2 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), earMat); ear2.position.set(0.14, 0.74, 0); pGroup.add(ear1, ear2);
 
       const snout = new THREE.Mesh(new THREE.SphereGeometry(0.042, 8, 8), new THREE.MeshStandardMaterial({ color: 0xff8fab, roughness: 0.6 }));
-      snout.scale.set(1.2, 0.8, 1);
-      snout.position.set(0, 0.56, 0.21);
-      pGroup.add(snout);
-
-      const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.007, 4, 8, Math.PI), new THREE.MeshBasicMaterial({ color: 0x222222 }));
-      mouth.position.set(0, 0.525, 0.21);
-      mouth.rotation.x = Math.PI * 0.1;
-      pGroup.add(mouth);
-
+      snout.scale.set(1.2, 0.8, 1); snout.position.set(0, 0.56, 0.21); pGroup.add(snout);
       return pGroup;
     }
 
     const miniAudience = new THREE.Group();
     const plushColors = [0xff7675, 0x74b9ff, 0xa29bfe, 0xffbe76, 0x55efc4, 0xfd79a8, 0xf6e58d, 0x48dbfb, 0xff9ff3];
-    let playerPlushie1 = null;
-    let playerPlushie2 = null;
+    let playerPlushie1 = null; let playerPlushie2 = null;
 
     [5.7, 6.4].forEach((radius, rowIdx) => {
       const count = rowIdx === 0 ? 14 : 18;
@@ -2242,7 +1922,6 @@
         pGroup.lookAt(0, 1.8, -2.6);
         pGroup.userData = { initialY: pGroup.position.y, phase: Math.random() * Math.PI * 2 };
         miniDiorama.add(pGroup);
-
         if (rowIdx === 0 && i === 4) playerPlushie1 = pGroup;
         if (rowIdx === 0 && i === 9) playerPlushie2 = pGroup;
       }
@@ -2280,7 +1959,6 @@
     const sScreenCtx = studioScreenCanvas.getContext('2d');
     const studioScreenTex = new THREE.CanvasTexture(studioScreenCanvas);
 
-    // Updated drawScreenFeed: Shows Country instead of City
     function drawScreenFeed(ctx, x, y, width, height, name, country, isLive, videoElem, isGuy, currentRoll, isRolling, isGoodyHostSlot) {
       ctx.fillStyle = '#05020a'; ctx.fillRect(x, y, width, height);
       ctx.strokeStyle = isGoodyHostSlot ? '#a29bfe' : (isLive ? '#39ff14' : '#ffb300');
@@ -2288,21 +1966,10 @@
 
       if (isGoodyHostSlot) {
         ctx.fillStyle = '#16082b'; ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
-        const cx = x + width / 2; const cy = y + height * 0.45;
-        ctx.fillStyle = '#cccccc'; ctx.strokeStyle = '#00f0ff'; ctx.lineWidth = 3; ctx.strokeRect(cx - 40, cy - 35, 80, 70);
-        ctx.strokeStyle = '#39ff14'; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(cx - 24, cy - 10); ctx.lineTo(cx - 14, cy - 22); ctx.lineTo(cx - 4, cy - 10); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(cx + 4, cy - 10); ctx.lineTo(cx + 14, cy - 22); ctx.lineTo(cx + 24, cy - 10); ctx.stroke();
-        if (isGoodySpeaking) { ctx.beginPath(); ctx.ellipse(cx, cy + 15, 16, 8, 0, 0, Math.PI * 2); ctx.stroke(); }
-        else { ctx.beginPath(); ctx.arc(cx, cy + 10, 12, 0.2, Math.PI - 0.2, false); ctx.stroke(); }
       } else if (isLive && videoElem.readyState >= 2) {
         ctx.save(); ctx.drawImage(videoElem, x + 2, y + 2, width - 4, height - 4); ctx.restore();
       } else {
         ctx.fillStyle = isGuy ? '#1b2a47' : '#3d1b38'; ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
-        const cx = x + width / 2; const cy = y + height * 0.58;
-        ctx.fillStyle = isGuy ? '#4a69bd' : '#e84393'; ctx.beginPath(); ctx.ellipse(cx, cy + 25, 26, 32, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#f8c291'; ctx.beginPath(); ctx.arc(cx, cy - 10, 16, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(cx - 5, cy - 10, 2, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(cx + 5, cy - 10, 2, 0, Math.PI * 2); ctx.fill();
       }
 
       if (diceCountdown > 0 && !isGoodyHostSlot) {
@@ -2312,42 +1979,20 @@
       }
 
       const diceSize = 42; const diceX = x + width - diceSize - 12; const diceY = y + 12;
-      if (isRolling) {
-        const animVal = Math.floor((performance.now() / 80) % 6) + 1;
-        drawDiceFace(ctx, diceX, diceY, diceSize, animVal);
-      } else if (currentRoll !== null) {
-        drawDiceFace(ctx, diceX, diceY, diceSize, currentRoll);
-      }
+      if (isRolling) drawDiceFace(ctx, diceX, diceY, diceSize, Math.floor((performance.now() / 80) % 6) + 1);
+      else if (currentRoll !== null) drawDiceFace(ctx, diceX, diceY, diceSize, currentRoll);
 
       ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(x, y + height - 26, width, 26);
       ctx.fillStyle = isGoodyHostSlot ? '#00f0ff' : (isLive ? '#39ff14' : '#ffda66');
       ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
-      const tag = isGoodyHostSlot ? `[AI HOST: GOODY]` : `${isLive ? ' LIVE ' : ' CALL'} ${name.toUpperCase()} [${country.toUpperCase()}]`;
-      ctx.fillText(tag, x + width/2, y + height - 8);
+      ctx.fillText(isGoodyHostSlot ? `[AI HOST: GOODY]` : `${isLive ? ' LIVE ' : ' CALL'} ${name.toUpperCase()} [${country.toUpperCase()}]`, x + width/2, y + height - 8);
     }
 
     function renderBackstageScreens() {
       sScreenCtx.fillStyle = '#060210'; sScreenCtx.fillRect(0, 0, 512, 256);
       if (studioPower) {
-        const isP1Goody = isVsGoodyMode && goodyPlayerSlot === "goody-contestant-1";
-        const isP2Goody = isVsGoodyMode && goodyPlayerSlot === "goody-contestant-2";
-        if (isP1Goody || showJake) {
-          drawScreenFeed(sScreenCtx, 15, 20, 225, 215, contestantNames["goody-contestant-1"], contestantCountries["goody-contestant-1"], hasLiveJakeStream, videoJake, true, p1RollVal, isDiceRollingP1, isP1Goody);
-        } else {
-          sScreenCtx.strokeStyle = '#ffb300'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(15, 20, 225, 215);
-          sScreenCtx.fillStyle = '#ffda66'; sScreenCtx.font = 'bold 22px sans-serif'; sScreenCtx.textAlign = 'center';
-          sScreenCtx.fillText(isSoloMode && soloPlayerId !== "goody-contestant-1" ? "WITHDRAWN" : `CONTESTANT 1 (${(contestantNames["goody-contestant-1"] || "").toUpperCase()})`, 127, 120);
-          sScreenCtx.fillStyle = '#39ff14'; sScreenCtx.font = '14px monospace'; sScreenCtx.fillText(gameState === "INTERMISSION" ? "DISCONNECTED" : "STANDBY...", 127, 150);
-        }
-
-        if (isP2Goody || showJune) {
-          drawScreenFeed(sScreenCtx, 272, 20, 225, 215, contestantNames["goody-contestant-2"], contestantCountries["goody-contestant-2"], hasLiveJuneStream, videoJune, false, p2RollVal, isDiceRollingP2, isP2Goody);
-        } else {
-          sScreenCtx.strokeStyle = '#ffb300'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(272, 20, 225, 215);
-          sScreenCtx.fillStyle = '#ffda66'; sScreenCtx.font = 'bold 22px sans-serif'; sScreenCtx.textAlign = 'center';
-          sScreenCtx.fillText(isSoloMode && soloPlayerId !== "goody-contestant-2" ? "WITHDRAWN" : `CONTESTANT 2 (${(contestantNames["goody-contestant-2"] || "").toUpperCase()})`, 384, 120);
-          sScreenCtx.fillStyle = '#39ff14'; sScreenCtx.font = '14px monospace'; sScreenCtx.fillText(gameState === "INTERMISSION" ? "DISCONNECTED" : "STANDBY...", 384, 150);
-        }
+        drawScreenFeed(sScreenCtx, 15, 20, 225, 215, contestantNames["goody-contestant-1"], contestantCountries["goody-contestant-1"], hasLiveJakeStream, videoJake, true, p1RollVal, isDiceRollingP1, isVsGoodyMode && goodyPlayerSlot === "goody-contestant-1");
+        drawScreenFeed(sScreenCtx, 272, 20, 225, 215, contestantNames["goody-contestant-2"], contestantCountries["goody-contestant-2"], hasLiveJuneStream, videoJune, false, p2RollVal, isDiceRollingP2, isVsGoodyMode && goodyPlayerSlot === "goody-contestant-2");
       }
       studioScreenTex.needsUpdate = true;
     }
@@ -2360,7 +2005,6 @@
     const podiumTrim = new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.46, 0.05, 20), silverMetalMat); podiumTrim.position.y = 1.02; miniGoody.add(podiumTrim);
     const gBody = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.4), silverMetalMat); gBody.position.y = 1.34; miniGoody.add(gBody);
     const gHead = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.35, 0.35), silverMetalMat); gHead.position.y = 1.82; miniGoody.add(gHead);
-    const gAntennaStem = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.22, 8), silverMetalMat); gAntennaStem.position.y = 2.08; miniGoody.add(gAntennaStem);
     const gAntOrb = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), new THREE.MeshBasicMaterial({ color: 0x111111 })); gAntOrb.position.y = 2.20; miniGoody.add(gAntOrb);
 
     const faceCanvas = document.createElement('canvas'); faceCanvas.width = 128; faceCanvas.height = 128;
@@ -2374,17 +2018,15 @@
       fctx.fillStyle = '#030108'; fctx.fillRect(0, 0, 128, 128);
       if (!studioPower) { gAntOrb.material.color.setHex(0x111111); faceTex.needsUpdate = true; return; }
       gAntOrb.material.color.setHex(isGoodySpeaking ? 0x00f0ff : 0x39ff14);
-      fctx.fillStyle = '#39ff14'; fctx.strokeStyle = '#39ff14'; fctx.lineWidth = 4; fctx.lineCap = 'round'; fctx.lineJoin = 'round';
+      fctx.fillStyle = '#39ff14'; fctx.strokeStyle = '#39ff14'; fctx.lineWidth = 4;
       fctx.beginPath(); fctx.moveTo(28, 56); fctx.lineTo(44, 38); fctx.lineTo(60, 56); fctx.stroke();
       fctx.beginPath(); fctx.moveTo(68, 56); fctx.lineTo(84, 38); fctx.lineTo(100, 56); fctx.stroke();
+
       if (isGoodySpeaking) {
         const mouthOpen = (Math.sin(time * 0.022) + 1.0) * 0.5;
-        const mouthHeight = 6 + (mouthOpen * 20); const mouthWidth = 40 + (mouthOpen * 6);
-        fctx.fillStyle = '#220033'; fctx.strokeStyle = '#39ff14'; fctx.lineWidth = 3.5;
-        fctx.beginPath(); fctx.ellipse(64, 88, mouthWidth / 2, mouthHeight / 2, 0, 0, Math.PI * 2); fctx.fill(); fctx.stroke();
-        fctx.fillStyle = '#ffffff'; fctx.fillRect(54, 88 - (mouthHeight / 2) + 2, 20, Math.min(5, mouthHeight / 2));
+        fctx.beginPath(); fctx.ellipse(64, 88, 20 + mouthOpen * 3, 3 + mouthOpen * 10, 0, 0, Math.PI * 2); fctx.stroke();
       } else {
-        fctx.strokeStyle = '#39ff14'; fctx.lineWidth = 5; fctx.beginPath(); fctx.arc(64, 78, 16, 0.2, Math.PI - 0.2, false); fctx.stroke();
+        fctx.lineWidth = 5; fctx.beginPath(); fctx.arc(64, 78, 16, 0.2, Math.PI - 0.2, false); fctx.stroke();
       }
       faceTex.needsUpdate = true;
     }
@@ -2392,16 +2034,12 @@
     function createStudioRoboticCamera(x, z) {
       const camRig = new THREE.Group(); camRig.position.set(x, 0.44, z);
       const darkMat = new THREE.MeshStandardMaterial({ color: 0x1f1f26 });
-      const basePlate = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.42, 0.08, 16), darkMat); basePlate.position.y = 0.04; camRig.add(basePlate);
-      const outerCol = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.13, 0.55, 16), darkMat); outerCol.position.y = 0.35; camRig.add(outerCol);
       const headPivot = new THREE.Group(); headPivot.position.y = 1.0;
       const cameraBox = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.24, 0.42), darkMat); headPivot.add(cameraBox);
       const lensBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.095, 0.26, 16), new THREE.MeshStandardMaterial({ color: 0x0a0a0a }));
       lensBarrel.rotation.x = Math.PI / 2; lensBarrel.position.set(0, 0, -0.24); headPivot.add(lensBarrel);
-      const frontGlass = new THREE.Mesh(new THREE.CircleGeometry(0.08, 16), new THREE.MeshBasicMaterial({ color: 0x00f0ff })); frontGlass.position.set(0, 0, -0.431); headPivot.add(frontGlass);
-      const tallyLamp = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff0000 })); tallyLamp.position.set(0, 0.15, -0.28); headPivot.add(tallyLamp);
       camRig.add(headPivot); miniDiorama.add(camRig);
-      return { headPivot, tallyLamp, frontGlass };
+      return { headPivot };
     }
     const autoCam1 = createStudioRoboticCamera(-2.4, 0.3);
     const autoCam2 = createStudioRoboticCamera(2.4, 0.3);
@@ -2411,10 +2049,6 @@
       if (studioPower) {
         autoCam1.headPivot.lookAt(hostHeadPos); autoCam2.headPivot.lookAt(hostHeadPos);
         autoCam1.headPivot.rotation.y += Math.PI; autoCam2.headPivot.rotation.y += Math.PI;
-        autoCam1.tallyLamp.material.color.setHex(0xff0000); autoCam2.tallyLamp.material.color.setHex(0xff0000);
-      } else {
-        autoCam1.headPivot.rotation.set(0.6, 0.2, 0); autoCam2.headPivot.rotation.set(0.6, -0.2, 0);
-        autoCam1.tallyLamp.material.color.setHex(0x111111); autoCam2.tallyLamp.material.color.setHex(0x111111);
       }
     }
     scene.add(miniDiorama);
@@ -2464,19 +2098,8 @@
       renderBackstageScreens();
       renderGoodyFace(time);
 
-      if (pawn1 && pawn1.userData && pawn1.userData.badgeMesh) pawn1.userData.badgeMesh.quaternion.copy(camera.quaternion);
-      if (pawn2 && pawn2.userData && pawn2.userData.badgeMesh) pawn2.userData.badgeMesh.quaternion.copy(camera.quaternion);
-
-      if (studioPower) {
-        updateCameraAlignment();
-        fixtureCyan.target.position.x = -1.2 + Math.sin(time * 0.003) * 1.5;
-        fixtureMagenta.target.position.x = 1.2 + Math.cos(time * 0.003) * 1.5;
-        miniAudience.children.forEach((p) => {
-          if (p !== playerPlushie1 && p !== playerPlushie2) {
-            p.position.y = p.userData.initialY + Math.sin(time * 0.006 + p.userData.phase) * 0.04;
-          }
-        });
-      }
+      if (pawn1?.userData?.badgeMesh) pawn1.userData.badgeMesh.quaternion.copy(camera.quaternion);
+      if (pawn2?.userData?.badgeMesh) pawn2.userData.badgeMesh.quaternion.copy(camera.quaternion);
 
       if (controls.isLocked) {
         velocity.x -= velocity.x * 10.0 * delta; velocity.z -= velocity.z * 10.0 * delta;
