@@ -374,10 +374,19 @@
     let stageSelectedOption = null;
     let stageOptionStatus = null;
 
+    // Mobile-Compliant Video Elements
     const videoJake = document.createElement('video');
-    videoJake.autoplay = true; videoJake.playsInline = true; videoJake.muted = true;
+    videoJake.autoplay = true; 
+    videoJake.playsInline = true; 
+    videoJake.muted = true;
+    videoJake.setAttribute('playsinline', '');
+
     const videoJune = document.createElement('video');
-    videoJune.autoplay = true; videoJune.playsInline = true; videoJune.muted = true;
+    videoJune.autoplay = true; 
+    videoJune.playsInline = true; 
+    videoJune.muted = true;
+    videoJune.setAttribute('playsinline', '');
+
     let hasLiveJakeStream = false;
     let hasLiveJuneStream = false;
 
@@ -385,6 +394,11 @@
 
     btnJoinStudio.addEventListener('click', () => {
       unlockAudio();
+      
+      // Prime video playback on user gesture for iOS & Android Chrome
+      videoJake.play().catch(() => {});
+      videoJune.play().catch(() => {});
+
       const entered = audienceNameInput.value.trim();
       if (entered.length > 0) audienceNickname = entered;
       userDisplayName.textContent = audienceNickname.toUpperCase();
@@ -393,10 +407,11 @@
       startLimoArrivalCutscene();
     });
 
-    // --- 2. WEBRTC CONNECTION ---
+    // --- 2. WEBRTC CONNECTION & MEDIA STREAM PIPELINE ---
     function connectToStudio() {
       peer = new Peer();
       peer.on('open', () => {
+        // Data connection for Chat, Positions, Timers
         dataConn = peer.connect('goody-main-studio', {
           metadata: {
             role: 'AUDIENCE',
@@ -409,6 +424,27 @@
         dataConn.on('open', () => {
           addChatMessage('System', 'Connected to live studio relay!', 'is-host');
         });
+
+        // Request live video feed from host using a lightweight dummy stream
+        try {
+          const dummyCanvas = document.createElement('canvas');
+          dummyCanvas.width = 16;
+          dummyCanvas.height = 16;
+          const dummyStream = dummyCanvas.captureStream(1);
+
+          const mediaCall = peer.call('goody-main-studio', dummyStream, {
+            metadata: { role: 'AUDIENCE' }
+          });
+
+          mediaCall.on('stream', (incomingStream) => {
+            videoJake.srcObject = incomingStream;
+            videoJake.muted = true;
+            videoJake.play().catch(() => {});
+            hasLiveJakeStream = true;
+          });
+        } catch (err) {
+          console.error("Audience media subscribe error:", err);
+        }
 
         dataConn.on('data', (data) => {
           if (data.type === 'SYNC_MATCH_TIMER') {
@@ -487,14 +523,19 @@
           }
         });
 
+        // Direct stream reception handler
         peer.on('call', (call) => {
           call.answer();
           call.on('stream', (remoteStream) => {
             if (call.metadata && call.metadata.contestant === "goody-contestant-2") {
-              videoJune.srcObject = remoteStream; videoJune.play().catch(() => {});
+              videoJune.srcObject = remoteStream; 
+              videoJune.muted = true;
+              videoJune.play().catch(() => {});
               hasLiveJuneStream = true;
             } else {
-              videoJake.srcObject = remoteStream; videoJake.play().catch(() => {});
+              videoJake.srcObject = remoteStream; 
+              videoJake.muted = true;
+              videoJake.play().catch(() => {});
               hasLiveJakeStream = true;
             }
           });
@@ -560,7 +601,7 @@
       if (!text) return;
       const now = performance.now();
       
-      // Cooldown rule: 2.5s between messages
+      // Enforce the 2.5s anti-spam flood cooldown
       if (now - lastMessageSentTime < 2500) return;
       lastMessageSentTime = now;
 
@@ -598,7 +639,7 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
 
-    // ILLUMINATION RIG
+    // Illumination Rig
     const ambientLight = new THREE.AmbientLight(0x352155, 1.6); scene.add(ambientLight);
     const ceilingLight = new THREE.PointLight(0xffecd2, 1.2, 60); ceilingLight.position.set(0, 16.0, 0); scene.add(ceilingLight);
     const studioSpot = new THREE.SpotLight(0x00f0ff, 5.0, 30, Math.PI / 3, 0.4); studioSpot.position.set(0, 11, -9); scene.add(studioSpot);
@@ -609,7 +650,7 @@
     const foyerChandelier2 = new THREE.PointLight(0xffdfa9, 3.5, 20); foyerChandelier2.position.set(3.5, 3.8, -4.5); scene.add(foyerChandelier2);
     const restroomVanityLight = new THREE.PointLight(0xffffff, 2.5, 12); restroomVanityLight.position.set(8.5, 3.2, -5.0); scene.add(restroomVanityLight);
 
-    // --- GROUND LEVEL: STREET, LOBBY, FOYER, RESTROOMS ---
+    // Ground Level: Street, Foyer, Restrooms
     const groundLevelGroup = new THREE.Group();
 
     const streetMat = new THREE.MeshStandardMaterial({ color: 0x121216, roughness: 0.9 });
@@ -622,7 +663,7 @@
     const foyerFloor = new THREE.Mesh(new THREE.PlaneGeometry(24, 16), new THREE.MeshStandardMaterial({ color: 0x221338, roughness: 0.25 }));
     foyerFloor.rotation.x = -Math.PI / 2; foyerFloor.position.set(0, 0.25, -5); groundLevelGroup.add(foyerFloor);
 
-    // TRUE CRIMSON RED CARPET
+    // Crimson Red Carpet
     const redCarpetGroup = new THREE.Group();
     const crimsonCarpetMat = new THREE.MeshStandardMaterial({ color: 0x99001a, roughness: 0.85 });
     const goldTrimMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.85, roughness: 0.2 });
@@ -665,14 +706,14 @@
     marqueeSign.position.set(0, 0.2, 2.01); marqueeGroup.add(marqueeSign);
     groundLevelGroup.add(marqueeGroup);
 
-    // --- REFRESHMENTS & SNACK BAR ---
+    // Refreshments & Snack Bar
     const barGroup = new THREE.Group(); barGroup.position.set(-7.5, 0.25, -5.0);
     const counterBase = new THREE.Mesh(new THREE.BoxGeometry(6.5, 1.1, 2.2), new THREE.MeshStandardMaterial({ color: 0x3d1a0a, roughness: 0.7 }));
     counterBase.position.y = 0.55; barGroup.add(counterBase);
     const marbleTop = new THREE.Mesh(new THREE.BoxGeometry(6.7, 0.1, 2.4), new THREE.MeshStandardMaterial({ color: 0xe6e6e6, roughness: 0.2 }));
     marbleTop.position.y = 1.12; barGroup.add(marbleTop);
 
-    // Popcorn Warmer Machine
+    // Popcorn Machine
     const popcornMachine = new THREE.Group(); popcornMachine.position.set(-1.8, 1.17, 0);
     const pcBase = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.2, 1.0), new THREE.MeshStandardMaterial({ color: 0xc0392b })); pcBase.position.y = 0.1; popcornMachine.add(pcBase);
     const pcGlass = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.1, 0.9), new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.35 }));
@@ -683,7 +724,7 @@
     const pcLight = new THREE.PointLight(0xffda77, 1.2, 4); pcLight.position.y = 1.0; popcornMachine.add(pcLight);
     barGroup.add(popcornMachine);
 
-    // Soda Dispenser Machine
+    // Soda Machine
     const sodaMachine = new THREE.Group(); sodaMachine.position.set(1.5, 1.17, 0);
     const smBody = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.2, 1.0), new THREE.MeshStandardMaterial({ color: 0x222f3e, metalness: 0.7 }));
     smBody.position.y = 0.6; sodaMachine.add(smBody);
@@ -698,7 +739,7 @@
     barGroup.add(barUsher);
     groundLevelGroup.add(barGroup);
 
-    // --- WALK-IN LUXURY RESTROOM ---
+    // Luxury Restroom
     const restroomGroup = new THREE.Group(); restroomGroup.position.set(8.5, 0.25, -5.0);
     const tileMat = new THREE.MeshStandardMaterial({ color: 0xdfe6e9, roughness: 0.3 });
     const rBackWall = new THREE.Mesh(new THREE.PlaneGeometry(6, 4), tileMat); rBackWall.position.set(0, 2, -2.5); restroomGroup.add(rBackWall);
@@ -723,7 +764,7 @@
     handDryer.position.set(2.4, 1.6, -1.2); restroomGroup.add(handDryer);
     groundLevelGroup.add(restroomGroup);
 
-    // --- EXPRESS STUDIO ELEVATOR ---
+    // Express Studio Elevator
     const elevatorGroup = new THREE.Group(); elevatorGroup.position.set(0, 0.25, -12.5);
     const elevOuter = new THREE.Mesh(new THREE.BoxGeometry(4.5, 4.5, 3.5), new THREE.MeshStandardMaterial({ color: 0x221338 }));
     elevOuter.position.y = 2.25; elevatorGroup.add(elevOuter);
@@ -765,7 +806,7 @@
     const wallClockMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.2), new THREE.MeshBasicMaterial({ map: wallClockTex }));
     wallClockMesh.position.set(0, 6.2, -4.4); miniDiorama.add(wallClockMesh);
 
-    // 14-Country Flags
+    // Flag Textures
     const COUNTRIES = ["France", "Netherlands", "Canada", "Sweden", "Italy", "Denmark", "Brazil", "Australia", "Spain", "Germany", "United Kingdom", "Nigeria", "United States", "Belgium"];
     function createCountryFlagTexture(countryName) {
       const c = document.createElement('canvas'); c.width = 256; c.height = 256;
@@ -1055,17 +1096,22 @@
       faceTex.needsUpdate = true;
     }
 
-    // Backstage Screens
+    // Backstage Screens (Real Camera Feed Renderer)
     const studioScreenCanvas = document.createElement('canvas'); studioScreenCanvas.width = 512; studioScreenCanvas.height = 256;
     const sScreenCtx = studioScreenCanvas.getContext('2d');
     const studioScreenTex = new THREE.CanvasTexture(studioScreenCanvas);
+    
     function drawScreenFeed(ctx, x, y, width, height, name, city, isLive, videoElem, isGuy, currentRoll) {
       ctx.fillStyle = '#05020a'; ctx.fillRect(x, y, width, height);
       ctx.strokeStyle = '#39ff14'; ctx.lineWidth = 3; ctx.strokeRect(x, y, width, height);
 
-      if (isLive && videoElem.readyState >= 2) {
-        ctx.save(); ctx.drawImage(videoElem, x + 2, y + 2, width - 4, height - 4); ctx.restore();
+      // Render actual live WebRTC camera frame if available
+      if (isLive && videoElem && videoElem.readyState >= 2) {
+        ctx.save(); 
+        ctx.drawImage(videoElem, x + 2, y + 2, width - 4, height - 4); 
+        ctx.restore();
       } else {
+        // Fallback placeholder avatar
         ctx.fillStyle = isGuy ? '#1b2a47' : '#3d1b38'; ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
         const cx = x + width / 2; const cy = y + height * 0.58;
         ctx.fillStyle = isGuy ? '#4a69bd' : '#e84393'; ctx.beginPath(); ctx.ellipse(cx, cy + 25, 26, 32, 0, 0, Math.PI * 2); ctx.fill();
@@ -1075,6 +1121,7 @@
       ctx.fillStyle = '#39ff14'; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
       ctx.fillText(`${isLive ? 'LIVE' : 'CALL'} ${name.toUpperCase()} [${city.toUpperCase()}]`, x + width / 2, y + height - 8);
     }
+
     function renderBackstageScreens() {
       sScreenCtx.fillStyle = '#060210'; sScreenCtx.fillRect(0, 0, 512, 256);
       drawScreenFeed(sScreenCtx, 15, 20, 225, 215, p1ContestantName, p1ContestantCity, hasLiveJakeStream, videoJake, true, p1RollVal);
