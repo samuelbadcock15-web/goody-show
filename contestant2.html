@@ -6,7 +6,7 @@
   <title>Goody Tonight Show - Contestant 2</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
-    
+   
     html, body {
       width: 100%;
       height: 100%;
@@ -248,7 +248,7 @@
       font-size: 0.75rem; font-weight: bold; color: #ffda66; text-transform: uppercase;
     }
     #q-timer { font-family: monospace; font-weight: bold; color: #ff7675; font-size: 0.8rem; text-align: right; }
-    
+   
     #q-text {
       font-size: 0.82rem; font-weight: 600; line-height: 1.3; color: #ffffff;
       background: rgba(0,0,0,0.35); padding: 6px; border-radius: 6px; border-left: 3px solid #00f0ff;
@@ -297,7 +297,7 @@
   <div id="setup-card">
     <div class="badge-podium">PODIUM 2</div>
     <h2 style="color: #ffda66; margin-bottom: 12px; font-size: 1.25rem;">The Goody Tonight Show</h2>
-    
+   
     <div class="form-group">
       <span class="input-label">Host Screen 4-Digit Code:</span>
       <input type="text" id="passcode-input" maxlength="4" placeholder="0000" inputmode="numeric" pattern="[0-9]*" autocomplete="off" />
@@ -585,7 +585,7 @@
               if (rollTimer) clearInterval(rollTimer);
               if (questionTimer) clearInterval(questionTimer);
               if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-              
+             
               choiceCard.style.display = 'none';
               btnRollDice.disabled = true;
               btnRollDice.classList.remove('active-roll');
@@ -811,7 +811,7 @@
       btnRollDice.style.display = 'none';
       recapCard.style.display = 'none';
       triviaCard.style.display = 'flex';
-      
+     
       qCountryTag.textContent = ` ${qData.country} (${isMyTurn ? "YOUR QUESTION" : activeName.toUpperCase() + "'S QUESTION"})`;
       qText.textContent = qData.text || qData.q || "Listen to host:";
       qTimer.textContent = " LISTENING...";
