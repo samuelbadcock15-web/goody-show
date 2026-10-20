@@ -355,7 +355,7 @@
     let isDiceRollingP1 = false;
     let isDiceRollingP2 = false;
 
-    // Movement lock flag to prevent duplicate hop triggers
+    // Movement and turn state locks
     let isPawnMoving = false;
     let hasPlayerRolledThisTurn = false;
 
@@ -527,6 +527,8 @@
 
       isPawnMoving = false;
       hasPlayerRolledThisTurn = false;
+      isDiceRollingP1 = false;
+      isDiceRollingP2 = false;
 
       savedGameState = gameState;
       savedTurnPlayer = activePlayer;
@@ -803,6 +805,8 @@
       p1RollVal = null;
       p2RollVal = null;
       hasPlayerRolledThisTurn = false;
+      isDiceRollingP1 = false;
+      isDiceRollingP2 = false;
 
       const qPool = COUNTRY_QUESTIONS[country] || COUNTRY_QUESTIONS["UK"];
       const rawQ = qPool[Math.floor(Math.random() * qPool.length)];
@@ -856,6 +860,9 @@
       p1RollVal = null;
       p2RollVal = null;
       hasPlayerRolledThisTurn = false;
+      isPawnMoving = false;
+      isDiceRollingP1 = false;
+      isDiceRollingP2 = false;
       renderStageQuestionBoard();
 
       broadcastMicState("goody-contestant-1", false);
@@ -881,7 +888,6 @@
 
     function executeGoodyTurnRoll() {
       if (hasPlayerRolledThisTurn || isPawnMoving) return;
-      hasPlayerRolledThisTurn = true;
 
       const isGoodyP2 = goodyPlayerSlot === "goody-contestant-2";
       if (isGoodyP2) isDiceRollingP2 = true;
@@ -1571,7 +1577,6 @@
           playTone(440, 'triangle', 0.08, 0.03);
         } else {
           clearInterval(diceInterval);
-          // If the player has not rolled yet, the host rolls authoritatively ONCE
           if (!hasPlayerRolledThisTurn && !isPawnMoving) {
             const autoVal = Math.floor(Math.random() * 6) + 1;
             handlePlayerRoll(turnPlayer, pName, autoVal);
@@ -1596,8 +1601,12 @@
           finalizeDiceDuel();
         }
       } else if (gameState === "IN_PLAY") {
-        // Enforce strict lock: must be active turn player, must not already have rolled this turn, pawn must not be moving
-        if (contestant !== activePlayer || hasPlayerRolledThisTurn || isPawnMoving) return;
+        if (contestant !== activePlayer || hasPlayerRolledThisTurn || isPawnMoving) {
+          // If rejected, ensure we stop any active roll loop
+          if (contestant === "goody-contestant-2") isDiceRollingP2 = false;
+          else isDiceRollingP1 = false;
+          return;
+        }
         hasPlayerRolledThisTurn = true;
         isPawnMoving = true;
         
@@ -1976,6 +1985,8 @@
       p2RollVal = null;
       hasPlayerRolledThisTurn = false;
       isPawnMoving = false;
+      isDiceRollingP1 = false;
+      isDiceRollingP2 = false;
       renderStageQuestionBoard();
 
       if (activePlayer === goodyPlayerSlot) {
