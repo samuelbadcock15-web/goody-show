@@ -17,7 +17,7 @@
       box-shadow: 0 0 8px #00f0ff; transition: transform 0.15s; z-index: 10;
     }
     #crosshair.hover-active { transform: translate(-50%, -50%) scale(2.2); background: #ff69b4; }
-    
+   
     /* PRODUCER PIN GATE MODAL */
     #host-auth-gate {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -707,7 +707,7 @@
       renderStageQuestionBoard();
 
       const speech = `Welcome back to The Goody Tonight Show! Unfortunately, we have been unable to find a replacement contestant. But the show must go on! So ${remainingName}, we are placing the power in your hands! You have two choices: You can choose to go it alone as a solo race to see if you can reach tile 32 before the 20-minute timer expires—remember, if time runs out, nobody wins and the prize rolls over! Or, you can choose to go head-to-head with me, Goody! I will take over the board right where your opponent left off! ${remainingName}, make your choice now!`;
-      
+     
       speakGoody(speech, () => {
         connectedDataConns.forEach(c => {
           if (c.open) c.send({ type: "OFFER_CONTESTANT_CHOICE" });
@@ -1035,14 +1035,14 @@
 
     const controls = new THREE.PointerLockControls(camera, document.body);
 
-    blockerEl.addEventListener('click', () => { 
+    blockerEl.addEventListener('click', () => {
       if (!isHostAuthorized) return;
-      initAudio(); 
-      controls.lock(); 
+      initAudio();
+      controls.lock();
     });
     controls.addEventListener('lock', () => { blockerEl.style.display = 'none'; });
-    controls.addEventListener('unlock', () => { 
-      if (isHostAuthorized) blockerEl.style.display = 'flex'; 
+    controls.addEventListener('unlock', () => {
+      if (isHostAuthorized) blockerEl.style.display = 'flex';
     });
 
     // --- MODERATION & SHADOWBAN STORE ---
@@ -1142,13 +1142,13 @@
               videoJune.srcObject = remoteStream;
               videoJune.muted = false;
               videoJune.play().catch(console.error);
-              hasLiveJuneStream = true; 
+              hasLiveJuneStream = true;
               showJune = true;
             } else {
               videoJake.srcObject = remoteStream;
               videoJake.muted = false;
               videoJake.play().catch(console.error);
-              hasLiveJakeStream = true; 
+              hasLiveJakeStream = true;
               showJake = true;
             }
             broadcastBoardState();
@@ -1275,7 +1275,7 @@
 
               const chatRow = document.createElement('div');
               chatRow.className = `mod-chat-row ${isShadowbanned ? 'is-shadowbanned' : ''}`;
-              
+             
               const textSpan = document.createElement('span');
               textSpan.innerHTML = `<strong style="color:${isShadowbanned ? '#ff7675' : '#00f0ff'};">${authorName}:</strong> ${rawText} ${isShadowbanned ? '<em style="color:#ff7675;">[SHADOWBANNED]</em>' : ''}`;
               chatRow.appendChild(textSpan);
@@ -1442,7 +1442,7 @@
         if (onComplete) onComplete();
         return;
       }
-      
+     
       window.speechSynthesis.cancel();
       goodyUtterance = new SpeechSynthesisUtterance(text);
       goodyUtterance.rate = 0.95;
@@ -1546,7 +1546,7 @@
         }
       } else if (gameState === "IN_PLAY") {
         if (contestant !== activePlayer) return;
-        
+       
         if (diceInterval) clearInterval(diceInterval);
         diceCountdown = 0;
 
@@ -1576,7 +1576,7 @@
         const mins = Math.max(0, Math.floor(matchTimerSeconds / 60)).toString().padStart(2, '0');
         const secs = Math.max(0, (matchTimerSeconds % 60)).toString().padStart(2, '0');
         const timeStr = `${mins}:${secs}`;
-        
+       
         gameClockValEl.textContent = timeStr;
         renderWallClockTexture(timeStr);
 
@@ -1709,7 +1709,7 @@
         const landedCountry = boardTileCoords[currentTileIdx].country;
         const qPool = COUNTRY_QUESTIONS[landedCountry] || COUNTRY_QUESTIONS["UK"];
         const rawQ = qPool[Math.floor(Math.random() * qPool.length)];
-        
+       
         activeQuestion = {
           country: landedCountry,
           text: rawQ.q,
@@ -2357,11 +2357,11 @@
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       const cleanName = (displayName || "PLAYER").toUpperCase().trim();
-      
+     
       let fontSize = 48;
       if (cleanName.length > 8) fontSize = 36;
       if (cleanName.length > 12) fontSize = 28;
-      
+     
       ctx.font = `bold ${fontSize}px sans-serif`;
       ctx.fillText(cleanName, w / 2, h / 2 + 2);
 
@@ -2840,7 +2840,7 @@
       ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(x, y + height - 26, width, 26);
       ctx.fillStyle = isGoodyHostSlot ? '#00f0ff' : (isLive ? '#39ff14' : '#ffda66');
       ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
-      
+     
       const tag = isGoodyHostSlot
         ? `[AI HOST: GOODY]`
         : `${isLive ? ' LIVE ' : ' CALL'} ${name.toUpperCase()} [${city.toUpperCase()}]`;
