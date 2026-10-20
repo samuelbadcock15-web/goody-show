@@ -607,7 +607,7 @@
       renderStageQuestionBoard();
 
       const speech = `Welcome back to The Goody Tonight Show! Unfortunately, we have been unable to find a replacement contestant. But the show must go on! So ${remainingName}, we are placing the power in your hands! You have two choices: You can choose to go it alone as a solo race to see if you can reach tile 32 before the 20-minute timer expires—remember, if time runs out, nobody wins and the prize rolls over! Or, you can choose to go head-to-head with me, Goody! I will take over the board right where your opponent left off! ${remainingName}, make your choice now!`;
-     
+      
       speakGoody(speech, () => {
         connectedDataConns.forEach(c => {
           if (c.open) c.send({ type: "OFFER_CONTESTANT_CHOICE" });
@@ -819,121 +819,25 @@
       });
     }
 
-    // --- SPEECH RECOGNITION & CONVERSATIONAL BANTER ENGINE ---
-    let speechRecognizer = null;
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      speechRecognizer = new SR();
-      speechRecognizer.continuous = false;
-      speechRecognizer.interimResults = false;
-      speechRecognizer.lang = 'en-GB';
-    }
-
-    function listenToContestantVoice(durationSeconds, onResult) {
-      if (!speechRecognizer) {
-        setTimeout(() => onResult(""), durationSeconds * 1000);
-        return;
-      }
-
-      let capturedText = "";
-      let hasEnded = false;
-
-      speechRecognizer.onresult = (event) => {
-        if (event.results.length > 0) {
-          capturedText = event.results[0][0].transcript;
-        }
-      };
-
-      speechRecognizer.onerror = () => {};
-      speechRecognizer.onend = () => {};
-
-      try { speechRecognizer.start(); } catch(e) {}
-
-      setTimeout(() => {
-        if (hasEnded) return;
-        hasEnded = true;
-        try { speechRecognizer.stop(); } catch(e) {}
-        onResult(capturedText.trim());
-      }, durationSeconds * 1000);
-    }
-
-    function generateHostBanter(name, city, userSpeech, onComplete) {
-      playTone(880, 'sine', 0.08, 0.04);
-      setTimeout(() => playTone(1200, 'sine', 0.08, 0.04), 100);
-
-      const cleaned = userSpeech.toLowerCase();
-
-      if (!cleaned || cleaned.length < 2) {
-        const fallbacks = [
-          `Speechless already, ${name}? I don't blame you, my studio lights are dazzling!`,
-          `Saving your vocal cords for the board, ${name}? A true strategist!`,
-          `Quiet confidence from ${city}! Let's see if the dice agree with you, ${name}!`
-        ];
-        onComplete(fallbacks[Math.floor(Math.random() * fallbacks.length)]);
-        return;
-      }
-
-      if (cleaned.includes("ready") || cleaned.includes("win") || cleaned.includes("yes") || cleaned.includes("yeah") || cleaned.includes("good")) {
-        onComplete(`I love that winning spirit, ${name}! Let's find out if ${city} is taking home tonight's prize!`);
-        return;
-      }
-      if (cleaned.includes("nervous") || cleaned.includes("scared") || cleaned.includes("worried") || cleaned.includes("no")) {
-        onComplete(`Don't let the circuits intimidate you, ${name}! Deep breaths, ${city} is cheering you on!`);
-        return;
-      }
-
-      onComplete(`Well said, ${name}! My processors love that energy from ${city}!`);
-    }
-
-    // --- INTERACTIVE INTRO STAGE BANTER SEQUENCE ---
+    // --- STREAMLINED INTRO MONOLOGUE (NO 6-SECOND DELAYS) ---
     function startGoodyMonologue() {
       const p1 = contestantNames["goody-contestant-1"] || "Contestant 1";
       const c1 = contestantCities["goody-contestant-1"] || "London";
       const p2 = contestantNames["goody-contestant-2"] || "Contestant 2";
       const c2 = contestantCities["goody-contestant-2"] || "Nottingham";
 
-      const part1 = "Hello, good evening, and welcome to The Goody Tonight Show! " +
+      const introText = "Hello, good evening, and welcome to The Goody Tonight Show! " +
         "I'm your host, Goody! " +
         "You are now part of the world's first and only televised self-exclusion game show! " +
         "Now, let's meet tonight's contestants! " +
-        `Contestant number 1! This is ${p1} from ${c1}! ` +
-        `${p1}, your microphone is live for 6 seconds! Give a shout-out and tell us how you're feeling tonight!`;
+        `At Podium 1, we have ${p1} from ${c1}! ` +
+        `And at Podium 2, we have ${p2} from ${c2}! ` +
+        "Welcome to the studio! Now we need to determine who moves first! " +
+        "Contestants, you both have 10 seconds to roll your dice!";
 
-      speakGoody(part1, () => {
+      speakGoody(introText, () => {
         if (gameState !== "INTRO_SPEECH") return;
-
-        broadcastMicState("goody-contestant-1", true, "🎙️ ON AIR: Shout out to Goody now!");
-
-        listenToContestantVoice(6, (p1Words) => {
-          broadcastMicState("goody-contestant-1", false);
-          if (gameState !== "INTRO_SPEECH") return;
-
-          generateHostBanter(p1, c1, p1Words, (banter1) => {
-            const part2 = `${banter1} And now, let's meet contestant number 2! ` +
-              `This is ${p2} from ${c2}! ` +
-              `${p2}, your microphone is live for 6 seconds! Say hello to everyone watching at home!`;
-
-            speakGoody(part2, () => {
-              if (gameState !== "INTRO_SPEECH") return;
-
-              broadcastMicState("goody-contestant-2", true, "🎙️ ON AIR: Shout out to Goody now!");
-
-              listenToContestantVoice(6, (p2Words) => {
-                broadcastMicState("goody-contestant-2", false);
-                if (gameState !== "INTRO_SPEECH") return;
-
-                generateHostBanter(p2, c2, p2Words, (banter2) => {
-                  const part3 = `${banter2} Now we need to determine who moves first! ` +
-                    `Contestants, you both have 10 seconds to roll your dice!`;
-
-                  speakGoody(part3, () => {
-                    beginTenSecondDiceDuel();
-                  });
-                });
-              });
-            });
-          });
-        });
+        beginTenSecondDiceDuel();
       });
     }
 
@@ -1039,7 +943,6 @@
     const shadowbannedHardwareIds = new Set();
     let isAudienceChatGlobalMuted = false;
 
-    // Automated Profanity & Harassment Tripwire Regex
     const profanityTripwireRegex = /\b(fuck|shit|bitch|cunt|nigger|nigga|faggot|retard|whore|slut|pussy|dick|bastard|asshole)\b/i;
 
     function isSenderShadowbanned(token, hardwareId) {
@@ -1130,7 +1033,6 @@
         studioPeer.on('connection', (conn) => {
           const isAudience = conn.metadata && conn.metadata.role === 'AUDIENCE';
 
-          // Contestants Jake and June must verify passcode; audience members join freely
           if (!isAudience) {
             const passcode = conn.metadata ? conn.metadata.passcode : "";
             if (passcode !== studioRoomCode) {
@@ -1167,7 +1069,6 @@
               connectedAudiencePeers.add(conn.peer);
               broadcastAudienceCount();
 
-              // Send initial state sync to incoming audience member
               const mins = Math.max(0, Math.floor(matchTimerSeconds / 60)).toString().padStart(2, '0');
               const secs = Math.max(0, (matchTimerSeconds % 60)).toString().padStart(2, '0');
               conn.send({ type: "SYNC_MATCH_TIMER", timeStr: `${mins}:${secs}`, secondsLeft: matchTimerSeconds });
@@ -1221,7 +1122,6 @@
           });
 
           conn.on('data', (data) => {
-            // --- AUDIENCE LIVE CHAT & SHADOWBAN DISPATCHER ---
             if (data.type === "AUDIENCE_CHAT_MESSAGE") {
               const senderToken = data.sessionToken;
               const senderHw = data.hardwareId;
@@ -1237,13 +1137,11 @@
 
               const isShadowbanned = alreadyBanned || tripsFilter;
 
-              // Append to host moderation tray
               const chatRow = document.createElement('div');
               chatRow.className = `mod-chat-row ${isShadowbanned ? 'is-shadowbanned' : ''}`;
-             
+              
               const textSpan = document.createElement('span');
               textSpan.innerHTML = `<strong style="color:${isShadowbanned ? '#ff7675' : '#00f0ff'};">${authorName}:</strong> ${rawText} ${isShadowbanned ? '<em style="color:#ff7675;">[SHADOWBANNED]</em>' : ''}`;
-
               chatRow.appendChild(textSpan);
 
               if (!isShadowbanned) {
@@ -1262,7 +1160,6 @@
               modChatStream.appendChild(chatRow);
               modChatStream.scrollTop = modChatStream.scrollHeight;
 
-              // If allowed and chat is not globally muted, broadcast to all spectators
               if (!isShadowbanned && !isAudienceChatGlobalMuted) {
                 connectedDataConns.forEach(c => {
                   if (c.open && c.metadata && c.metadata.role === 'AUDIENCE') {
@@ -1410,7 +1307,7 @@
         if (onComplete) onComplete();
         return;
       }
-     
+      
       window.speechSynthesis.cancel();
       goodyUtterance = new SpeechSynthesisUtterance(text);
       goodyUtterance.rate = 0.95;
@@ -1513,7 +1410,7 @@
         }
       } else if (gameState === "IN_PLAY") {
         if (contestant !== activePlayer) return;
-       
+        
         if (diceInterval) clearInterval(diceInterval);
         diceCountdown = 0;
 
@@ -1543,7 +1440,7 @@
         const mins = Math.max(0, Math.floor(matchTimerSeconds / 60)).toString().padStart(2, '0');
         const secs = Math.max(0, (matchTimerSeconds % 60)).toString().padStart(2, '0');
         const timeStr = `${mins}:${secs}`;
-       
+        
         gameClockValEl.textContent = timeStr;
         renderWallClockTexture(timeStr);
 
@@ -1561,24 +1458,37 @@
       }, 1000);
     }
 
+    // --- FAIR OPENING DICE DUEL WITH TIE RE-ROLL ---
     function finalizeDiceDuel() {
       if (p1RollVal === null) p1RollVal = Math.floor(Math.random() * 6) + 1;
       if (p2RollVal === null) p2RollVal = Math.floor(Math.random() * 6) + 1;
       isDiceRollingP1 = false;
       isDiceRollingP2 = false;
 
-      if (p1RollVal === p2RollVal) p1RollVal++;
+      // Handle Tie: Re-roll fresh rather than adding or artificially bumping
+      if (p1RollVal === p2RollVal) {
+        const tieVal = p1RollVal;
+        const speech = `Both contestants rolled a ${tieVal}! It's a dead heat tie! We must re-roll to decide who goes first! Rolling again in 3, 2, 1!`;
+        speakGoody(speech, () => {
+          p1RollVal = null;
+          p2RollVal = null;
+          beginTenSecondDiceDuel();
+        });
+        return;
+      }
 
       const winnerNum = p1RollVal > p2RollVal ? 1 : 2;
       activePlayer = winnerNum === 1 ? "goody-contestant-1" : "goody-contestant-2";
-      const winRoll = winnerNum === 1 ? p1RollVal : p2RollVal;
+      
+      // Advance by ONLY the winning roll
+      const finalWinningRoll = winnerNum === 1 ? p1RollVal : p2RollVal;
 
       gameState = "IN_PLAY";
       renderStageQuestionBoard();
       startTwentyMinuteMatchTimer();
 
-      speakGoody(`Contestant number ${winnerNum} wins the roll and goes first! The 20-minute show clock has begun! Moving ${winRoll} spaces.`, () => {
-        advanceTurnPlayer(activePlayer, winRoll);
+      speakGoody(`Contestant number ${winnerNum} wins the opening roll with a ${finalWinningRoll}! The 20-minute show clock has begun! Moving ${finalWinningRoll} spaces.`, () => {
+        advanceTurnPlayer(activePlayer, finalWinningRoll);
       });
     }
 
@@ -1664,7 +1574,7 @@
         const landedCountry = boardTileCoords[currentTileIdx].country;
         const qPool = COUNTRY_QUESTIONS[landedCountry] || COUNTRY_QUESTIONS["UK"];
         const rawQ = qPool[Math.floor(Math.random() * qPool.length)];
-       
+        
         activeQuestion = {
           country: landedCountry,
           text: rawQ.q,
@@ -2309,11 +2219,11 @@
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       const cleanName = (displayName || "PLAYER").toUpperCase().trim();
-     
+      
       let fontSize = 48;
       if (cleanName.length > 8) fontSize = 36;
       if (cleanName.length > 12) fontSize = 28;
-     
+      
       ctx.font = `bold ${fontSize}px sans-serif`;
       ctx.fillText(cleanName, w / 2, h / 2 + 2);
 
@@ -2792,7 +2702,7 @@
       ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(x, y + height - 26, width, 26);
       ctx.fillStyle = isGoodyHostSlot ? '#00f0ff' : (isLive ? '#39ff14' : '#ffda66');
       ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
-     
+      
       const tag = isGoodyHostSlot
         ? `[AI HOST: GOODY]`
         : `${isLive ? ' LIVE ' : ' CALL'} ${name.toUpperCase()} [${city.toUpperCase()}]`;
