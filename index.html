@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>The Goody Tonight Show - Live Studio</title>
+  <title>The Goody Tonight Show - Live Studio Host</title>
   <style>
     body, html {
       margin: 0; padding: 0; width: 100%; height: 100%;
@@ -17,9 +17,37 @@
       box-shadow: 0 0 8px #00f0ff; transition: transform 0.15s; z-index: 10;
     }
     #crosshair.hover-active { transform: translate(-50%, -50%) scale(2.2); background: #ff69b4; }
+    
+    /* PRODUCER PIN GATE MODAL */
+    #host-auth-gate {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: #06020f; display: flex; flex-direction: column;
+      justify-content: center; align-items: center; z-index: 200;
+    }
+    .auth-box {
+      background: #140727; border: 2.5px solid #00f0ff; border-radius: 18px;
+      padding: 30px 40px; box-shadow: 0 0 40px rgba(0, 240, 255, 0.35);
+      text-align: center; max-width: 380px; width: 90%;
+    }
+    .auth-title { color: #ffda66; font-size: 1.35rem; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
+    .auth-sub { color: #ebdcf9; font-size: 0.82rem; margin-bottom: 18px; line-height: 1.4; }
+    #host-pin-input {
+      width: 100%; box-sizing: border-box; padding: 12px; font-size: 2rem;
+      font-family: monospace; font-weight: 900; letter-spacing: 12px; text-align: center;
+      background: #070212; color: #39ff14; border: 2px solid #a29bfe;
+      border-radius: 10px; outline: none; margin-bottom: 16px;
+    }
+    #host-pin-input:focus { border-color: #39ff14; box-shadow: 0 0 12px rgba(57, 255, 20, 0.5); }
+    .btn-unlock-host {
+      width: 100%; padding: 12px; background: linear-gradient(180deg, #00f0ff, #0984e3);
+      border: none; border-radius: 10px; font-size: 1rem; font-weight: 900;
+      color: #06020f; text-transform: uppercase; cursor: pointer; letter-spacing: 1px;
+    }
+    .btn-unlock-host:hover { background: #39ff14; }
+
     #blocker {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(8, 4, 16, 0.92); display: flex; flex-direction: column;
+      background: rgba(8, 4, 16, 0.92); display: none; flex-direction: column;
       justify-content: center; align-items: center; color: #fff; z-index: 100; text-align: center;
     }
     #instructions-card {
@@ -172,6 +200,16 @@
   </style>
 </head>
 <body>
+  <!-- PRODUCER PIN GATE MODAL -->
+  <div id="host-auth-gate">
+    <div class="auth-box">
+      <div class="auth-title">Director Terminal</div>
+      <p class="auth-sub">Enter the Host Master PIN to gain broadcast control rights.</p>
+      <input type="password" id="host-pin-input" maxlength="4" placeholder="••••" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autofocus />
+      <button class="btn-unlock-host" id="btn-submit-pin">Unlock Studio</button>
+    </div>
+  </div>
+
   <div id="crosshair"></div>
   <div id="hud">
     <div class="hud-title" id="mode-title" style="color: #ffda66;">BEDROOM WORKSHOP</div>
@@ -244,6 +282,48 @@
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
   <script>
+    // --- HOST SECURITY PIN VERIFICATION ---
+    const HOST_SECURITY_PIN = "7788"; // Change this 4-digit PIN to whatever you prefer
+    let isHostAuthorized = false;
+
+    const hostAuthGate = document.getElementById('host-auth-gate');
+    const hostPinInput = document.getElementById('host-pin-input');
+    const btnSubmitPin = document.getElementById('btn-submit-pin');
+    const blockerEl = document.getElementById('blocker');
+
+    function checkHostPin() {
+      const entered = hostPinInput.value.trim();
+      if (entered === HOST_SECURITY_PIN) {
+        sessionStorage.setItem("goody_host_authenticated", "true");
+        unlockHostEnvironment();
+      } else {
+        alert("ACCESS DENIED: Invalid Director PIN.");
+        hostPinInput.value = "";
+        hostPinInput.focus();
+      }
+    }
+
+    btnSubmitPin.addEventListener('click', checkHostPin);
+    hostPinInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') checkHostPin();
+    });
+
+    function unlockHostEnvironment() {
+      isHostAuthorized = true;
+      hostAuthGate.style.display = 'none';
+      blockerEl.style.display = 'flex';
+      initAudio();
+      initStudioWebRTC();
+      startAutoCountdown();
+    }
+
+    // Auto-unlock if authenticated during current browser session
+    window.addEventListener('DOMContentLoaded', () => {
+      if (sessionStorage.getItem("goody_host_authenticated") === "true") {
+        unlockHostEnvironment();
+      }
+    });
+
     const studioRoomCode = Math.floor(1000 + Math.random() * 9000).toString();
     document.getElementById('entry-code').textContent = studioRoomCode;
     document.getElementById('hud-code-val').textContent = studioRoomCode;
@@ -341,17 +421,22 @@
     let savedGameState = null;
 
     let autoStartSeconds = 10;
-    let autoStartInterval = setInterval(() => {
-      autoStartSeconds--;
-      if (autoStartSeconds > 0) {
-        timerValEl.textContent = `${autoStartSeconds}s`;
-      } else {
-        clearInterval(autoStartInterval);
-        timerExpired = true;
-        checkReadyOrWait();
-      }
-      renderStageQuestionBoard();
-    }, 1000);
+    let autoStartInterval = null;
+
+    function startAutoCountdown() {
+      if (autoStartInterval) return;
+      autoStartInterval = setInterval(() => {
+        autoStartSeconds--;
+        if (autoStartSeconds > 0) {
+          timerValEl.textContent = `${autoStartSeconds}s`;
+        } else {
+          clearInterval(autoStartInterval);
+          timerExpired = true;
+          checkReadyOrWait();
+        }
+        renderStageQuestionBoard();
+      }, 1000);
+    }
 
     function checkReadyOrWait() {
       if (isP1Connected && isP2Connected) {
@@ -819,7 +904,7 @@
       });
     }
 
-    // --- STREAMLINED INTRO MONOLOGUE (NO 6-SECOND DELAYS) ---
+    // --- STREAMLINED INTRO MONOLOGUE ---
     function startGoodyMonologue() {
       const p1 = contestantNames["goody-contestant-1"] || "Contestant 1";
       const c1 = contestantCities["goody-contestant-1"] || "London";
@@ -932,11 +1017,16 @@
     const streamJune = canvasJune.captureStream(30);
 
     const controls = new THREE.PointerLockControls(camera, document.body);
-    const blocker = document.getElementById('blocker');
 
-    blocker.addEventListener('click', () => { initAudio(); controls.lock(); });
-    controls.addEventListener('lock', () => { blocker.style.display = 'none'; });
-    controls.addEventListener('unlock', () => { blocker.style.display = 'flex'; });
+    blockerEl.addEventListener('click', () => { 
+      if (!isHostAuthorized) return;
+      initAudio(); 
+      controls.lock(); 
+    });
+    controls.addEventListener('lock', () => { blockerEl.style.display = 'none'; });
+    controls.addEventListener('unlock', () => { 
+      if (isHostAuthorized) blockerEl.style.display = 'flex'; 
+    });
 
     // --- MODERATION & SHADOWBAN STORE ---
     const shadowbannedTokens = new Set();
@@ -989,6 +1079,8 @@
     const connectedAudiencePeers = new Set();
 
     function initStudioWebRTC() {
+      if (!isHostAuthorized || studioPeer) return;
+
       try {
         studioPeer = new Peer("goody-main-studio");
 
@@ -1265,7 +1357,6 @@
 
       } catch(e) { console.error(e); }
     }
-    initStudioWebRTC();
 
     function broadcastAudienceCount() {
       audienceCount = Math.max(1, connectedAudiencePeers.size + 1);
@@ -1458,14 +1549,12 @@
       }, 1000);
     }
 
-    // --- FAIR OPENING DICE DUEL WITH TIE RE-ROLL ---
     function finalizeDiceDuel() {
       if (p1RollVal === null) p1RollVal = Math.floor(Math.random() * 6) + 1;
       if (p2RollVal === null) p2RollVal = Math.floor(Math.random() * 6) + 1;
       isDiceRollingP1 = false;
       isDiceRollingP2 = false;
 
-      // Handle Tie: Re-roll fresh rather than adding or artificially bumping
       if (p1RollVal === p2RollVal) {
         const tieVal = p1RollVal;
         const speech = `Both contestants rolled a ${tieVal}! It's a dead heat tie! We must re-roll to decide who goes first! Rolling again in 3, 2, 1!`;
@@ -1479,8 +1568,6 @@
 
       const winnerNum = p1RollVal > p2RollVal ? 1 : 2;
       activePlayer = winnerNum === 1 ? "goody-contestant-1" : "goody-contestant-2";
-      
-      // Advance by ONLY the winning roll
       const finalWinningRoll = winnerNum === 1 ? p1RollVal : p2RollVal;
 
       gameState = "IN_PLAY";
@@ -2762,7 +2849,7 @@
     gAntOrb.position.y = 2.20; miniGoody.add(gAntOrb);
 
     const faceCanvas = document.createElement('canvas'); faceCanvas.width = 128; faceCanvas.height = 128;
-    const fctx = faceCanvas.getContext('2d'); fctx.fillStyle = '#000'; fctx.fillRect(0, 0, 128, 128);
+    const fctx = faceCanvas.getContext('2d'); fctx.fillStyle = '#00'; fctx.fillRect(0, 0, 128, 128);
     const faceTex = new THREE.CanvasTexture(faceCanvas);
     const gFace = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 0.25), new THREE.MeshBasicMaterial({ map: faceTex }));
     gFace.position.set(0, 1.82, 0.19); miniGoody.add(gFace);
@@ -2862,10 +2949,12 @@
     const move = { forward: false, backward: false, left: false, right: false };
     const velocity = new THREE.Vector3();
     document.addEventListener('keydown', (e) => {
+      if (!isHostAuthorized) return;
       if (e.code === 'KeyW') move.forward = true; if (e.code === 'KeyS') move.backward = true;
       if (e.code === 'KeyA') move.left = true; if (e.code === 'KeyD') move.right = true;
     });
     document.addEventListener('keyup', (e) => {
+      if (!isHostAuthorized) return;
       if (e.code === 'KeyW') move.forward = false; if (e.code === 'KeyS') move.backward = false;
       if (e.code === 'KeyA') move.left = false; if (e.code === 'KeyD') move.right = false;
     });
