@@ -263,7 +263,7 @@
       opacity: 0.6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .btn-opt.unlocked { cursor: pointer; opacity: 1; border-color: #00f0ff; }
-    .btn-opt.selected { background: #6c5ce7; border-color: #a29bfe; }
+    .btn-opt.selected { background: #6c5ce7; border-color: #fdcb6e; }
     .btn-opt.flash-green { background: #00b894 !important; border-color: #55efc4 !important; }
     .btn-opt.flash-red { background: #d63031 !important; border-color: #ff7675 !important; }
 
@@ -377,7 +377,6 @@
 
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script>
-    // AUTOMATIC SESSION TOKEN FAIL-SAFE
     let playerSessionToken = sessionStorage.getItem("goody_session_token_c1");
     if (!playerSessionToken) {
       playerSessionToken = "s1_" + Math.random().toString(36).substring(2, 9);
@@ -720,7 +719,6 @@
       }
     }
 
-    // Touch Support (Mobile)
     interactiveViewport.addEventListener('touchstart', (e) => {
       if (e.touches.length === 1) {
         lookStartX = e.touches[0].clientX;
@@ -738,7 +736,6 @@
       }
     }, { passive: true });
 
-    // Mouse Drag Support (Desktop PC)
     interactiveViewport.addEventListener('mousedown', (e) => {
       if (e.button === 0) {
         isMouseDown = true;
@@ -777,7 +774,11 @@
           statusPill.textContent = ` ROLL TIMER: ${timeLeft}s`;
         } else {
           clearInterval(rollTimer);
-          if (!hasRolled) executeRoll(true);
+          // When countdown reaches 0, lock client controls and wait for authoritative host roll
+          btnRollDice.disabled = true;
+          btnRollDice.classList.remove('active-roll');
+          btnRollDice.textContent = "TIME EXPIRED";
+          statusPill.textContent = "Time expired! Host auto-rolling...";
         }
       }, 1000);
     }
@@ -991,7 +992,6 @@
     bindDpad('dpad-left', 'LEFT');
     bindDpad('dpad-right', 'RIGHT');
 
-    // Desktop Keyboard Listeners (WASD + Arrow Keys)
     const keyMap = {
       'KeyW': 'FORWARD', 'ArrowUp': 'FORWARD',
       'KeyS': 'BACK',    'ArrowDown': 'BACK',
@@ -1000,7 +1000,6 @@
     };
 
     window.addEventListener('keydown', (e) => {
-      // Ignore if user is currently typing in an input field
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       if (keyMap[e.code]) {
         e.preventDefault();
@@ -1015,3 +1014,4 @@
     });
   </script>
 </body>
+</html>
