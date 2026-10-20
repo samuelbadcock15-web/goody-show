@@ -281,7 +281,7 @@
 
   <script>
     // --- HOST SECURITY PIN VERIFICATION ---
-    const HOST_SECURITY_PIN = "7788"; // Change this 4-digit PIN to whatever you prefer
+    const HOST_SECURITY_PIN = "3776";
     let isHostAuthorized = false;
 
     const hostAuthGate = document.getElementById('host-auth-gate');
@@ -315,7 +315,6 @@
       startAutoCountdown();
     }
 
-    // Auto-unlock if authenticated during current browser session
     window.addEventListener('DOMContentLoaded', () => {
       if (sessionStorage.getItem("goody_host_authenticated") === "true") {
         unlockHostEnvironment();
@@ -457,6 +456,22 @@
       } else if (timerExpired && !studioPower) {
         checkReadyOrWait();
       }
+    }
+
+    // --- BROADCAST SYNCHRONIZED BOARD STATE TO AUDIENCE CLIENTS ---
+    function broadcastBoardState() {
+      connectedDataConns.forEach(c => {
+        if (c.open) {
+          c.send({
+            type: "SYNC_BOARD_STATE",
+            studioPower: studioPower,
+            p1Name: contestantNames["goody-contestant-1"] || "Jake",
+            p2Name: contestantNames["goody-contestant-2"] || "June",
+            p1Index: p1Index,
+            p2Index: p2Index
+          });
+        }
+      });
     }
 
     // --- INTERMISSION & DROPOUT HANDLER ---
@@ -626,6 +641,7 @@
       gameState = "IN_PLAY";
       renderStageQuestionBoard();
       startTwentyMinuteMatchTimer();
+      broadcastBoardState();
 
       const speech = isSamePerson
         ? `Welcome back, ${newName}! Great to have you back in the game! Let's resume the race!`
@@ -661,6 +677,7 @@
       renderStageQuestionBoard();
 
       startTwentyMinuteMatchTimer();
+      broadcastBoardState();
 
       const speech = `Welcome back to the show! We have been unable to reconnect our missing contestant, but not to worry! Contestant number ${soloNum}, ${soloName}, will now race the board alone to see if they can reach the end before the 20-minute show clock expires! If they reach tile 32, they take home the prize. If time runs out, tonight's prize rolls over to next week and we will invite ${soloName} back! Let's play!`;
       speakGoody(speech, () => {
@@ -730,6 +747,7 @@
       gameState = "IN_PLAY";
       renderStageQuestionBoard();
       startTwentyMinuteMatchTimer();
+      broadcastBoardState();
 
       const speech = `A bold choice, ${humanName}! You have chosen to battle me, Goody! I am now taking over the controls and hopping into the hot seat! Let's resume!`;
       speakGoody(speech, () => {
@@ -1163,6 +1181,16 @@
               const secs = Math.max(0, (matchTimerSeconds % 60)).toString().padStart(2, '0');
               conn.send({ type: "SYNC_MATCH_TIMER", timeStr: `${mins}:${secs}`, secondsLeft: matchTimerSeconds });
 
+              // Instant board synchronization for incoming audience member
+              conn.send({
+                type: "SYNC_BOARD_STATE",
+                studioPower: studioPower,
+                p1Name: contestantNames["goody-contestant-1"] || "Jake",
+                p2Name: contestantNames["goody-contestant-2"] || "June",
+                p1Index: p1Index,
+                p2Index: p2Index
+              });
+
               if (activeQuestion) {
                 conn.send({
                   type: "SHOW_QUESTION_LOCKED",
@@ -1203,6 +1231,7 @@
             conn.send({ type: "AUTH_SUCCESS" });
             connectedAudiencePeers.add(conn.peer);
             broadcastAudienceCount();
+            broadcastBoardState();
 
             if (!studioPower) {
               checkBothContestantsReady();
@@ -1432,6 +1461,7 @@
       updateStudioLighting(true);
       updateCameraAlignment();
       renderStageQuestionBoard();
+      broadcastBoardState();
       startGoodyMonologue();
     }
 
@@ -1553,7 +1583,6 @@
       isDiceRollingP1 = false;
       isDiceRollingP2 = false;
 
-      // Handle Tie: Re-roll fresh rather than adding or artificially bumping
       if (p1RollVal === p2RollVal) {
         const tieVal = p1RollVal;
         const speech = `Both contestants rolled a ${tieVal}! It's a dead heat tie! We must re-roll to decide who goes first! Rolling again in 3, 2, 1!`;
@@ -1572,6 +1601,7 @@
       gameState = "IN_PLAY";
       renderStageQuestionBoard();
       startTwentyMinuteMatchTimer();
+      broadcastBoardState();
 
       speakGoody(`Contestant number ${winnerNum} wins the opening roll with a ${finalWinningRoll}! The 20-minute show clock has begun! Moving ${finalWinningRoll} spaces.`, () => {
         advanceTurnPlayer(activePlayer, finalWinningRoll);
@@ -1649,6 +1679,8 @@
       else p2Index = targetIdx;
 
       animatePawnHop(targetPawn, oldIdx, targetIdx, xOffset, () => {
+        broadcastBoardState();
+
         if (p1Index >= boardTileCoords.length - 1 || p2Index >= boardTileCoords.length - 1) {
           const winName = isP1 ? contestantNames["goody-contestant-1"] : contestantNames["goody-contestant-2"];
           const loseName = isP1 ? contestantNames["goody-contestant-2"] : contestantNames["goody-contestant-1"];
@@ -1839,7 +1871,10 @@
       if (isP1) p1Index = 0;
       else p2Index = 0;
 
-      animatePawnHop(pawnToMove, startFromIdx, 0, xOffset, onComplete, 110);
+      animatePawnHop(pawnToMove, startFromIdx, 0, xOffset, () => {
+        broadcastBoardState();
+        if (onComplete) onComplete();
+      }, 110);
     }
 
     function nextTurn() {
