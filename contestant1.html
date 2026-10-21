@@ -311,7 +311,7 @@
     <!-- IN-CHAT TRIVIA & CHAT CONTAINER -->
     <div id="chat-container">
       <div id="chat-header">
-        <span>COMMUNAL CHAT & TRIVIA</span>
+        <span>COMMUNAL CHAT & TRIVIA [CLOCK: <span id="c1-chat-clock" style="color:#ffda66;">20:00</span>]</span>
         <span id="chat-toggle-icon">▼</span>
       </div>
       <div id="chat-messages">
@@ -388,6 +388,7 @@
     const roleTag = document.getElementById('role-tag');
     const micStatusBadge = document.getElementById('mic-status-badge');
     const matchTimerBadge = document.getElementById('match-timer-badge');
+    const c1ChatClock = document.getElementById('c1-chat-clock');
     const turnBanner = document.getElementById('turn-banner');
     const statusPill = document.getElementById('status-pill');
     const btnRollDice = document.getElementById('btn-roll-dice');
@@ -574,6 +575,7 @@
               startTenSecondRoll();
             } else if (data.type === "SYNC_MATCH_TIMER") {
               matchTimerBadge.textContent = ` ${data.timeStr}`;
+              c1ChatClock.textContent = data.timeStr;
             } else if (data.type === "INTERMISSION_PAUSE") {
               setLocalMicEnabled(false);
               if (rollTimer) clearInterval(rollTimer);
