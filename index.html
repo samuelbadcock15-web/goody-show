@@ -103,7 +103,7 @@
       border-color: #a29bfe;
     }
     .btn-producer-choice:hover { background: #9b59b6; }
-   
+    
     #hud {
       position: absolute; top: 18px; left: 20px; background: rgba(22, 9, 44, 0.88);
       border: 2px solid #ff79b0; border-radius: 12px; padding: 12px 18px; color: #fff;
@@ -232,7 +232,7 @@
   </div>
 
   <div id="crosshair"></div>
- 
+  
   <div id="hud">
     <div class="hud-title" id="mode-title" style="color: #ffda66;">BEDROOM WORKSHOP</div>
     <div class="hud-sub" id="mode-sub">WebRTC Studio Host: ONLINE • FULL GAME LOOP READY</div>
@@ -779,7 +779,7 @@
       renderStageQuestionBoard();
 
       const speech = `Welcome back to The Goody Tonight Show! Unfortunately, we have been unable to find a replacement contestant. But the show must go on! So ${remainingName}, we are placing the power in your hands! You have two choices: You can choose to go it alone as a solo race to see if you can reach tile 32 before the 20-minute timer expires—remember, if time runs out, nobody wins and the prize rolls over! Or, you can choose to go head-to-head with me, Goody! I will take over the board right where your opponent left off! ${remainingName}, make your choice now!`;
-     
+      
       speakGoody(speech, () => {
         connectedDataConns.forEach(c => {
           if (c.open) c.send({ type: "OFFER_CONTESTANT_CHOICE" });
@@ -1574,7 +1574,7 @@
         if (onComplete) onComplete();
         return;
       }
-     
+      
       window.speechSynthesis.cancel();
       goodyUtterance = new SpeechSynthesisUtterance(text);
       goodyUtterance.rate = 0.95;
@@ -1690,7 +1690,7 @@
         }
         hasPlayerRolledThisTurn = true;
         isPawnMoving = true;
-       
+        
         if (diceInterval) clearInterval(diceInterval);
         diceCountdown = 0;
 
@@ -1720,7 +1720,7 @@
         const mins = Math.max(0, Math.floor(matchTimerSeconds / 60)).toString().padStart(2, '0');
         const secs = Math.max(0, (matchTimerSeconds % 60)).toString().padStart(2, '0');
         const timeStr = `${mins}:${secs}`;
-       
+        
         gameClockValEl.textContent = timeStr;
         renderWallClockTexture(timeStr);
 
@@ -1862,7 +1862,7 @@
         const landedCountry = boardTileCoords[currentTileIdx].country;
         const qPool = COUNTRY_QUESTIONS[landedCountry] || COUNTRY_QUESTIONS["UK"];
         const rawQ = qPool[Math.floor(Math.random() * qPool.length)];
-       
+        
         activeQuestion = {
           country: landedCountry,
           text: rawQ.q,
@@ -2507,7 +2507,7 @@
       let fontSize = 48;
       if (cleanName.length > 8) fontSize = 36;
       if (cleanName.length > 12) fontSize = 28;
-     
+      
       ctx.font = `bold ${fontSize}px sans-serif`;
       ctx.fillText(cleanName, w / 2, h / 2 + 2);
 
@@ -2977,7 +2977,7 @@
       ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(x, y + height - 26, width, 26);
       ctx.fillStyle = isGoodyHostSlot ? '#00f0ff' : (isLive ? '#39ff14' : '#ffda66');
       ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
-     
+      
       const tag = isGoodyHostSlot
         ? `[AI HOST: GOODY]`
         : `${isLive ? ' LIVE ' : ' CALL'} ${name.toUpperCase()} [${city.toUpperCase()}]`;
