@@ -334,7 +334,6 @@
 
     <div id="status-pill">Waiting for host...</div>
 
-    <!-- CHOICE CARD WHEN OFFERED BY HOST -->
     <div id="choice-card">
       <div id="choice-title">Make Your Choice, Contestant!</div>
       <button class="choice-btn btn-choice-solo" id="btn-pick-solo">Race Solo Against Clock</button>
@@ -377,7 +376,6 @@
 
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script>
-    // AUTOMATIC SESSION TOKEN FAIL-SAFE
     let playerSessionToken = sessionStorage.getItem("goody_session_token_c2");
     if (!playerSessionToken) {
       playerSessionToken = "s2_" + Math.random().toString(36).substring(2, 9);
@@ -577,6 +575,9 @@
             } else if (data.type === "START_DICE_COUNTDOWN") {
               setLocalMicEnabled(false);
               choiceCard.style.display = 'none';
+              triviaCard.style.display = 'none';
+              recapCard.style.display = 'none';
+              btnRollDice.style.display = 'block';
               startTenSecondRoll();
             } else if (data.type === "SYNC_MATCH_TIMER") {
               matchTimerBadge.textContent = ` ${data.timeStr}`;
@@ -704,7 +705,6 @@
       }
     }
 
-    // --- LOOK CONTROLS (TOUCH + DESKTOP MOUSE DRAG) ---
     let isMouseDown = false;
     let lookStartX = 0;
     let lookStartY = 0;
@@ -720,7 +720,6 @@
       }
     }
 
-    // Touch Support (Mobile)
     interactiveViewport.addEventListener('touchstart', (e) => {
       if (e.touches.length === 1) {
         lookStartX = e.touches[0].clientX;
@@ -738,7 +737,6 @@
       }
     }, { passive: true });
 
-    // Mouse Drag Support (Desktop PC)
     interactiveViewport.addEventListener('mousedown', (e) => {
       if (e.button === 0) {
         isMouseDown = true;
@@ -760,9 +758,9 @@
       isMouseDown = false;
     });
 
-    // --- DICE ROLLING ---
     function startTenSecondRoll() {
       hasRolled = false;
+      btnRollDice.style.display = 'block';
       btnRollDice.disabled = false;
       btnRollDice.classList.add('active-roll');
       btnRollDice.textContent = " ROLL DICE NOW!";
@@ -777,7 +775,10 @@
           statusPill.textContent = ` ROLL TIMER: ${timeLeft}s`;
         } else {
           clearInterval(rollTimer);
-          if (!hasRolled) executeRoll(true);
+          btnRollDice.disabled = true;
+          btnRollDice.classList.remove('active-roll');
+          btnRollDice.textContent = "TIME EXPIRED";
+          statusPill.textContent = "Time expired! Host auto-rolling...";
         }
       }, 1000);
     }
@@ -954,7 +955,6 @@
       btnRollDice.classList.remove('active-roll');
     }
 
-    // --- MOVEMENT ENGINE (ON-SCREEN D-PAD + DESKTOP KEYBOARD WASD) ---
     let dpadInterval = null;
     let activeMovementDir = null;
 
@@ -991,7 +991,6 @@
     bindDpad('dpad-left', 'LEFT');
     bindDpad('dpad-right', 'RIGHT');
 
-    // Desktop Keyboard Listeners (WASD + Arrow Keys)
     const keyMap = {
       'KeyW': 'FORWARD', 'ArrowUp': 'FORWARD',
       'KeyS': 'BACK',    'ArrowDown': 'BACK',
