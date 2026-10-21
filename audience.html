@@ -567,7 +567,6 @@
       if (!text) return;
       const now = performance.now();
      
-      // Cooldown rule: 2.5s between messages
       if (now - lastMessageSentTime < 2500) return;
       lastMessageSentTime = now;
 
@@ -1062,12 +1061,26 @@
       faceTex.needsUpdate = true;
     }
 
-    // Backstage Screens (Renders the Actual Live Cameras)
+    // --- DICE DRAWING HELPER ---
+    function drawDiceFace(ctx, x, y, size, value) {
+      ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#222222'; ctx.lineWidth = 3;
+      ctx.fillRect(x, y, size, size); ctx.strokeRect(x, y, size, size);
+      ctx.fillStyle = '#e74c3c';
+      const dot = (dx, dy) => {
+        ctx.beginPath(); ctx.arc(x + dx * size, y + dy * size, size * 0.08, 0, Math.PI * 2); ctx.fill();
+      };
+      if (value % 2 === 1) dot(0.5, 0.5);
+      if (value > 1) { dot(0.25, 0.25); dot(0.75, 0.75); }
+      if (value > 3) { dot(0.75, 0.25); dot(0.25, 0.75); }
+      if (value === 6) { dot(0.25, 0.5); dot(0.75, 0.5); }
+    }
+
+    // Backstage Screens (Renders the Actual Live Cameras with Dice)
     const studioScreenCanvas = document.createElement('canvas'); studioScreenCanvas.width = 512; studioScreenCanvas.height = 256;
     const sScreenCtx = studioScreenCanvas.getContext('2d');
     const studioScreenTex = new THREE.CanvasTexture(studioScreenCanvas);
    
-    function drawScreenFeed(ctx, x, y, width, height, name, city, isLive, videoElem, isGuy, currentRoll) {
+    function drawScreenFeed(ctx, x, y, width, height, name, city, isLive, videoElem, isGuy, currentRoll, isRolling) {
       ctx.fillStyle = '#05020a'; ctx.fillRect(x, y, width, height);
       ctx.strokeStyle = '#39ff14'; ctx.lineWidth = 3; ctx.strokeRect(x, y, width, height);
 
@@ -1079,6 +1092,19 @@
         ctx.fillStyle = isGuy ? '#4a69bd' : '#e84393'; ctx.beginPath(); ctx.ellipse(cx, cy + 25, 26, 32, 0, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#f8c291'; ctx.beginPath(); ctx.arc(cx, cy - 10, 16, 0, Math.PI * 2); ctx.fill();
       }
+
+      // Render Dice Overlay
+      const diceSize = 42;
+      const diceX = x + width - diceSize - 12;
+      const diceY = y + 12;
+
+      if (isRolling) {
+        const animVal = Math.floor((performance.now() / 80) % 6) + 1;
+        drawDiceFace(ctx, diceX, diceY, diceSize, animVal);
+      } else if (currentRoll !== null && currentRoll !== undefined) {
+        drawDiceFace(ctx, diceX, diceY, diceSize, currentRoll);
+      }
+
       ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(x, y + height - 26, width, 26);
       ctx.fillStyle = '#39ff14'; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
       ctx.fillText(`${isLive ? 'LIVE' : 'CALL'} ${name.toUpperCase()} [${city.toUpperCase()}]`, x + width / 2, y + height - 8);
@@ -1086,8 +1112,8 @@
 
     function renderBackstageScreens() {
       sScreenCtx.fillStyle = '#060210'; sScreenCtx.fillRect(0, 0, 512, 256);
-      drawScreenFeed(sScreenCtx, 15, 20, 225, 215, p1ContestantName, p1ContestantCity, hasLiveJakeStream, videoJake, true, p1RollVal);
-      drawScreenFeed(sScreenCtx, 272, 20, 225, 215, p2ContestantName, p2ContestantCity, hasLiveJuneStream, videoJune, false, p2RollVal);
+      drawScreenFeed(sScreenCtx, 15, 20, 225, 215, p1ContestantName, p1ContestantCity, hasLiveJakeStream, videoJake, true, p1RollVal, false);
+      drawScreenFeed(sScreenCtx, 272, 20, 225, 215, p2ContestantName, p2ContestantCity, hasLiveJuneStream, videoJune, false, p2RollVal, false);
       studioScreenTex.needsUpdate = true;
     }
     const studioBackScreenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshBasicMaterial({ map: studioScreenTex }));
