@@ -96,10 +96,12 @@
       padding: 8px 10px; font-size: 0.76rem; font-weight: bold; text-align: left; cursor: pointer;
       transition: background 0.2s, border-color 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .aud-opt-btn:hover { background: #6c5ce7; border-color: #00f0ff; }
-    .aud-opt-btn.selected { background: #34495e; border-color: #f1c40f; }
+    .aud-opt-btn:hover:not(:disabled) { background: #6c5ce7; border-color: #00f0ff; }
+    .aud-opt-btn.selected { background: #0984e3 !important; border-color: #00f0ff !important; box-shadow: 0 0 8px rgba(9,132,227,0.6); }
+    .aud-opt-btn.contestant-picked { border: 2.5px dashed #ffda66 !important; }
     .aud-opt-btn.correct { background: #00b894 !important; border-color: #55efc4 !important; }
     .aud-opt-btn.wrong { background: #d63031 !important; border-color: #ff7675 !important; }
+    .aud-opt-btn:disabled { cursor: default; opacity: 0.85; }
     #aud-status-msg { margin-top: 6px; font-size: 0.74rem; font-family: monospace; color: #39ff14; font-weight: bold; }
 
     /* CHAT */
@@ -216,7 +218,7 @@
         <button class="aud-opt-btn" id="aud-btn-2" onclick="submitAudienceAnswer(2)">C) ...</button>
         <button class="aud-opt-btn" id="aud-btn-3" onclick="submitAudienceAnswer(3)">D) ...</button>
       </div>
-      <div id="aud-status-msg">Select your answer. Results reveal when the studio decides!</div>
+      <div id="aud-status-msg">Select your answer. Dashed yellow border = Contestant choice.</div>
     </div>
 
     <div style="display:flex; flex-direction:column; align-items:center; width:100%;">
@@ -387,6 +389,7 @@
     let activeRecap = null;
     let audienceSelectedOption = null;
     let audienceHasAnswered = false;
+    let contestantSelectedAnswer = null;
 
     const videoJake = document.createElement('video');
     videoJake.autoplay = true; videoJake.playsInline = true; videoJake.muted = true;
@@ -447,13 +450,13 @@
             activeQuestion = data.question; activeRecap = null;
             audienceSelectedOption = null;
             audienceHasAnswered = false;
+            contestantSelectedAnswer = null;
             renderStageQuestionBoard();
-
-            // TRIGGER AUDIENCE PLAY-ALONG EARLY
             startAudiencePlayAlong(data.question, data.activeContestantName);
           } else if (data.type === 'OPPONENT_ANSWERED') {
-            // Contestant choice received
+            contestantSelectedAnswer = data.chosenAnswer;
             renderStageQuestionBoard();
+            highlightContestantAnswerOnAudienceHUD(data.chosenAnswer);
           } else if (data.type === 'EVALUATION_RESULT') {
             handleAudienceEvaluation(data);
 
@@ -509,7 +512,7 @@
       audienceTriviaHud.style.display = 'block';
       audQCountry.textContent = `HOME TRIVIA: ${qData.country.toUpperCase()}`;
       audQText.textContent = qData.text || qData.q;
-      audStatusMsg.textContent = `Contestant (${contestantName}) is answering... Play along at home!`;
+      audStatusMsg.textContent = `Contestant (${contestantName}) is thinking... Pick your answer!`;
 
       audOptionBtns.forEach((btn, idx) => {
         btn.textContent = `${["A", "B", "C", "D"][idx]}) ${qData.options[idx]}`;
@@ -524,11 +527,24 @@
       audienceSelectedOption = idx;
 
       audOptionBtns.forEach((b, i) => {
-        if (i === idx) b.classList.add('selected');
+        b.disabled = true; // Grey out / lock all buttons
+        if (i === idx) {
+          b.classList.add('selected');
+        }
       });
 
       audStatusMsg.textContent = "Answer locked in! Waiting for studio reveal...";
       renderStageQuestionBoard();
+    }
+
+    function highlightContestantAnswerOnAudienceHUD(chosenAnswer) {
+      if (!activeQuestion) return;
+      const cIdx = activeQuestion.options.indexOf(chosenAnswer);
+      if (cIdx !== -1) {
+        audOptionBtns.forEach((b, i) => {
+          if (i === cIdx) b.classList.add('contestant-picked');
+        });
+      }
     }
 
     function handleAudienceEvaluation(data) {
@@ -537,7 +553,6 @@
       const correctAnsText = activeQuestion.ans;
       const correctIdx = activeQuestion.options.indexOf(correctAnsText);
 
-      // Light up audience buttons based on actual correct answer
       audOptionBtns.forEach((b, i) => {
         b.disabled = true;
         if (i === correctIdx) {
@@ -552,7 +567,7 @@
       const contestantChoice = data.chosenAnswer;
 
       if (audienceSelectedOption === null) {
-        audStatusMsg.textContent = `Time up! Contestant answered "${contestantChoice}" (${contestantCorrect ? "Correct" : "Incorrect"}).`;
+        audStatusMsg.textContent = `Time up! Contestant chose "${contestantChoice}" (${contestantCorrect ? "Correct" : "Incorrect"}).`;
       } else if (userGotItRight) {
         audStatusMsg.textContent = `🎉 Well done! You were CORRECT! Contestant was ${contestantCorrect ? "correct" : "incorrect"}.`;
         playTone(587, 'sine', 0.2, 0.05);
@@ -564,6 +579,7 @@
       setTimeout(() => {
         audienceTriviaHud.style.display = 'none';
         audienceSelectedOption = null;
+        contestantSelectedAnswer = null;
       }, 5500);
     }
 
@@ -931,7 +947,7 @@
       hopNextStep();
     }
 
-    // 3D Studio Question Board (Left Screen) - Renders active question & options accurately
+    // 3D Studio Question Board (Left Screen) - Fully synchronized with contestant choice highlighting
     const qBoardCanvas = document.createElement('canvas'); qBoardCanvas.width = 512; qBoardCanvas.height = 384;
     const qBoardCtx = qBoardCanvas.getContext('2d');
     const qBoardTex = new THREE.CanvasTexture(qBoardCanvas);
@@ -973,10 +989,12 @@
         const letters = ["A", "B", "C", "D"];
         activeQuestion.options.forEach((opt, idx) => {
           const optY = 210 + (idx * 40);
-          qBoardCtx.fillStyle = '#220f3d';
-          qBoardCtx.strokeStyle = '#a29bfe';
+          const isContestantPick = contestantSelectedAnswer === opt;
+
+          qBoardCtx.fillStyle = isContestantPick ? '#6c5ce7' : '#220f3d';
+          qBoardCtx.strokeStyle = isContestantPick ? '#fdcb6e' : '#a29bfe';
           qBoardCtx.fillRect(20, optY - 24, 472, 32);
-          qBoardCtx.lineWidth = 2;
+          qBoardCtx.lineWidth = isContestantPick ? 4 : 2;
           qBoardCtx.strokeRect(20, optY - 24, 472, 32);
 
           qBoardCtx.fillStyle = '#ffda66';
