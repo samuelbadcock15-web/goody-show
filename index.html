@@ -103,6 +103,7 @@
       border-color: #a29bfe;
     }
     .btn-producer-choice:hover { background: #9b59b6; }
+   
     #hud {
       position: absolute; top: 18px; left: 20px; background: rgba(22, 9, 44, 0.88);
       border: 2px solid #ff79b0; border-radius: 12px; padding: 12px 18px; color: #fff;
@@ -113,7 +114,22 @@
     #match-clock-hud { margin-top: 4px; font-weight: bold; color: #00f0ff; font-size: 0.95rem; }
     #audience-pill { margin-top: 4px; font-weight: bold; color: #39ff14; }
 
-    /* HOST MODERATION TRAY EMBEDDED IN SCREENSAVER */
+    /* LIVE IN-GAME CHAT HUD */
+    #live-hud-chat {
+      position: absolute; bottom: 20px; left: 20px; width: 340px; height: 190px;
+      background: rgba(10, 3, 20, 0.75); border: 1.5px solid #00f0ff;
+      border-radius: 10px; display: flex; flex-direction: column; z-index: 25;
+      backdrop-filter: blur(4px); pointer-events: auto;
+    }
+    #live-hud-chat-header {
+      padding: 5px 8px; font-size: 0.72rem; font-family: monospace; font-weight: bold;
+      color: #ffda66; border-bottom: 1px solid #331555; display: flex; justify-content: space-between;
+    }
+    #live-hud-chat-stream {
+      flex: 1; overflow-y: auto; padding: 6px; display: flex; flex-direction: column; gap: 4px; font-size: 0.74rem;
+    }
+
+    /* HOST MODERATION TRAY */
     #mod-tray {
       margin-top: 14px;
       background: #0a0314;
@@ -160,18 +176,26 @@
       background: rgba(214, 48, 49, 0.15);
       border-left: 2px solid #ff7675;
     }
-    .mod-btn-ban {
-      background: #c0392b;
-      border: 1px solid #e74c3c;
-      color: #fff;
+    .author-clickable {
+      cursor: pointer;
+      text-decoration: underline;
+      font-weight: bold;
+    }
+    .author-clickable:hover {
+      color: #fffa65 !important;
+    }
+    .mod-btn-action {
+      background: #2b1154;
+      border: 1px solid #d4af37;
+      color: #ffda66;
       font-size: 0.65rem;
       font-family: monospace;
-      padding: 2px 6px;
+      padding: 2px 5px;
       border-radius: 4px;
       cursor: pointer;
       flex-shrink: 0;
     }
-    .mod-btn-ban:hover { background: #e74c3c; }
+    .mod-btn-action:hover { background: #6c5ce7; }
     .mod-controls-row {
       display: flex;
       justify-content: space-between;
@@ -198,7 +222,6 @@
   </style>
 </head>
 <body>
-  <!-- PRODUCER PIN GATE MODAL -->
   <div id="host-auth-gate">
     <div class="auth-box">
       <div class="auth-title">Director Terminal</div>
@@ -209,6 +232,7 @@
   </div>
 
   <div id="crosshair"></div>
+ 
   <div id="hud">
     <div class="hud-title" id="mode-title" style="color: #ffda66;">BEDROOM WORKSHOP</div>
     <div class="hud-sub" id="mode-sub">WebRTC Studio Host: ONLINE • FULL GAME LOOP READY</div>
@@ -216,6 +240,16 @@
     <div id="countdown-pill">BROADCAST STARTS IN: <span id="timer-val" style="color:#ff7675;">10s</span></div>
     <div id="match-clock-hud">SHOW CLOCK: <span id="game-clock-val" style="color:#ffda66;">20:00</span></div>
     <div id="audience-pill">AUDIENCE WATCHING: <span id="audience-count" style="color:#39ff14;">1</span></div>
+  </div>
+
+  <div id="live-hud-chat">
+    <div id="live-hud-chat-header">
+      <span>AUDIENCE STREAM</span>
+      <span style="color:#39ff14;">● ON AIR</span>
+    </div>
+    <div id="live-hud-chat-stream">
+      <div style="color:#888; font-style:italic;">Listening to studio chatter...</div>
+    </div>
   </div>
 
   <div id="blocker">
@@ -226,7 +260,6 @@
       <p><strong>Click Anywhere to Enter Control Mode</strong></p>
       <p><span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> &nbsp;Walk around freely</p>
 
-      <!-- PRODUCER OVERRIDE PANEL -->
       <div id="producer-panel">
         <div style="color: #ffda66; font-weight: bold; font-family: monospace;">PRODUCER OVERRIDE: INTERMISSION ACTIVE</div>
         <p id="producer-status-txt" style="font-size: 0.8rem; margin: 4px 0;">Looking for contestant...</p>
@@ -240,7 +273,6 @@
         </div>
       </div>
 
-      <!-- DIRECTOR LIVE EJECT CONTROLS -->
       <div id="host-eject-panel" style="margin-top: 14px; padding: 10px; background: #0a0314; border: 1.5px solid #ff7675; border-radius: 10px;">
         <div style="font-size: 0.75rem; font-family: monospace; color: #ff7675; font-weight: bold; text-transform: uppercase; margin-bottom: 6px;">
           Studio Director: Live Kick Controls
@@ -255,7 +287,6 @@
         </div>
       </div>
 
-      <!-- HOST AUDIENCE CHAT & MODERATION TRAY EMBEDDED IN SCREENSAVER -->
       <div id="mod-tray" onclick="event.stopPropagation();">
         <div id="mod-tray-header">
           <span>AUDIENCE CHAT MODERATOR</span>
@@ -280,7 +311,6 @@
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
   <script>
-    // --- HOST SECURITY PIN VERIFICATION ---
     const HOST_SECURITY_PIN = "3776";
     let isHostAuthorized = false;
 
@@ -340,6 +370,9 @@
     let hasLiveJakeStream = false;
     let hasLiveJuneStream = false;
 
+    let rawJakeStream = null;
+    let rawJuneStream = null;
+
     let gameState = "IDLE";
     let isSoloMode = false;
     let isVsGoodyMode = false;
@@ -353,6 +386,9 @@
     let isDiceRollingP1 = false;
     let isDiceRollingP2 = false;
 
+    let isPawnMoving = false;
+    let hasPlayerRolledThisTurn = false;
+
     let matchTimerSeconds = 20 * 60;
     let matchTimerInterval = null;
     let isTimeExpired = false;
@@ -365,6 +401,7 @@
     let tieBreakerAnswered = false;
 
     let questionTimer = 0;
+    let isQuestionTimerActive = false;
     let questionInterval = null;
     let stageSelectedOption = null;
     let stageOptionStatus = null;
@@ -396,10 +433,7 @@
       "goody-contestant-2": null
     };
 
-    const playerStats = {
-      asked: 0,
-      correct: 0
-    };
+    const playerStats = { asked: 0, correct: 0 };
 
     let isP1Connected = false;
     let isP2Connected = false;
@@ -458,7 +492,6 @@
       }
     }
 
-    // --- BROADCAST SYNCHRONIZED BOARD STATE TO AUDIENCE CLIENTS ---
     function broadcastBoardState() {
       connectedDataConns.forEach(c => {
         if (c.open) {
@@ -474,7 +507,35 @@
       });
     }
 
-    // --- INTERMISSION & DROPOUT HANDLER ---
+    function forwardContestantStreamsToAudience(audiencePeerId) {
+      if (!studioPeer) return;
+      if (rawJakeStream) {
+        try {
+          studioPeer.call(audiencePeerId, rawJakeStream, {
+            metadata: { contestant: "goody-contestant-1" }
+          });
+        } catch(e) {}
+      }
+      if (rawJuneStream) {
+        try {
+          studioPeer.call(audiencePeerId, rawJuneStream, {
+            metadata: { contestant: "goody-contestant-2" }
+          });
+        } catch(e) {}
+      }
+    }
+
+    function broadcastNewStreamToAllAudience(stream, contestantSlot) {
+      if (!studioPeer || !stream) return;
+      connectedAudiencePeers.forEach(audPeerId => {
+        try {
+          studioPeer.call(audPeerId, stream, {
+            metadata: { contestant: contestantSlot }
+          });
+        } catch(e) {}
+      });
+    }
+
     function handleMidGameDropout(contestantId) {
       if (gameState === "GAME_OVER" || gameState === "INTERMISSION") return;
 
@@ -492,13 +553,16 @@
       if (questionInterval) clearInterval(questionInterval);
       if (matchTimerInterval) clearInterval(matchTimerInterval);
 
+      isPawnMoving = false;
+      hasPlayerRolledThisTurn = false;
+      isDiceRollingP1 = false;
+      isDiceRollingP2 = false;
+      isQuestionTimerActive = false;
+      questionTimer = 0;
+
       savedGameState = gameState;
       savedTurnPlayer = activePlayer;
-      if (activeQuestion) {
-        savedActiveCountry = activeQuestion.country;
-      } else {
-        savedActiveCountry = null;
-      }
+      savedActiveCountry = activeQuestion ? activeQuestion.country : null;
 
       activeQuestion = null;
       activeRecap = null;
@@ -534,7 +598,6 @@
       }, 90000);
     }
 
-    // --- DIRECTOR LIVE EJECT FUNCTION ---
     function ejectContestant(slotId) {
       const isP1 = slotId === "goody-contestant-1";
       const isConnected = isP1 ? isP1Connected : isP2Connected;
@@ -565,6 +628,7 @@
           try { videoJake.srcObject.getTracks().forEach(t => t.stop()); } catch(e){}
           videoJake.srcObject = null;
         }
+        rawJakeStream = null;
         hasLiveJakeStream = false;
         showJake = false;
         isP1Connected = false;
@@ -574,6 +638,7 @@
           try { videoJune.srcObject.getTracks().forEach(t => t.stop()); } catch(e){}
           videoJune.srcObject = null;
         }
+        rawJuneStream = null;
         hasLiveJuneStream = false;
         showJune = false;
         isP2Connected = false;
@@ -583,7 +648,6 @@
       handleMidGameDropout(slotId);
     }
 
-    // --- RESUME 1: HUMAN RECONNECT / REPLACEMENT HANDLER ---
     function handleReplacementJoined(contestantId, newName, newCity, newSessionToken) {
       if (gameState !== "INTERMISSION" || contestantId !== droppedOutContestant) return;
 
@@ -658,7 +722,6 @@
       });
     }
 
-    // --- RESUME 2: SAM DIRECTLY TRIGGERS 1-PLAYER SOLO ---
     function triggerOnePlayerMode() {
       if (gameState !== "INTERMISSION" && gameState !== "CONTESTANT_CHOOSING") return;
 
@@ -671,6 +734,16 @@
       const soloNum = soloPlayerId === "goody-contestant-1" ? "1" : "2";
       const soloName = contestantNames[soloPlayerId];
       activePlayer = soloPlayerId;
+
+      if (soloPlayerId === "goody-contestant-1") {
+        p2RollVal = null;
+        isDiceRollingP2 = false;
+        pawn2.visible = false;
+      } else {
+        p1RollVal = null;
+        isDiceRollingP1 = false;
+        pawn1.visible = false;
+      }
 
       countdownPill.innerHTML = ` <span style="color:#39ff14;">SOLO RACE ACTIVE!</span>`;
       gameState = "IN_PLAY";
@@ -692,7 +765,6 @@
       });
     }
 
-    // --- RESUME 3: SAM OFFERS CHOICE TO CONTESTANT ---
     function triggerOfferChoiceMode() {
       if (gameState !== "INTERMISSION") return;
 
@@ -715,7 +787,6 @@
       });
     }
 
-    // --- RESUME 4: CONTESTANT PICKS HEAD-TO-HEAD VS GOODY ---
     function triggerVsGoodyMode() {
       isSoloMode = false;
       isVsGoodyMode = true;
@@ -724,8 +795,10 @@
       contestantNames[goodyPlayerSlot] = "Goody";
 
       if (goodyPlayerSlot === "goody-contestant-1") {
+        pawn1.visible = true;
         updatePawnNameBadge(pawn1, "Goody");
       } else {
+        pawn2.visible = true;
         updatePawnNameBadge(pawn2, "Goody");
       }
 
@@ -769,6 +842,13 @@
       stageOptionStatus = null;
       p1RollVal = null;
       p2RollVal = null;
+      hasPlayerRolledThisTurn = false;
+      isDiceRollingP1 = false;
+      isDiceRollingP2 = false;
+
+      if (questionInterval) clearInterval(questionInterval);
+      isQuestionTimerActive = false;
+      questionTimer = 0;
 
       const qPool = COUNTRY_QUESTIONS[country] || COUNTRY_QUESTIONS["UK"];
       const rawQ = qPool[Math.floor(Math.random() * qPool.length)];
@@ -821,6 +901,15 @@
       stageOptionStatus = null;
       p1RollVal = null;
       p2RollVal = null;
+      hasPlayerRolledThisTurn = false;
+      isPawnMoving = false;
+      isDiceRollingP1 = false;
+      isDiceRollingP2 = false;
+
+      if (questionInterval) clearInterval(questionInterval);
+      isQuestionTimerActive = false;
+      questionTimer = 0;
+
       renderStageQuestionBoard();
 
       broadcastMicState("goody-contestant-1", false);
@@ -845,6 +934,8 @@
     }
 
     function executeGoodyTurnRoll() {
+      if (hasPlayerRolledThisTurn || isPawnMoving) return;
+
       const isGoodyP2 = goodyPlayerSlot === "goody-contestant-2";
       if (isGoodyP2) isDiceRollingP2 = true;
       else isDiceRollingP1 = true;
@@ -857,23 +948,16 @@
 
     function calculateGoodyAccuracy() {
       let accuracy = 0.65;
-
       if (playerStats.asked > 0) {
         const humanRatio = playerStats.correct / playerStats.asked;
         if (humanRatio > 0.7) accuracy += 0.15;
         if (humanRatio < 0.4) accuracy -= 0.15;
       }
-
       const humanIdx = goodyPlayerSlot === "goody-contestant-1" ? p2Index : p1Index;
       const goodyIdx = goodyPlayerSlot === "goody-contestant-1" ? p1Index : p2Index;
       const leadGap = goodyIdx - humanIdx;
-
-      if (leadGap >= 4) {
-        accuracy -= 0.25;
-      } else if (leadGap <= -4) {
-        accuracy += 0.20;
-      }
-
+      if (leadGap >= 4) accuracy -= 0.25;
+      else if (leadGap <= -4) accuracy += 0.20;
       return Math.max(0.30, Math.min(0.90, accuracy));
     }
 
@@ -907,7 +991,6 @@
       }, 2500);
     }
 
-    // --- GATED MIC DISPATCHER ---
     function broadcastMicState(targetSlot, enabled, promptText = "") {
       connectedDataConns.forEach(c => {
         if (c.open && c.metadata && c.metadata.contestant === targetSlot) {
@@ -920,7 +1003,6 @@
       });
     }
 
-    // --- STREAMLINED INTRO MONOLOGUE ---
     function startGoodyMonologue() {
       const p1 = contestantNames["goody-contestant-1"] || "Contestant 1";
       const c1 = contestantCities["goody-contestant-1"] || "London";
@@ -1018,7 +1100,6 @@
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
 
-    // Off-screen canvas contexts for rendering Jake and June
     const canvasJake = document.createElement('canvas');
     canvasJake.width = 640; canvasJake.height = 360;
     const rendererJake = new THREE.WebGLRenderer({ canvas: canvasJake, antialias: true });
@@ -1045,7 +1126,6 @@
       if (isHostAuthorized) blockerEl.style.display = 'flex';
     });
 
-    // --- MODERATION & SHADOWBAN STORE ---
     const shadowbannedTokens = new Set();
     const shadowbannedHardwareIds = new Set();
     let isAudienceChatGlobalMuted = false;
@@ -1065,17 +1145,45 @@
     }
 
     const modChatStream = document.getElementById('mod-chat-stream');
+    const liveHudChatStream = document.getElementById('live-hud-chat-stream');
     const modSpectatorCount = document.getElementById('mod-spectator-count');
     const btnToggleAllChat = document.getElementById('btn-toggle-all-chat');
 
     function addModeratorLog(text) {
-      const row = document.createElement('div');
-      row.style.color = '#ff7675';
-      row.style.fontSize = '0.70rem';
-      row.style.fontFamily = 'monospace';
-      row.textContent = text;
-      modChatStream.appendChild(row);
-      modChatStream.scrollTop = modChatStream.scrollHeight;
+      [modChatStream, liveHudChatStream].forEach(stream => {
+        const row = document.createElement('div');
+        row.style.color = '#ff7675';
+        row.style.fontSize = '0.70rem';
+        row.style.fontFamily = 'monospace';
+        row.textContent = text;
+        stream.appendChild(row);
+        stream.scrollTop = stream.scrollHeight;
+      });
+    }
+
+    function showSpectatorActionMenu(senderToken, senderHw, authorName, peerId) {
+      const choice = prompt(
+        `Moderation options for ${authorName}:\nType "MUTE" to shadowban/mute.\nType "KICK" to eject from studio.\nOr click Cancel.`,
+        "MUTE"
+      );
+      if (!choice) return;
+
+      const act = choice.trim().toUpperCase();
+      if (act === "MUTE") {
+        shadowbanSpectator(senderToken, senderHw, authorName);
+      } else if (act === "KICK") {
+        ejectSpectatorPeer(peerId, authorName);
+      }
+    }
+
+    function ejectSpectatorPeer(peerId, authorName) {
+      connectedDataConns.forEach(c => {
+        if (c.peer === peerId && c.open) {
+          c.send({ type: "HOST_EJECTED_SPECTATOR", message: "You were kicked by the studio director." });
+          setTimeout(() => { try { c.close(); } catch(e){} }, 200);
+        }
+      });
+      addModeratorLog(`[SYSTEM] Ejected spectator ${authorName}.`);
     }
 
     function toggleGlobalAudienceChat() {
@@ -1094,7 +1202,6 @@
     let studioPeer = null;
     let connectedDataConns = [];
     const connectedAudiencePeers = new Set();
-    const audienceMediaCalls = new Set();
 
     function initStudioWebRTC() {
       if (!isHostAuthorized || studioPeer) return;
@@ -1104,19 +1211,14 @@
 
         studioPeer.on('open', (id) => console.log("Master Host Registered:", id));
 
-        // --- INCOMING CALL HANDLER (NOW SUPPORTS AUDIENCE STREAM CONSUMERS) ---
         studioPeer.on('call', (call) => {
           const isAudience = call.metadata && call.metadata.role === 'AUDIENCE';
 
-          // If caller is an audience spectator, answer with the Jake stage video stream
           if (isAudience) {
-            call.answer(streamJake);
-            audienceMediaCalls.add(call);
-            call.on('close', () => audienceMediaCalls.delete(call));
+            call.answer();
             return;
           }
 
-          // Otherwise caller must be contestant Jake or June
           const passcode = call.metadata ? call.metadata.passcode : "";
           if (passcode !== studioRoomCode) {
             call.close();
@@ -1139,17 +1241,21 @@
 
           call.on('stream', (remoteStream) => {
             if (isJune) {
+              rawJuneStream = remoteStream;
               videoJune.srcObject = remoteStream;
               videoJune.muted = false;
               videoJune.play().catch(console.error);
               hasLiveJuneStream = true;
               showJune = true;
+              broadcastNewStreamToAllAudience(remoteStream, "goody-contestant-2");
             } else {
+              rawJakeStream = remoteStream;
               videoJake.srcObject = remoteStream;
               videoJake.muted = false;
               videoJake.play().catch(console.error);
               hasLiveJakeStream = true;
               showJake = true;
+              broadcastNewStreamToAllAudience(remoteStream, "goody-contestant-1");
             }
             broadcastBoardState();
           });
@@ -1198,7 +1304,6 @@
               const secs = Math.max(0, (matchTimerSeconds % 60)).toString().padStart(2, '0');
               conn.send({ type: "SYNC_MATCH_TIMER", timeStr: `${mins}:${secs}`, secondsLeft: matchTimerSeconds });
 
-              // Immediate board state for spectator
               conn.send({
                 type: "SYNC_BOARD_STATE",
                 studioPower: studioPower,
@@ -1216,6 +1321,11 @@
                   activeContestantName: contestantNames[activePlayer]
                 });
               }
+
+              setTimeout(() => {
+                forwardContestantStreamsToAudience(conn.peer);
+              }, 400);
+
               return;
             }
 
@@ -1246,7 +1356,6 @@
             }
 
             conn.send({ type: "AUTH_SUCCESS" });
-            connectedAudiencePeers.add(conn.peer);
             broadcastAudienceCount();
             broadcastBoardState();
 
@@ -1273,28 +1382,45 @@
 
               const isShadowbanned = alreadyBanned || tripsFilter;
 
-              const chatRow = document.createElement('div');
-              chatRow.className = `mod-chat-row ${isShadowbanned ? 'is-shadowbanned' : ''}`;
-             
-              const textSpan = document.createElement('span');
-              textSpan.innerHTML = `<strong style="color:${isShadowbanned ? '#ff7675' : '#00f0ff'};">${authorName}:</strong> ${rawText} ${isShadowbanned ? '<em style="color:#ff7675;">[SHADOWBANNED]</em>' : ''}`;
-              chatRow.appendChild(textSpan);
+              [modChatStream, liveHudChatStream].forEach(stream => {
+                const chatRow = document.createElement('div');
+                chatRow.className = `mod-chat-row ${isShadowbanned ? 'is-shadowbanned' : ''}`;
 
-              if (!isShadowbanned) {
-                const banBtn = document.createElement('button');
-                banBtn.className = 'mod-btn-ban';
-                banBtn.textContent = 'Mute';
-                banBtn.onclick = () => {
-                  shadowbanSpectator(senderToken, senderHw, authorName);
-                  chatRow.classList.add('is-shadowbanned');
-                  textSpan.innerHTML += ' <em style="color:#ff7675;">[MUTED]</em>';
-                  banBtn.remove();
+                const textSpan = document.createElement('span');
+                const authorEl = document.createElement('span');
+                authorEl.className = 'author-clickable';
+                authorEl.style.color = isShadowbanned ? '#ff7675' : '#00f0ff';
+                authorEl.textContent = `${authorName}: `;
+                authorEl.title = "Click to Mute or Kick user";
+                authorEl.onclick = (e) => {
+                  e.stopPropagation();
+                  showSpectatorActionMenu(senderToken, senderHw, authorName, conn.peer);
                 };
-                chatRow.appendChild(banBtn);
-              }
 
-              modChatStream.appendChild(chatRow);
-              modChatStream.scrollTop = modChatStream.scrollHeight;
+                textSpan.appendChild(authorEl);
+                textSpan.appendChild(document.createTextNode(rawText));
+                if (isShadowbanned) {
+                  const bTag = document.createElement('em');
+                  bTag.style.color = '#ff7675';
+                  bTag.textContent = ' [SHADOWBANNED]';
+                  textSpan.appendChild(bTag);
+                }
+                chatRow.appendChild(textSpan);
+
+                if (!isShadowbanned) {
+                  const banBtn = document.createElement('button');
+                  banBtn.className = 'mod-btn-action';
+                  banBtn.textContent = 'Mod';
+                  banBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    showSpectatorActionMenu(senderToken, senderHw, authorName, conn.peer);
+                  };
+                  chatRow.appendChild(banBtn);
+                }
+
+                stream.appendChild(chatRow);
+                stream.scrollTop = stream.scrollHeight;
+              });
 
               if (!isShadowbanned && !isAudienceChatGlobalMuted) {
                 connectedDataConns.forEach(c => {
@@ -1307,6 +1433,24 @@
                   }
                 });
               }
+              return;
+            }
+
+            if (data.type === "SPECTATOR_MOVE") {
+              connectedDataConns.forEach(c => {
+                if (c.open && c.metadata && c.metadata.role === 'AUDIENCE' && c.peer !== conn.peer) {
+                  c.send({
+                    type: "SPECTATOR_POS_RELAY",
+                    peerId: data.peerId,
+                    name: data.name,
+                    x: data.x,
+                    y: data.y,
+                    z: data.z,
+                    yaw: data.yaw,
+                    zone: data.zone
+                  });
+                }
+              });
               return;
             }
 
@@ -1387,18 +1531,6 @@
           });
         });
 
-        studioPeer.on('error', (err) => {
-          if (err.type === 'unavailable-id') {
-            const viewerPeer = new Peer();
-            viewerPeer.on('open', () => {
-              const dataConn = viewerPeer.connect("goody-main-studio");
-              dataConn.on('data', (data) => {
-                if (data.type === "AUDIENCE_COUNT") audienceCountEl.textContent = data.count;
-              });
-            });
-          }
-        });
-
       } catch(e) { console.error(e); }
     }
 
@@ -1448,10 +1580,7 @@
       goodyUtterance.rate = 0.95;
       goodyUtterance.pitch = 1.25;
 
-      goodyUtterance.onstart = () => {
-        isGoodySpeaking = true;
-      };
-
+      goodyUtterance.onstart = () => { isGoodySpeaking = true; };
       goodyUtterance.onboundary = (e) => {
         isGoodySpeaking = true;
         const chunk = text.substring(e.charIndex, e.charIndex + 65);
@@ -1490,6 +1619,8 @@
       p2RollVal = null;
       isDiceRollingP1 = true;
       isDiceRollingP2 = true;
+      isPawnMoving = false;
+      hasPlayerRolledThisTurn = false;
 
       broadcastMicState("goody-contestant-1", false);
       broadcastMicState("goody-contestant-2", false);
@@ -1512,6 +1643,9 @@
 
     function startTurnDiceCountdown(turnPlayer, pName) {
       diceCountdown = 10;
+      hasPlayerRolledThisTurn = false;
+      isPawnMoving = false;
+
       if (turnPlayer === "goody-contestant-2") isDiceRollingP2 = true;
       else isDiceRollingP1 = true;
 
@@ -1525,8 +1659,10 @@
           playTone(440, 'triangle', 0.08, 0.03);
         } else {
           clearInterval(diceInterval);
-          const autoVal = Math.floor(Math.random() * 6) + 1;
-          handlePlayerRoll(turnPlayer, pName, autoVal);
+          if (!hasPlayerRolledThisTurn && !isPawnMoving) {
+            const autoVal = Math.floor(Math.random() * 6) + 1;
+            handlePlayerRoll(turnPlayer, pName, autoVal);
+          }
         }
       }, 1000);
     }
@@ -1534,8 +1670,10 @@
     function handlePlayerRoll(contestant, name, roll) {
       if (gameState === "OPENING_DUEL") {
         if (contestant === "goody-contestant-2") {
+          if (p2RollVal !== null) return;
           p2RollVal = roll; isDiceRollingP2 = false;
         } else {
+          if (p1RollVal !== null) return;
           p1RollVal = roll; isDiceRollingP1 = false;
         }
         playTone(587, 'sine', 0.15, 0.08);
@@ -1545,7 +1683,13 @@
           finalizeDiceDuel();
         }
       } else if (gameState === "IN_PLAY") {
-        if (contestant !== activePlayer) return;
+        if (contestant !== activePlayer || hasPlayerRolledThisTurn || isPawnMoving) {
+          if (contestant === "goody-contestant-2") isDiceRollingP2 = false;
+          else isDiceRollingP1 = false;
+          return;
+        }
+        hasPlayerRolledThisTurn = true;
+        isPawnMoving = true;
        
         if (diceInterval) clearInterval(diceInterval);
         diceCountdown = 0;
@@ -1616,6 +1760,8 @@
       const finalWinningRoll = winnerNum === 1 ? p1RollVal : p2RollVal;
 
       gameState = "IN_PLAY";
+      hasPlayerRolledThisTurn = false;
+      isPawnMoving = true;
       renderStageQuestionBoard();
       startTwentyMinuteMatchTimer();
       broadcastBoardState();
@@ -1635,7 +1781,10 @@
       let currentHopIdx = fromIdx;
 
       function hopNextStep() {
-        if (gameState === "INTERMISSION") return;
+        if (gameState === "INTERMISSION") {
+          isPawnMoving = false;
+          return;
+        }
 
         if (currentHopIdx === toIdx) {
           if (onComplete) onComplete();
@@ -1658,7 +1807,10 @@
         playTone(320 + Math.random() * 80, 'sine', 0.06, 0.04);
 
         function stepFrame(now) {
-          if (gameState === "INTERMISSION") return;
+          if (gameState === "INTERMISSION") {
+            isPawnMoving = false;
+            return;
+          }
 
           const elapsed = now - hopStartTime;
           const progress = Math.min(1.0, elapsed / hopDurationMs);
@@ -1696,6 +1848,7 @@
       else p2Index = targetIdx;
 
       animatePawnHop(targetPawn, oldIdx, targetIdx, xOffset, () => {
+        isPawnMoving = false;
         broadcastBoardState();
 
         if (p1Index >= boardTileCoords.length - 1 || p2Index >= boardTileCoords.length - 1) {
@@ -1719,9 +1872,12 @@
           recap: rawQ.recap
         };
         activeRecap = null;
-
         stageSelectedOption = null;
         stageOptionStatus = null;
+
+        if (questionInterval) clearInterval(questionInterval);
+        isQuestionTimerActive = false;
+        questionTimer = 0;
 
         const activeName = contestantNames[activePlayer];
 
@@ -1761,16 +1917,21 @@
 
     function startQuestionCountdown() {
       questionTimer = 30;
+      isQuestionTimerActive = true;
+      renderStageQuestionBoard();
+
       if (questionInterval) clearInterval(questionInterval);
       questionInterval = setInterval(() => {
         if (gameState === "INTERMISSION") {
           clearInterval(questionInterval);
+          isQuestionTimerActive = false;
           return;
         }
         questionTimer--;
         renderStageQuestionBoard();
         if (questionTimer <= 0) {
           clearInterval(questionInterval);
+          isQuestionTimerActive = false;
           broadcastMicState(activePlayer, false);
           handleQuestionTimeout(activePlayer);
         }
@@ -1779,6 +1940,8 @@
 
     function evaluateAnswer(contestant, chosen) {
       if (questionInterval) clearInterval(questionInterval);
+      isQuestionTimerActive = false;
+      questionTimer = 0;
       broadcastMicState(contestant, false);
       const isCorrect = chosen === activeQuestion.ans;
 
@@ -1831,6 +1994,8 @@
 
     function handleQuestionTimeout(contestant) {
       if (questionInterval) clearInterval(questionInterval);
+      isQuestionTimerActive = false;
+      questionTimer = 0;
       broadcastMicState(contestant, false);
 
       if (contestant !== goodyPlayerSlot) {
@@ -1867,6 +2032,8 @@
     function transitionToRulesAndNextTurn() {
       activeRecap = null;
       activeQuestion = null;
+      isQuestionTimerActive = false;
+      questionTimer = 0;
       renderStageQuestionBoard();
 
       if (isTimeExpired) {
@@ -1911,6 +2078,12 @@
       stageOptionStatus = null;
       p1RollVal = null;
       p2RollVal = null;
+      hasPlayerRolledThisTurn = false;
+      isPawnMoving = false;
+      isDiceRollingP1 = false;
+      isDiceRollingP2 = false;
+      isQuestionTimerActive = false;
+      questionTimer = 0;
       renderStageQuestionBoard();
 
       if (activePlayer === goodyPlayerSlot) {
@@ -1934,6 +2107,8 @@
     function evaluateFinalShowdown() {
       if (diceInterval) clearInterval(diceInterval);
       if (questionInterval) clearInterval(questionInterval);
+      isQuestionTimerActive = false;
+      questionTimer = 0;
       broadcastMicState("goody-contestant-1", false);
       broadcastMicState("goody-contestant-2", false);
 
@@ -2047,6 +2222,8 @@
       if (matchTimerInterval) clearInterval(matchTimerInterval);
       if (questionInterval) clearInterval(questionInterval);
       if (diceInterval) clearInterval(diceInterval);
+      isQuestionTimerActive = false;
+      questionTimer = 0;
       broadcastMicState("goody-contestant-1", false);
       broadcastMicState("goody-contestant-2", false);
 
@@ -2174,19 +2351,10 @@
 
     function createCountryFlagTexture(countryName) {
       const c = document.createElement('canvas');
-      c.width = 256;
-      c.height = 256;
-      const ctx = c.getContext('2d');
-      const w = 256;
-      const h = 256;
-
-      ctx.fillStyle = '#1e1035';
-      ctx.fillRect(0, 0, w, h);
-
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(128, 128, 124, 0, Math.PI * 2);
-      ctx.clip();
+      c.width = 256; c.height = 256;
+      const ctx = c.getContext('2d'); const w = 256; const h = 256;
+      ctx.fillStyle = '#1e1035'; ctx.fillRect(0, 0, w, h);
+      ctx.save(); ctx.beginPath(); ctx.arc(128, 128, 124, 0, Math.PI * 2); ctx.clip();
 
       switch(countryName) {
         case "France":
@@ -2286,19 +2454,11 @@
       }
       ctx.restore();
 
-      ctx.strokeStyle = '#e6c875';
-      ctx.lineWidth = 8;
-      ctx.beginPath();
-      ctx.arc(128, 128, 123, 0, Math.PI * 2);
-      ctx.stroke();
-
-      const tex = new THREE.CanvasTexture(c);
-      tex.needsUpdate = true;
-      return tex;
+      ctx.strokeStyle = '#e6c875'; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(128, 128, 123, 0, Math.PI * 2); ctx.stroke();
+      const tex = new THREE.CanvasTexture(c); tex.needsUpdate = true; return tex;
     }
 
     const flagTextures = COUNTRIES.map(cName => createCountryFlagTexture(cName));
-
     const boardTileCoords = [];
     const spiralCenterZ = 1.8;
     const totalTiles = 32;
@@ -2324,40 +2484,26 @@
       miniDiorama.add(tile);
     }
 
-    // Dynamic Name Badges
     function updatePawnNameBadge(pawnGroup, displayName) {
       if (!pawnGroup || !pawnGroup.userData || !pawnGroup.userData.badgeCanvas) return;
       const canvas = pawnGroup.userData.badgeCanvas;
       const ctx = canvas.getContext('2d');
-      const w = canvas.width;
-      const h = canvas.height;
+      const w = canvas.width; const h = canvas.height;
       const tagColor = pawnGroup.userData.tagColor || '#00d2d3';
 
       ctx.clearRect(0, 0, w, h);
 
       const r = 24;
-      ctx.fillStyle = '#0a0314';
-      ctx.strokeStyle = tagColor;
-      ctx.lineWidth = 8;
+      ctx.fillStyle = '#0a0314'; ctx.strokeStyle = tagColor; ctx.lineWidth = 8;
       ctx.beginPath();
-      ctx.moveTo(r, 4);
-      ctx.lineTo(w - r, 4);
-      ctx.quadraticCurveTo(w - 4, 4, w - 4, r);
-      ctx.lineTo(w - 4, h - r);
-      ctx.quadraticCurveTo(w - 4, h - 4, w - r, h - 4);
-      ctx.lineTo(r, h - 4);
-      ctx.quadraticCurveTo(4, h - 4, 4, h - r);
-      ctx.lineTo(4, r);
-      ctx.quadraticCurveTo(4, 4, r, 4);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
+      ctx.moveTo(r, 4); ctx.lineTo(w - r, 4); ctx.quadraticCurveTo(w - 4, 4, w - 4, r);
+      ctx.lineTo(w - 4, h - r); ctx.quadraticCurveTo(w - 4, h - 4, w - r, h - 4);
+      ctx.lineTo(r, h - 4); ctx.quadraticCurveTo(4, h - 4, 4, h - r);
+      ctx.lineTo(4, r); ctx.quadraticCurveTo(4, 4, r, 4);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
 
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       const cleanName = (displayName || "PLAYER").toUpperCase().trim();
-     
       let fontSize = 48;
       if (cleanName.length > 8) fontSize = 36;
       if (cleanName.length > 12) fontSize = 28;
@@ -2381,29 +2527,20 @@
       head.position.y = 0.22; pawn.add(head);
 
       const bCanvas = document.createElement('canvas');
-      bCanvas.width = 256;
-      bCanvas.height = 96;
+      bCanvas.width = 256; bCanvas.height = 96;
       const bTex = new THREE.CanvasTexture(bCanvas);
 
       const badgeMat = new THREE.MeshBasicMaterial({
-        map: bTex,
-        transparent: true,
-        side: THREE.DoubleSide,
-        depthWrite: false
+        map: bTex, transparent: true, side: THREE.DoubleSide, depthWrite: false
       });
-
       const badgeMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.13), badgeMat);
       badgeMesh.position.set(0, 0.35, 0);
       pawn.add(badgeMesh);
 
       const hexStr = '#' + colorHex.toString(16).padStart(6, '0');
       pawn.userData = {
-        badgeCanvas: bCanvas,
-        badgeTexture: bTex,
-        badgeMesh: badgeMesh,
-        tagColor: hexStr
+        badgeCanvas: bCanvas, badgeTexture: bTex, badgeMesh: badgeMesh, tagColor: hexStr
       };
-
       updatePawnNameBadge(pawn, initialName);
       return pawn;
     }
@@ -2519,7 +2656,7 @@
         qBoardCtx.textAlign = 'left';
         qBoardCtx.fillText(` ${activeQuestion.country.toUpperCase()} [${pName}]`, 20, 36);
 
-        if (questionTimer > 0 && !isTieBreakerActive) {
+        if (isQuestionTimerActive && questionTimer > 0 && !isTieBreakerActive) {
           qBoardCtx.fillStyle = '#ff7675';
           qBoardCtx.font = 'bold 20px monospace';
           qBoardCtx.textAlign = 'right';
@@ -2854,22 +2991,22 @@
         const isP1Goody = isVsGoodyMode && goodyPlayerSlot === "goody-contestant-1";
         const isP2Goody = isVsGoodyMode && goodyPlayerSlot === "goody-contestant-2";
 
-        if (isP1Goody || showJake) {
+        if (isP1Goody || (showJake && (!isSoloMode || soloPlayerId === "goody-contestant-1"))) {
           drawScreenFeed(sScreenCtx, 15, 20, 225, 215, contestantNames["goody-contestant-1"], contestantCities["goody-contestant-1"], hasLiveJakeStream, videoJake, true, p1RollVal, isDiceRollingP1, isP1Goody);
         } else {
           sScreenCtx.strokeStyle = '#ffb300'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(15, 20, 225, 215);
           sScreenCtx.fillStyle = '#ffda66'; sScreenCtx.font = 'bold 22px sans-serif'; sScreenCtx.textAlign = 'center';
           sScreenCtx.fillText(isSoloMode && soloPlayerId !== "goody-contestant-1" ? "WITHDRAWN" : `CONTESTANT 1 (${(contestantNames["goody-contestant-1"] || "").toUpperCase()})`, 127, 120);
-          sScreenCtx.fillStyle = '#39ff14'; sScreenCtx.font = '14px monospace'; sScreenCtx.fillText(gameState === "INTERMISSION" ? "DISCONNECTED" : "STANDBY...", 127, 150);
+          sScreenCtx.fillStyle = '#39ff14'; sScreenCtx.font = '14px monospace'; sScreenCtx.fillText(gameState === "INTERMISSION" ? "DISCONNECTED" : (isSoloMode ? "OFF-AIR" : "STANDBY..."), 127, 150);
         }
 
-        if (isP2Goody || showJune) {
+        if (isP2Goody || (showJune && (!isSoloMode || soloPlayerId === "goody-contestant-2"))) {
           drawScreenFeed(sScreenCtx, 272, 20, 225, 215, contestantNames["goody-contestant-2"], contestantCities["goody-contestant-2"], hasLiveJuneStream, videoJune, false, p2RollVal, isDiceRollingP2, isP2Goody);
         } else {
           sScreenCtx.strokeStyle = '#ffb300'; sScreenCtx.lineWidth = 3; sScreenCtx.strokeRect(272, 20, 225, 215);
           sScreenCtx.fillStyle = '#ffda66'; sScreenCtx.font = 'bold 22px sans-serif'; sScreenCtx.textAlign = 'center';
           sScreenCtx.fillText(isSoloMode && soloPlayerId !== "goody-contestant-2" ? "WITHDRAWN" : `CONTESTANT 2 (${(contestantNames["goody-contestant-2"] || "").toUpperCase()})`, 384, 120);
-          sScreenCtx.fillStyle = '#39ff14'; sScreenCtx.font = '14px monospace'; sScreenCtx.fillText(gameState === "INTERMISSION" ? "DISCONNECTED" : "STANDBY...", 384, 150);
+          sScreenCtx.fillStyle = '#39ff14'; sScreenCtx.font = '14px monospace'; sScreenCtx.fillText(gameState === "INTERMISSION" ? "DISCONNECTED" : (isSoloMode ? "OFF-AIR" : "STANDBY..."), 384, 150);
         }
       }
       studioScreenTex.needsUpdate = true;
@@ -2879,9 +3016,7 @@
 
     const miniGoody = new THREE.Group();
     const silverMetalMat = new THREE.MeshStandardMaterial({
-      color: 0xcccccc,
-      metalness: 0.95,
-      roughness: 0.15
+      color: 0xcccccc, metalness: 0.95, roughness: 0.15
     });
 
     const gPodium = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 0.6, 20), new THREE.MeshStandardMaterial({ color: 0x2b154a }));
@@ -2920,43 +3055,28 @@
 
       gAntOrb.material.color.setHex(isGoodySpeaking ? 0x00f0ff : 0x39ff14);
 
-      fctx.fillStyle = '#39ff14';
-      fctx.strokeStyle = '#39ff14';
-      fctx.lineWidth = 4;
-      fctx.lineCap = 'round';
-      fctx.lineJoin = 'round';
+      fctx.fillStyle = '#39ff14'; fctx.strokeStyle = '#39ff14'; fctx.lineWidth = 4;
+      fctx.lineCap = 'round'; fctx.lineJoin = 'round';
 
       fctx.beginPath();
-      fctx.moveTo(28, 56);
-      fctx.lineTo(44, 38);
-      fctx.lineTo(60, 56);
-      fctx.stroke();
-
+      fctx.moveTo(28, 56); fctx.lineTo(44, 38); fctx.lineTo(60, 56); fctx.stroke();
       fctx.beginPath();
-      fctx.moveTo(68, 56);
-      fctx.lineTo(84, 38);
-      fctx.lineTo(100, 56);
-      fctx.stroke();
+      fctx.moveTo(68, 56); fctx.lineTo(84, 38); fctx.lineTo(100, 56); fctx.stroke();
 
       if (isGoodySpeaking) {
         const mouthOpen = (Math.sin(time * 0.022) + 1.0) * 0.5;
         const mouthHeight = 6 + (mouthOpen * 20);
         const mouthWidth = 40 + (mouthOpen * 6);
 
-        fctx.fillStyle = '#220033';
-        fctx.strokeStyle = '#39ff14';
-        fctx.lineWidth = 3.5;
-
+        fctx.fillStyle = '#220033'; fctx.strokeStyle = '#39ff14'; fctx.lineWidth = 3.5;
         fctx.beginPath();
         fctx.ellipse(64, 88, mouthWidth / 2, mouthHeight / 2, 0, 0, Math.PI * 2);
-        fctx.fill();
-        fctx.stroke();
+        fctx.fill(); fctx.stroke();
 
         fctx.fillStyle = '#ffffff';
         fctx.fillRect(54, 88 - (mouthHeight / 2) + 2, 20, Math.min(5, mouthHeight / 2));
       } else {
-        fctx.strokeStyle = '#39ff14';
-        fctx.lineWidth = 5;
+        fctx.strokeStyle = '#39ff14'; fctx.lineWidth = 5;
         fctx.beginPath();
         fctx.arc(64, 78, 16, 0.2, Math.PI - 0.2, false);
         fctx.stroke();
@@ -3016,13 +3136,11 @@
     });
 
     function syncContestantCameras() {
-      const dist = 1.8;
-      const height = 1.2;
+      const dist = 1.8; const height = 1.2;
 
       if (playerPlushie1) {
         const rot = contestantRotations["goody-contestant-1"];
         playerPlushie1.rotation.y = rot.yaw;
-
         const worldX = playerPlushie1.position.x;
         const worldY = playerPlushie1.position.y + 3.95;
         const worldZ = playerPlushie1.position.z - 9.0;
@@ -3032,19 +3150,16 @@
           worldY + height,
           worldZ + Math.cos(rot.yaw) * dist
         );
-
-        const lookTarget = new THREE.Vector3(
+        camJake.lookAt(new THREE.Vector3(
           worldX - Math.sin(rot.yaw) * 4.0,
           worldY + 0.5 + rot.pitch * 3.0,
           worldZ - Math.cos(rot.yaw) * 4.0
-        );
-        camJake.lookAt(lookTarget);
+        ));
       }
 
       if (playerPlushie2) {
         const rot = contestantRotations["goody-contestant-2"];
         playerPlushie2.rotation.y = rot.yaw;
-
         const worldX = playerPlushie2.position.x;
         const worldY = playerPlushie2.position.y + 3.95;
         const worldZ = playerPlushie2.position.z - 9.0;
@@ -3054,13 +3169,11 @@
           worldY + height,
           worldZ + Math.cos(rot.yaw) * dist
         );
-
-        const lookTarget = new THREE.Vector3(
+        camJune.lookAt(new THREE.Vector3(
           worldX - Math.sin(rot.yaw) * 4.0,
           worldY + 0.5 + rot.pitch * 3.0,
           worldZ - Math.cos(rot.yaw) * 4.0
-        );
-        camJune.lookAt(lookTarget);
+        ));
       }
     }
 
@@ -3101,10 +3214,8 @@
       }
 
       prevTime = time;
-
       syncContestantCameras();
 
-      // Render the master and contestant perspective camera views
       if (playerPlushie1) playerPlushie1.visible = false;
       if (playerPlushie2) playerPlushie2.visible = false;
       renderer.render(scene, camera);
