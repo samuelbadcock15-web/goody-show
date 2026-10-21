@@ -392,6 +392,7 @@
     let isSoloMode = false;
     let isVsGoodyMode = false;
     let goodyPlayerSlot = null;
+    let soloPlayerId = null;
 
     let activeQuestion = null;
     let activeRecap = null;
@@ -413,9 +414,10 @@
       const entered = audienceNameInput.value.trim();
       if (entered.length > 0) audienceNickname = entered;
       userDisplayName.textContent = audienceNickname.toUpperCase();
+      
       entryModal.style.display = 'none';
-      connectToStudio();
       startLimoArrivalCutscene();
+      connectToStudio();
     });
 
     // WEBRTC CONNECTION & STREAM RECEIVER
@@ -445,6 +447,11 @@
             if (data.p1Name) { p1ContestantName = data.p1Name; updatePawnNameBadge(pawn1, data.p1Name); }
             if (data.p2Name) { p2ContestantName = data.p2Name; updatePawnNameBadge(pawn2, data.p2Name); }
            
+            if (data.isSoloMode !== undefined) isSoloMode = data.isSoloMode;
+            if (data.isVsGoodyMode !== undefined) isVsGoodyMode = data.isVsGoodyMode;
+            if (data.goodyPlayerSlot !== undefined) goodyPlayerSlot = data.goodyPlayerSlot;
+            if (data.soloPlayerId !== undefined) soloPlayerId = data.soloPlayerId;
+
             if (data.p1Index !== undefined && data.p1Index !== p1Index) {
               const old = p1Index; p1Index = data.p1Index;
               animatePawnHop(pawn1, old, p1Index, -0.08);
@@ -1073,11 +1080,6 @@
     const studioBackScreenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshBasicMaterial({ map: studioScreenTex }));
     studioBackScreenMesh.position.set(0, 3.4, -4.5); miniDiorama.add(studioBackScreenMesh);
 
-    let isSoloMode = false;
-    let isVsGoodyMode = false;
-    let goodyPlayerSlot = null;
-    let soloPlayerId = null;
-
     // 3D Studio Question Board (Left Screen)
     const qBoardCanvas = document.createElement('canvas'); qBoardCanvas.width = 512; qBoardCanvas.height = 384;
     const qBoardCtx = qBoardCanvas.getContext('2d');
@@ -1279,15 +1281,339 @@
       faceTex.needsUpdate = true;
     }
 
-    // --- LATEST UPDATED SYNC HANDLER ---
-    // Make sure we listen for game modes (Solo / Vs. Goody) in SYNC_BOARD_STATE
-    // (Added inside connectToStudio data listener on host connection)
+    // ==========================================
+    // 4. WHITE STRETCH LIMOUSINE & DOORMAN
+    // ==========================================
+    const limoGroup = new THREE.Group();
+    limoGroup.position.set(-18, 0.4, 8.5);
 
-    // Ensure SYNC_BOARD_STATE handles mode flags if present:
-    // if (data.isSoloMode !== undefined) isSoloMode = data.isSoloMode;
-    // if (data.isVsGoodyMode !== undefined) isVsGoodyMode = data.isVsGoodyMode;
-    // if (data.goodyPlayerSlot !== undefined) goodyPlayerSlot = data.goodyPlayerSlot;
-    // if (data.soloPlayerId !== undefined) soloPlayerId = data.soloPlayerId;
+    const whiteLimoMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.8, roughness: 0.15 });
+    const tintedGlassMat = new THREE.MeshStandardMaterial({ color: 0x050508, roughness: 0.05 });
+    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xecf0f1, metalness: 0.95, roughness: 0.1 });
+
+    const limoBody = new THREE.Mesh(new THREE.BoxGeometry(8.5, 1.4, 2.2), whiteLimoMat);
+    limoBody.position.y = 0.55; limoGroup.add(limoBody);
+
+    const limoCabin = new THREE.Mesh(new THREE.BoxGeometry(5.6, 1.0, 1.95), tintedGlassMat);
+    limoCabin.position.set(-0.4, 1.6, 0); limoGroup.add(limoCabin);
+
+    const chromeTrim = new THREE.Mesh(new THREE.BoxGeometry(8.55, 0.08, 2.22), chromeMat);
+    chromeTrim.position.y = 0.35; limoGroup.add(chromeTrim);
+
+    const headLightL = new THREE.Mesh(new THREE.CircleGeometry(0.18, 12), new THREE.MeshBasicMaterial({ color: 0xfffae6 }));
+    headLightL.rotation.y = Math.PI / 2; headLightL.position.set(4.26, 0.65, 0.7); limoGroup.add(headLightL);
+    const headLightR = new THREE.Mesh(new THREE.CircleGeometry(0.18, 12), new THREE.MeshBasicMaterial({ color: 0xfffae6 }));
+    headLightR.rotation.y = Math.PI / 2; headLightR.position.set(4.26, 0.65, -0.7); limoGroup.add(headLightR);
+
+    // Opening Passenger Door
+    const limoDoorPivot = new THREE.Group();
+    limoDoorPivot.position.set(0.5, 0.55, -1.1);
+    const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.3, 0.1), whiteLimoMat);
+    doorMesh.position.set(0.6, 0, 0); limoDoorPivot.add(doorMesh);
+    const doorWindow = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.6, 0.12), tintedGlassMat);
+    doorWindow.position.set(0.6, 0.55, 0); limoDoorPivot.add(doorWindow);
+    limoGroup.add(limoDoorPivot);
+
+    [-3.0, -1.0, 1.0, 3.0].forEach(wx => {
+      const wL = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.28, 16), chromeMat);
+      wL.rotation.x = Math.PI / 2; wL.position.set(wx, 0.2, 1.15); limoGroup.add(wL);
+      const wR = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.28, 16), chromeMat);
+      wR.rotation.x = Math.PI / 2; wR.position.set(wx, 0.2, -1.15); limoGroup.add(wR);
+    });
+    scene.add(limoGroup);
+
+    // Uniformed Doorman Staff Plushie
+    const doormanPlushie = createCutePlushie3D(0x2c3e50, true, 1.0);
+    doormanPlushie.position.set(1.5, 0.26, 6.2);
+    doormanPlushie.rotation.y = Math.PI;
+    scene.add(doormanPlushie);
+
+    // Spectator's Personal Plushie (75% Opacity)
+    const myPlushie = createCutePlushie3D(0xff7675, false, 0.75);
+    myPlushie.position.set(0, 0.26, 7.8);
+    myPlushie.visible = false;
+    scene.add(myPlushie);
+
+    let playerPos = { x: 0, y: 0.26, z: 7.8 };
+    let playerYaw = 0;
+    let playerPitch = -0.12;
+
+    // --- 5. ARRIVAL CUTSCENE SEQUENCER ---
+    let cutsceneActive = false;
+    let cutsceneStartTime = 0;
+
+    function startLimoArrivalCutscene() {
+      cutsceneActive = true;
+      cutsceneStartTime = performance.now();
+      lensOverlay.style.display = 'block';
+      camera.position.set(3.8, 1.8, 4.0);
+      camera.lookAt(-10, 1.0, 8.5);
+    }
+
+    function updateCutscene(now) {
+      const elapsed = (now - cutsceneStartTime) / 1000;
+
+      if (elapsed < 3.0) {
+        const t = elapsed / 3.0;
+        limoGroup.position.x = -18 + (18 * Math.sin(t * Math.PI / 2));
+        camera.lookAt(limoGroup.position.x, 1.0, 8.5);
+      } else if (elapsed < 4.5) {
+        const t = (elapsed - 3.0) / 1.5;
+        limoDoorPivot.rotation.y = -t * 1.4;
+        doormanPlushie.position.z = 6.2 + (t * 0.9);
+        doormanPlushie.rotation.y = Math.PI - (t * 0.5);
+        camera.position.set(3.2 - (t * 0.5), 1.6, 4.5);
+        camera.lookAt(0.5, 0.8, 7.5);
+      } else if (elapsed < 6.5) {
+        myPlushie.visible = true;
+        const t = (elapsed - 4.5) / 2.0;
+        myPlushie.position.set(0, 0.26, 8.2 - (t * 1.6));
+        playerPos.z = myPlushie.position.z;
+
+        camera.position.lerp(new THREE.Vector3(playerPos.x, playerPos.y + 0.85, playerPos.z + 1.35), 0.08);
+        camera.lookAt(playerPos.x, playerPos.y + 0.6, playerPos.z - 4.0);
+      } else if (elapsed < 7.2) {
+        const t = (elapsed - 6.5) / 0.7;
+        limoDoorPivot.rotation.y = -1.4 * (1.0 - t);
+      } else {
+        cutsceneActive = false;
+        isSpectatorControlsLocked = false;
+        lensOverlay.style.display = 'none';
+        barTop.style.transform = 'translateY(-100%)';
+        barBottom.style.transform = 'translateY(100%)';
+        spectatorUi.style.display = 'flex';
+      }
+    }
+
+    // ==========================================
+    // 6. PC KEYBOARD (WASD / ARROWS) & ON-SCREEN CONTROLS
+    // ==========================================
+    const keysPressed = {};
+
+    window.addEventListener('keydown', (e) => {
+      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+      keysPressed[e.code] = true;
+    });
+
+    window.addEventListener('keyup', (e) => {
+      keysPressed[e.code] = false;
+    });
+
+    function applyMovementStep(deltaSec) {
+      if (isSpectatorControlsLocked) return;
+
+      let moveFwd = 0;
+      let moveRight = 0;
+
+      if (keysPressed['KeyW'] || keysPressed['ArrowUp']) moveFwd += 1;
+      if (keysPressed['KeyS'] || keysPressed['ArrowDown']) moveFwd -= 1;
+      if (keysPressed['KeyA'] || keysPressed['ArrowLeft']) moveRight -= 1;
+      if (keysPressed['KeyD'] || keysPressed['ArrowRight']) moveRight += 1;
+
+      if (dpadActiveDirs.has('FORWARD')) moveFwd += 1;
+      if (dpadActiveDirs.has('BACK')) moveFwd -= 1;
+      if (dpadActiveDirs.has('LEFT')) moveRight -= 1;
+      if (dpadActiveDirs.has('RIGHT')) moveRight += 1;
+
+      if (moveFwd === 0 && moveRight === 0) return;
+
+      const len = Math.hypot(moveFwd, moveRight);
+      const speed = 4.2;
+      const dist = (speed * deltaSec) / len;
+
+      const fwdX = -Math.sin(playerYaw);
+      const fwdZ = -Math.cos(playerYaw);
+      const rX = Math.cos(playerYaw);
+      const rZ = -Math.sin(playerYaw);
+
+      playerPos.x += (fwdX * moveFwd + rX * moveRight) * dist;
+      playerPos.z += (fwdZ * moveFwd + rZ * moveRight) * dist;
+
+      checkZoneAndElevatorTriggers();
+    }
+
+    const dpadActiveDirs = new Set();
+    function setupDpadButton(btnId, dir) {
+      const el = document.getElementById(btnId);
+      const start = (e) => {
+        unlockAudio();
+        e.preventDefault();
+        dpadActiveDirs.add(dir);
+        el.classList.add('pressed');
+      };
+      const stop = () => {
+        dpadActiveDirs.delete(dir);
+        el.classList.remove('pressed');
+      };
+
+      el.addEventListener('mousedown', start);
+      el.addEventListener('mouseup', stop);
+      el.addEventListener('mouseleave', stop);
+      el.addEventListener('touchstart', start, { passive: false });
+      el.addEventListener('touchend', stop, { passive: false });
+    }
+    setupDpadButton('dpad-fwd', 'FORWARD');
+    setupDpadButton('dpad-back', 'BACK');
+    setupDpadButton('dpad-left', 'LEFT');
+    setupDpadButton('dpad-right', 'RIGHT');
+
+    // ==========================================
+    // 7. INTERACTIVE VISIBLE-CURSOR LOOK PAD
+    // ==========================================
+    const lookPad = document.getElementById('look-pad');
+    const lookPadKnob = document.getElementById('look-pad-knob');
+    let isLooking = false;
+    let lookOriginX = 0;
+    let lookOriginY = 0;
+
+    function handleLookStart(clientX, clientY) {
+      unlockAudio();
+      isLooking = true;
+      lookOriginX = clientX;
+      lookOriginY = clientY;
+    }
+
+    function handleLookMove(clientX, clientY) {
+      if (!isLooking || isSpectatorControlsLocked) return;
+
+      const deltaX = clientX - lookOriginX;
+      const deltaY = clientY - lookOriginY;
+      lookOriginX = clientX;
+      lookOriginY = clientY;
+
+      playerYaw -= deltaX * 0.008;
+      playerPitch = Math.max(-0.6, Math.min(0.5, playerPitch - deltaY * 0.006));
+
+      const maxOffset = 22;
+      const knobX = Math.max(-maxOffset, Math.min(maxOffset, deltaX * 3));
+      const knobY = Math.max(-maxOffset, Math.min(maxOffset, deltaY * 3));
+      lookPadKnob.style.transform = `translate(${knobX}px, ${knobY}px)`;
+    }
+
+    function handleLookEnd() {
+      isLooking = false;
+      lookPadKnob.style.transform = `translate(0px, 0px)`;
+    }
+
+    lookPad.addEventListener('mousedown', (e) => handleLookStart(e.clientX, e.clientY));
+    window.addEventListener('mousemove', (e) => handleLookMove(e.clientX, e.clientY));
+    window.addEventListener('mouseup', handleLookEnd);
+
+    lookPad.addEventListener('touchstart', (e) => {
+      if (e.touches.length > 0) handleLookStart(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+      if (isLooking && e.touches.length > 0) handleLookMove(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+
+    window.addEventListener('touchend', handleLookEnd);
+
+    // ==========================================
+    // 8. ZONE & ELEVATOR TRIGGERS
+    // ==========================================
+    function checkZoneAndElevatorTriggers() {
+      if (currentZone === "STREET" && playerPos.z < 4.0) {
+        currentZone = "FOYER"; locationPill.textContent = "LOCATION: GRAND FOYER";
+      } else if (currentZone === "FOYER" && playerPos.z > 4.5) {
+        currentZone = "STREET"; locationPill.textContent = "LOCATION: STREET CURBSIDE";
+      }
+
+      if (currentZone === "FOYER" && playerPos.x > 6.0 && Math.abs(playerPos.z - (-5.0)) < 2.0) {
+        interactionPrompt.style.display = 'block';
+        interactionPrompt.textContent = "🚿 RESTROOM: WASHING & DRYING HANDS...";
+        playTone(380, 'sine', 0.15, 0.03);
+      }
+      else if (currentZone === "FOYER" && playerPos.x < -5.5 && Math.abs(playerPos.z - (-5.0)) < 2.0) {
+        interactionPrompt.style.display = 'block';
+        interactionPrompt.textContent = "🍿 CONCESSIONS: FRESH POPCORN & COLD DRINKS READY!";
+      }
+      else if (currentZone === "FOYER" && Math.abs(playerPos.x) < 1.6 && playerPos.z < -10.5) {
+        interactionPrompt.style.display = 'block';
+        interactionPrompt.textContent = "TAKING LIFT TO STUDIO MEZZANINE...";
+        isSpectatorControlsLocked = true;
+        playTone(523, 'sine', 0.2, 0.04);
+
+        setTimeout(() => {
+          currentZone = "STUDIO"; locationPill.textContent = "LOCATION: LIVE STUDIO TABLE";
+          interactionPrompt.style.display = 'none';
+          playerPos.x = 0; playerPos.y = 8.41; playerPos.z = -4.5; playerYaw = 0;
+          isSpectatorControlsLocked = false;
+          playTone(659, 'sine', 0.2, 0.04);
+        }, 1200);
+      }
+      else if (currentZone === "STUDIO" && playerPos.z > -2.0) {
+        interactionPrompt.style.display = 'block';
+        interactionPrompt.textContent = "TAKING LIFT DOWN TO GRAND FOYER...";
+        isSpectatorControlsLocked = true;
+        playTone(659, 'sine', 0.2, 0.04);
+
+        setTimeout(() => {
+          currentZone = "FOYER"; locationPill.textContent = "LOCATION: GRAND FOYER";
+          interactionPrompt.style.display = 'none';
+          playerPos.x = 0; playerPos.y = 0.26; playerPos.z = -9.0; playerYaw = Math.PI;
+          isSpectatorControlsLocked = false;
+          playTone(523, 'sine', 0.2, 0.04);
+        }, 1200);
+      } else {
+        interactionPrompt.style.display = 'none';
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // --- 9. MAIN RENDER LOOP ---
+    let prevFrameTime = performance.now();
+    let prevBroadcastTime = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const time = performance.now();
+      const deltaSec = Math.min((time - prevFrameTime) / 1000, 0.1);
+      prevFrameTime = time;
+
+      if (cutsceneActive) {
+        updateCutscene(time);
+      } else {
+        applyMovementStep(deltaSec);
+
+        myPlushie.position.set(playerPos.x, playerPos.y, playerPos.z);
+        myPlushie.rotation.y = playerYaw;
+
+        const camDist = 1.35; const camHeight = 0.85;
+        camera.position.set(
+          playerPos.x + Math.sin(playerYaw) * camDist,
+          playerPos.y + camHeight,
+          playerPos.z + Math.cos(playerYaw) * camDist
+        );
+        camera.lookAt(new THREE.Vector3(
+          playerPos.x - Math.sin(playerYaw) * 4.0,
+          playerPos.y + camHeight + playerPitch * 3.0,
+          playerPos.z - Math.cos(playerYaw) * 4.0
+        ));
+
+        if (time - prevBroadcastTime > 160) {
+          prevBroadcastTime = time;
+          broadcastSpectatorMovement();
+        }
+      }
+
+      renderGoodyFace(time);
+      renderBackstageScreens();
+
+      if (pawn1?.userData?.badgeMesh) pawn1.userData.badgeMesh.quaternion.copy(camera.quaternion);
+      if (pawn2?.userData?.badgeMesh) pawn2.userData.badgeMesh.quaternion.copy(camera.quaternion);
+
+      miniAudience.children.forEach((p) => {
+        p.position.y = p.userData.initialY + Math.sin(time * 0.006 + p.userData.phase) * 0.04;
+      });
+
+      renderer.render(scene, camera);
+    }
+    animate();
   </script>
 </body>
 </html>
