@@ -127,6 +127,16 @@
     #live-hud-chat-stream {
       flex: 1; overflow-y: auto; padding: 6px; display: flex; flex-direction: column; gap: 4px; font-size: 0.74rem;
     }
+    .mod-chat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 3px 6px;
+      border-radius: 4px;
+    }
+    .author-clickable { font-weight: bold; color: #00f0ff; }
   </style>
 </head>
 <body>
@@ -151,7 +161,7 @@
 
   <div id="live-hud-chat">
     <div id="live-hud-chat-header">
-      <span>CONTESTANT STREAM [CLOCK: <span id="host-chat-clock" style="color:#ffda66;">20:00</span>]</span>
+      <span>STUDIO CHAT [CLOCK: <span id="host-chat-clock" style="color:#ffda66;">20:00</span>]</span>
       <span style="color:#39ff14;">● ON AIR</span>
     </div>
     <div id="live-hud-chat-stream">
@@ -302,6 +312,7 @@
     const timerValEl = document.getElementById('timer-val');
     const producerPanel = document.getElementById('producer-panel');
     const producerStatusTxt = document.getElementById('producer-status-txt');
+    const liveHudChatStream = document.getElementById('live-hud-chat-stream');
 
     const contestantRotations = {
       "goody-contestant-1": { yaw: 0, pitch: -0.15 },
@@ -508,6 +519,19 @@
             conn.send({ type: "AUTH_SUCCESS" });
             broadcastBoardState();
 
+            const mins = Math.max(0, Math.floor(matchTimerSeconds / 60)).toString().padStart(2, '0');
+            const secs = Math.max(0, (matchTimerSeconds % 60)).toString().padStart(2, '0');
+            conn.send({ type: "SYNC_MATCH_TIMER", timeStr: `${mins}:${secs}`, secondsLeft: matchTimerSeconds });
+
+            if (activeQuestion) {
+              conn.send({
+                type: "SHOW_QUESTION_LOCKED",
+                question: activeQuestion,
+                activeContestantId: activePlayer,
+                activeContestantName: contestantNames[activePlayer]
+              });
+            }
+
             if (!studioPower) {
               checkBothContestantsReady();
             } else if (gameState === "INTERMISSION" && cId === droppedOutContestant) {
@@ -520,22 +544,20 @@
               const authorName = data.author || "Guest";
               const rawText = data.text || "";
 
-              const stream = liveHudChatStream;
               const chatRow = document.createElement('div');
-              chatRow.className = `mod-chat-row`;
+              chatRow.className = 'mod-chat-row';
 
               const textSpan = document.createElement('span');
               const authorEl = document.createElement('span');
               authorEl.className = 'author-clickable';
-              authorEl.style.color = '#00f0ff';
               authorEl.textContent = `${authorName}: `;
 
               textSpan.appendChild(authorEl);
               textSpan.appendChild(document.createTextNode(rawText));
               chatRow.appendChild(textSpan);
 
-              stream.appendChild(chatRow);
-              stream.scrollTop = stream.scrollHeight;
+              liveHudChatStream.appendChild(chatRow);
+              liveHudChatStream.scrollTop = liveHudChatStream.scrollHeight;
               return;
             }
 
