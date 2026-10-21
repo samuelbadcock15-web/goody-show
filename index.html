@@ -490,7 +490,7 @@
 
     <div id="live-hud-chat-header">
 
-      <span>AUDIENCE STREAM</span>
+      <span>AUDIENCE STREAM [CLOCK: <span id="host-chat-clock" style="color:#ffda66;">20:00</span>]</span>
 
       <span style="color:#39ff14;">● ON AIR</span>
 
@@ -787,6 +787,8 @@
     let isTimeExpired = false;
 
     let gameClockValEl = document.getElementById('game-clock-val');
+
+    let hostChatClockEl = document.getElementById('host-chat-clock');
 
 
 
@@ -3445,6 +3447,8 @@
        
 
         gameClockValEl.textContent = timeStr;
+
+        hostChatClockEl.textContent = timeStr;
 
         renderWallClockTexture(timeStr);
 
@@ -6472,4 +6476,4 @@
 
 </body>
 
-</html>
+</html> 
