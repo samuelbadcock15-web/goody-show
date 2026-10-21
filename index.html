@@ -1101,18 +1101,18 @@
     renderer.shadowMap.enabled = true;
 
     const canvasJake = document.createElement('canvas');
-    canvasJake.width = 640; canvasJake.height = 360;
+    canvasJake.width = 320; canvasJake.height = 240;
     const rendererJake = new THREE.WebGLRenderer({ canvas: canvasJake, antialias: true });
 
     const canvasJune = document.createElement('canvas');
-    canvasJune.width = 640; canvasJune.height = 360;
+    canvasJune.width = 320; canvasJune.height = 240;
     const rendererJune = new THREE.WebGLRenderer({ canvas: canvasJune, antialias: true });
 
     const camJake = new THREE.PerspectiveCamera(65, 16 / 9, 0.1, 100);
     const camJune = new THREE.PerspectiveCamera(65, 16 / 9, 0.1, 100);
 
-    const streamJake = canvasJake.captureStream(30);
-    const streamJune = canvasJune.captureStream(30);
+    const streamJake = canvasJake.captureStream(15);
+    const streamJune = canvasJune.captureStream(15);
 
     const controls = new THREE.PointerLockControls(camera, document.body);
 
