@@ -6,7 +6,7 @@
   <title>Goody Tonight Show - Contestant 2</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
-   
+    
     html, body {
       width: 100%;
       height: 100%;
@@ -248,7 +248,7 @@
       font-size: 0.75rem; font-weight: bold; color: #ffda66; text-transform: uppercase;
     }
     #q-timer { font-family: monospace; font-weight: bold; color: #ff7675; font-size: 0.8rem; text-align: right; }
-   
+    
     #q-text {
       font-size: 0.82rem; font-weight: 600; line-height: 1.3; color: #ffffff;
       background: rgba(0,0,0,0.35); padding: 6px; border-radius: 6px; border-left: 3px solid #00f0ff;
@@ -297,7 +297,7 @@
   <div id="setup-card">
     <div class="badge-podium">PODIUM 2</div>
     <h2 style="color: #ffda66; margin-bottom: 12px; font-size: 1.25rem;">The Goody Tonight Show</h2>
-   
+    
     <div class="form-group">
       <span class="input-label">Host Screen 4-Digit Code:</span>
       <input type="text" id="passcode-input" maxlength="4" placeholder="0000" inputmode="numeric" pattern="[0-9]*" autocomplete="off" />
@@ -334,6 +334,7 @@
 
     <div id="status-pill">Waiting for host...</div>
 
+    <!-- CHOICE CARD WHEN OFFERED BY HOST -->
     <div id="choice-card">
       <div id="choice-title">Make Your Choice, Contestant!</div>
       <button class="choice-btn btn-choice-solo" id="btn-pick-solo">Race Solo Against Clock</button>
@@ -376,6 +377,7 @@
 
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script>
+    // AUTOMATIC SESSION TOKEN FAIL-SAFE
     let playerSessionToken = sessionStorage.getItem("goody_session_token_c2");
     if (!playerSessionToken) {
       playerSessionToken = "s2_" + Math.random().toString(36).substring(2, 9);
@@ -575,9 +577,6 @@
             } else if (data.type === "START_DICE_COUNTDOWN") {
               setLocalMicEnabled(false);
               choiceCard.style.display = 'none';
-              triviaCard.style.display = 'none';
-              recapCard.style.display = 'none';
-              btnRollDice.style.display = 'block';
               startTenSecondRoll();
             } else if (data.type === "SYNC_MATCH_TIMER") {
               matchTimerBadge.textContent = ` ${data.timeStr}`;
@@ -586,7 +585,7 @@
               if (rollTimer) clearInterval(rollTimer);
               if (questionTimer) clearInterval(questionTimer);
               if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-             
+              
               choiceCard.style.display = 'none';
               btnRollDice.disabled = true;
               btnRollDice.classList.remove('active-roll');
@@ -705,6 +704,7 @@
       }
     }
 
+    // --- LOOK CONTROLS (TOUCH + DESKTOP MOUSE DRAG) ---
     let isMouseDown = false;
     let lookStartX = 0;
     let lookStartY = 0;
@@ -720,6 +720,7 @@
       }
     }
 
+    // Touch Support (Mobile)
     interactiveViewport.addEventListener('touchstart', (e) => {
       if (e.touches.length === 1) {
         lookStartX = e.touches[0].clientX;
@@ -737,6 +738,7 @@
       }
     }, { passive: true });
 
+    // Mouse Drag Support (Desktop PC)
     interactiveViewport.addEventListener('mousedown', (e) => {
       if (e.button === 0) {
         isMouseDown = true;
@@ -758,9 +760,9 @@
       isMouseDown = false;
     });
 
+    // --- DICE ROLLING ---
     function startTenSecondRoll() {
       hasRolled = false;
-      btnRollDice.style.display = 'block';
       btnRollDice.disabled = false;
       btnRollDice.classList.add('active-roll');
       btnRollDice.textContent = " ROLL DICE NOW!";
@@ -775,10 +777,7 @@
           statusPill.textContent = ` ROLL TIMER: ${timeLeft}s`;
         } else {
           clearInterval(rollTimer);
-          btnRollDice.disabled = true;
-          btnRollDice.classList.remove('active-roll');
-          btnRollDice.textContent = "TIME EXPIRED";
-          statusPill.textContent = "Time expired! Host auto-rolling...";
+          if (!hasRolled) executeRoll(true);
         }
       }, 1000);
     }
@@ -812,7 +811,7 @@
       btnRollDice.style.display = 'none';
       recapCard.style.display = 'none';
       triviaCard.style.display = 'flex';
-     
+      
       qCountryTag.textContent = ` ${qData.country} (${isMyTurn ? "YOUR QUESTION" : activeName.toUpperCase() + "'S QUESTION"})`;
       qText.textContent = qData.text || qData.q || "Listen to host:";
       qTimer.textContent = " LISTENING...";
@@ -955,6 +954,7 @@
       btnRollDice.classList.remove('active-roll');
     }
 
+    // --- MOVEMENT ENGINE (ON-SCREEN D-PAD + DESKTOP KEYBOARD WASD) ---
     let dpadInterval = null;
     let activeMovementDir = null;
 
@@ -991,6 +991,7 @@
     bindDpad('dpad-left', 'LEFT');
     bindDpad('dpad-right', 'RIGHT');
 
+    // Desktop Keyboard Listeners (WASD + Arrow Keys)
     const keyMap = {
       'KeyW': 'FORWARD', 'ArrowUp': 'FORWARD',
       'KeyS': 'BACK',    'ArrowDown': 'BACK',
