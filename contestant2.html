@@ -705,7 +705,7 @@
       }
     }
 
-    let isMouseDown = false;
+    let touchIdentifier = null;
     let lookStartX = 0;
     let lookStartY = 0;
 
@@ -721,22 +721,38 @@
     }
 
     interactiveViewport.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) {
-        lookStartX = e.touches[0].clientX;
-        lookStartY = e.touches[0].clientY;
+      if (touchIdentifier === null && e.changedTouches.length > 0) {
+        const t = e.changedTouches[0];
+        touchIdentifier = t.identifier;
+        lookStartX = t.clientX;
+        lookStartY = t.clientY;
       }
     }, { passive: true });
 
     interactiveViewport.addEventListener('touchmove', (e) => {
-      if (e.touches.length === 1) {
-        const deltaX = e.touches[0].clientX - lookStartX;
-        const deltaY = e.touches[0].clientY - lookStartY;
-        lookStartX = e.touches[0].clientX;
-        lookStartY = e.touches[0].clientY;
-        handleLookDelta(deltaX, deltaY);
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        if (t.identifier === touchIdentifier) {
+          const deltaX = t.clientX - lookStartX;
+          const deltaY = t.clientY - lookStartY;
+          lookStartX = t.clientX;
+          lookStartY = t.clientY;
+          handleLookDelta(deltaX, deltaY);
+        }
       }
     }, { passive: true });
 
+    const endTouchLook = (e) => {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === touchIdentifier) {
+          touchIdentifier = null;
+        }
+      }
+    };
+    interactiveViewport.addEventListener('touchend', endTouchLook, { passive: true });
+    interactiveViewport.addEventListener('touchcancel', endTouchLook, { passive: true });
+
+    let isMouseDown = false;
     interactiveViewport.addEventListener('mousedown', (e) => {
       if (e.button === 0) {
         isMouseDown = true;
