@@ -6,44 +6,100 @@
   <title>Goody Tonight Show - Live Audience Experience</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
-    html, body { width: 100%; height: 100%; height: 100dvh; overflow: hidden; background: #06020c; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    html, body {
+      width: 100%; height: 100%; height: 100dvh;
+      overflow: hidden; background: #06020c; color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
     #canvas3d { width: 100%; height: 100%; display: block; position: absolute; top: 0; left: 0; z-index: 1; }
 
-    #entry-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(6, 2, 14, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; padding: 16px; }
-    .entry-card { background: #17072b; border: 2.5px solid #d4af37; border-radius: 18px; padding: 26px 22px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 0 30px rgba(212, 175, 55, 0.35); }
-    .badge-audience { display: inline-block; padding: 4px 14px; background: #99001a; color: #ffda66; font-family: monospace; font-weight: 900; font-size: 0.82rem; border-radius: 6px; margin-bottom: 12px; letter-spacing: 1.5px; border: 1px solid #d4af37; }
-    .text-field { width: 100%; padding: 12px; font-size: 1.05rem; font-weight: bold; background: #090314; color: #00f0ff; border: 2px solid #a29bfe; border-radius: 10px; outline: none; margin-bottom: 14px; text-align: center; }
-    .btn-join { width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 1.05rem; font-weight: 900; text-transform: uppercase; cursor: pointer; color: #fff; background: linear-gradient(180deg, #d4af37, #b8860b); box-shadow: 0 3px 0 #6e5200; }
+    #entry-modal {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(6, 2, 14, 0.95); display: flex; flex-direction: column;
+      justify-content: center; align-items: center; z-index: 100; padding: 16px;
+    }
+    .entry-card {
+      background: #17072b; border: 2.5px solid #d4af37; border-radius: 18px;
+      padding: 26px 22px; width: 100%; max-width: 380px; text-align: center;
+      box-shadow: 0 0 30px rgba(212, 175, 55, 0.35);
+    }
+    .badge-audience {
+      display: inline-block; padding: 4px 14px; background: #99001a; color: #ffda66;
+      font-family: monospace; font-weight: 900; font-size: 0.82rem; border-radius: 6px;
+      margin-bottom: 12px; border: 1px solid #d4af37;
+    }
+    .text-field {
+      width: 100%; padding: 12px; font-size: 1.05rem; font-weight: bold; background: #090314;
+      color: #00f0ff; border: 2px solid #a29bfe; border-radius: 10px; outline: none;
+      margin-bottom: 14px; text-align: center;
+    }
+    .btn-join {
+      width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 1.05rem;
+      font-weight: 900; text-transform: uppercase; cursor: pointer; color: #fff;
+      background: linear-gradient(180deg, #d4af37, #b8860b);
+    }
 
-    #spectator-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; justify-content: space-between; pointer-events: none; z-index: 10; padding: 8px; }
-    .top-bar { display: flex; justify-content: space-between; align-items: center; background: rgba(18, 7, 36, 0.90); border: 1.5px solid #d4af37; border-radius: 8px; padding: 6px 12px; font-family: monospace; font-size: 0.78rem; pointer-events: auto; }
-    #location-pill { color: #39ff14; font-weight: bold; }
+    #lens-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; display: none;
+    }
+    .letterbox-bar { position: absolute; left: 0; width: 100%; height: 10%; background: #000; }
+    #bar-top { top: 0; } #bar-bottom { bottom: 0; }
+    .rec-indicator { position: absolute; top: 12%; left: 4%; color: #ff3838; font-family: monospace; font-weight: bold; }
 
-    #audience-trivia-hud { position: absolute; top: 52px; left: 50%; transform: translateX(-50%); background: rgba(18, 7, 36, 0.92); border: 2px solid #00f0ff; border-radius: 12px; padding: 8px 12px; width: 100%; max-width: 440px; text-align: center; display: none; pointer-events: auto; box-shadow: 0 0 20px rgba(0, 240, 255, 0.3); z-index: 25; backdrop-filter: blur(4px); }
-    #aud-q-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.68rem; font-family: monospace; color: #ffda66; font-weight: bold; margin-bottom: 3px; }
-    #aud-q-text { font-size: 0.78rem; color: #fff; font-weight: 600; margin-bottom: 6px; line-height: 1.25; }
-    .aud-options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-    .aud-opt-btn { background: rgba(43, 17, 84, 0.85); border: 1.5px solid #a29bfe; border-radius: 6px; color: #fff; padding: 6px 8px; font-size: 0.72rem; font-weight: bold; text-align: left; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .aud-opt-btn.selected { background: rgba(9, 132, 227, 0.9) !important; border-color: #00f0ff !important; }
-    .aud-opt-btn.contestant-picked { border: 2.5px dashed #ffda66 !important; }
-    .aud-opt-btn.correct { background: rgba(0, 184, 148, 0.9) !important; border-color: #55efc4 !important; }
-    .aud-opt-btn.wrong { background: rgba(214, 48, 49, 0.9) !important; border-color: #ff7675 !important; }
-    .aud-opt-btn:disabled { cursor: default; opacity: 0.85; }
-    #aud-status-msg { margin-top: 5px; font-size: 0.70rem; font-family: monospace; color: #39ff14; font-weight: bold; }
+    #spectator-ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: none; flex-direction: column; justify-content: space-between;
+      pointer-events: none; z-index: 10; padding: 8px;
+    }
+    .top-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(18, 7, 36, 0.90); border: 1.5px solid #d4af37; border-radius: 8px;
+      padding: 6px 12px; font-family: monospace; font-size: 0.78rem; pointer-events: auto;
+    }
 
-    #chat-container { width: 100%; max-width: 420px; background: rgba(13, 5, 26, 0.88); border: 1.5px solid #d4af37; border-radius: 10px; display: flex; flex-direction: column; pointer-events: auto; margin-bottom: 6px; }
-    #chat-header { padding: 6px 10px; background: #230a42; font-size: 0.75rem; font-weight: bold; color: #ffda66; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-    #chat-messages { height: 85px; overflow-y: auto; padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; font-size: 0.78rem; }
+    #interaction-prompt {
+      position: absolute; top: 20%; left: 50%; transform: translateX(-50%);
+      background: rgba(18, 7, 36, 0.94); border: 2px solid #fdcb6e; border-radius: 10px;
+      padding: 8px 18px; color: #ffda66; font-family: monospace; font-weight: bold;
+      display: none; pointer-events: auto; text-align: center;
+    }
+
+    #stage-synced-banner {
+      background: rgba(22, 9, 44, 0.94); border: 2px solid #00f0ff; border-radius: 10px;
+      padding: 8px 12px; margin: 6px auto; width: 100%; max-width: 440px; text-align: center;
+      display: none; pointer-events: auto;
+    }
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+    .opt-box {
+      background: #250f44; border: 1.5px solid #a29bfe; border-radius: 6px;
+      color: #fff; padding: 6px 8px; font-size: 0.72rem; text-align: left; font-weight: bold;
+    }
+    .opt-box.selected { background: #6c5ce7; border-color: #fdcb6e; }
+    .opt-box.correct { background: #00b894 !important; }
+    .opt-box.wrong { background: #d63031 !important; }
+
+    #chat-container {
+      width: 100%; max-width: 420px; background: rgba(13, 5, 26, 0.88);
+      border: 1.5px solid #d4af37; border-radius: 10px; display: flex; flex-direction: column;
+      pointer-events: auto; margin-bottom: 6px;
+    }
+    #chat-header {
+      padding: 6px 10px; background: #230a42; border-top-left-radius: 8px; border-top-right-radius: 8px;
+      font-size: 0.75rem; font-weight: bold; color: #ffda66;
+    }
+    #chat-messages { height: 95px; overflow-y: auto; padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; font-size: 0.78rem; }
     .chat-input-row { display: flex; border-top: 1px solid #442266; padding: 4px; gap: 4px; }
-    #chat-text-input { flex: 1; background: #080313; border: 1px solid #a29bfe; border-radius: 6px; color: #fff; padding: 6px 8px; font-size: 0.82rem; outline: none; }
-    #btn-send-chat { background: #d4af37; border: none; border-radius: 6px; color: #111; font-weight: bold; font-size: 0.75rem; padding: 0 12px; cursor: pointer; }
+    #chat-text-input { flex: 1; background: #080313; border: 1px solid #a29bfe; border-radius: 6px; color: #fff; padding: 6px 8px; font-size: 0.82rem; }
+    #btn-send-chat { background: #d4af37; border: none; border-radius: 6px; color: #111; font-weight: bold; padding: 0 12px; cursor: pointer; }
 
-    .controls-wrapper { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; pointer-events: none; padding: 0 4px; }
-    .dpad-section { background: rgba(20, 7, 40, 0.90); border: 1.5px solid #d4af37; border-radius: 10px; padding: 4px; pointer-events: auto; display: flex; flex-direction: column; align-items: center; }
-    .dpad-grid { display: grid; grid-template-columns: 44px 44px 44px; grid-template-rows: 32px 32px; gap: 4px; }
-    .dpad-btn { background: #2b1154; border: 1.5px solid #d4af37; border-radius: 6px; color: #fff; font-size: 1rem; font-weight: bold; display: flex; justify-content: center; align-items: center; cursor: pointer; }
-    #look-pad { width: 110px; height: 90px; background: rgba(18, 7, 38, 0.90); border: 1.5px solid #00f0ff; border-radius: 12px; pointer-events: auto; cursor: grab; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
-    #look-pad-knob { width: 32px; height: 32px; border-radius: 50%; background: #00f0ff; opacity: 0.85; pointer-events: none; }
+    .controls-wrapper { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; pointer-events: none; }
+    .dpad-grid { display: grid; grid-template-columns: 44px 44px 44px; grid-template-rows: 32px 32px; gap: 4px; pointer-events: auto; }
+    .dpad-btn { background: #2b1154; border: 1.5px solid #d4af37; border-radius: 6px; color: #fff; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+    #look-pad {
+      width: 110px; height: 90px; background: rgba(18, 7, 38, 0.90); border: 1.5px solid #00f0ff;
+      border-radius: 12px; pointer-events: auto; display: flex; justify-content: center; align-items: center;
+    }
+    #look-pad-knob { width: 32px; height: 32px; border-radius: 50%; background: #00f0ff; }
   </style>
 </head>
 <body>
@@ -53,47 +109,54 @@
     <div class="entry-card">
       <div class="badge-audience">VIP PASS</div>
       <h2 style="color: #ffda66; font-size: 1.35rem; margin-bottom: 8px;">The Goody Tonight Show</h2>
-      <p style="color: #ebdcf9; font-size: 0.85rem; margin-bottom: 16px;">Step out of the white stretch limo onto the red carpet and ride the elevator to the studio!</p>
-      <input type="text" id="audience-name-input" class="text-field" maxlength="14" placeholder="Your Name" autocomplete="off" />
+      <p style="color: #ebdcf9; font-size: 0.85rem; margin-bottom: 16px;">
+        Arrive via stretch limo, grab refreshments, explore the studio foyer, and take the express lift to the live broadcast!
+      </p>
+      <input type="text" id="audience-name-input" class="text-field" maxlength="14" placeholder="Your Name" />
       <button class="btn-join" id="btn-join-studio">Arrive in Limousine</button>
     </div>
+  </div>
+
+  <div id="lens-overlay">
+    <div class="letterbox-bar" id="bar-top"></div>
+    <div class="letterbox-bar" id="bar-bottom"></div>
+    <div class="rec-indicator">● LIVE FEED [CAM 04] - VIP ARRIVAL CURB</div>
   </div>
 
   <main id="spectator-ui">
     <div class="top-bar">
       <span id="user-display-name" style="color:#00f0ff;">SPECTATOR</span>
-      <span id="location-pill">LOCATION: STREET CURBSIDE</span>
+      <span id="location-pill" style="color:#39ff14;">LOCATION: STREET CURBSIDE</span>
       <span id="show-clock-pill" style="color:#ffda66;">SHOW: 20:00</span>
     </div>
 
-    <div id="audience-trivia-hud">
-      <div id="aud-q-header"><span id="aud-q-country">HOME PLAY-ALONG</span><span>TRIVIA</span></div>
-      <div id="aud-q-text">Waiting for question from Goody...</div>
-      <div class="aud-options-grid" id="aud-options-grid">
-        <button class="aud-opt-btn" id="aud-btn-0" onclick="submitAudienceAnswer(0)">A) ...</button>
-        <button class="aud-opt-btn" id="aud-btn-1" onclick="submitAudienceAnswer(1)">B) ...</button>
-        <button class="aud-opt-btn" id="aud-btn-2" onclick="submitAudienceAnswer(2)">C) ...</button>
-        <button class="aud-opt-btn" id="aud-btn-3" onclick="submitAudienceAnswer(3)">D) ...</button>
+    <div id="interaction-prompt">PRESS [ W / ▲ ] TO TAKE ELEVATOR</div>
+
+    <div id="stage-synced-banner">
+      <div id="stage-q-title" style="font-size:0.75rem; color:#ffda66; font-weight:bold;">CURRENT QUESTION</div>
+      <div id="stage-q-text" style="font-size:0.84rem; margin:4px 0 8px 0;">Standby...</div>
+      <div class="options-grid" id="stage-options-grid">
+        <div class="opt-box" id="aud-opt-0">A) ...</div>
+        <div class="opt-box" id="aud-opt-1">B) ...</div>
+        <div class="opt-box" id="aud-opt-2">C) ...</div>
+        <div class="opt-box" id="aud-opt-3">D) ...</div>
       </div>
-      <div id="aud-status-msg">Select your answer. Dashed yellow border = Contestant choice.</div>
     </div>
 
     <div style="display:flex; flex-direction:column; align-items:center; width:100%;">
       <div id="chat-container">
-        <div id="chat-header"><span>COMMUNAL AUDIENCE CHAT</span><span id="chat-toggle-icon">▼</span></div>
-        <div id="chat-messages"><div class="chat-msg" style="color:#aaa; font-style:italic;">Welcome to the studios!</div></div>
+        <div id="chat-header">COMMUNAL AUDIENCE CHAT</div>
+        <div id="chat-messages"><div style="color:#aaa; font-style:italic;">Welcome to the studio!</div></div>
         <div class="chat-input-row">
-          <input type="text" id="chat-text-input" maxlength="120" placeholder="Say something..." autocomplete="off" />
+          <input type="text" id="chat-text-input" maxlength="120" placeholder="Say something..." />
           <button id="btn-send-chat">SEND</button>
         </div>
       </div>
 
       <div class="controls-wrapper">
-        <div class="dpad-section">
-          <div class="dpad-grid">
-            <div></div><button class="dpad-btn" id="dpad-fwd">▲</button><div></div>
-            <button class="dpad-btn" id="dpad-left">◀</button><button class="dpad-btn" id="dpad-back">▼</button><button class="dpad-btn" id="dpad-right">▶</button>
-          </div>
+        <div class="dpad-grid">
+          <div></div><button class="dpad-btn" id="dpad-fwd">▲</button><div></div>
+          <button class="dpad-btn" id="dpad-left">◀</button><button class="dpad-btn" id="dpad-back">▼</button><button class="dpad-btn" id="dpad-right">▶</button>
         </div>
         <div id="look-pad"><div id="look-pad-knob"></div></div>
       </div>
@@ -103,114 +166,86 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script>
-    const spectatorSessionToken = localStorage.getItem('goody_audience_token') || 'aud_' + Math.random().toString(36).substring(2, 10);
-    localStorage.setItem('goody_audience_token', spectatorSessionToken);
+    let audienceNickname = "Guest " + Math.floor(100 + Math.random() * 900);
+    let peer = null; let dataConn = null;
+    let lastMsgTime = 0;
+    let currentZone = "STREET";
 
-    let audienceNickname = "Guest";
-    let peer = null, dataConn = null;
-    let p1ContestantName = "Jake", p2ContestantName = "June";
-    let p1ContestantCity = "London", p2ContestantCity = "Nottingham";
-    let p1RollVal = null, p2RollVal = null, isDiceRollingP1 = false, isDiceRollingP2 = false;
-    let p1Index = 0, p2Index = 0, audienceIndex = 0, audiencePawnIdx = 0;
-    let isSoloMode = false, isVsGoodyMode = false, goodyPlayerSlot = null, soloPlayerId = null;
-    let activeQuestion = null, activeRecap = null, audienceSelectedOption = null, audienceHasAnswered = false, contestantSelectedAnswer = null;
+    const entryModal = document.getElementById('entry-modal');
+    const audienceNameInput = document.getElementById('audience-name-input');
+    const btnJoinStudio = document.getElementById('btn-join-studio');
+    const spectatorUi = document.getElementById('spectator-ui');
+    const userDisplayName = document.getElementById('user-display-name');
+    const locationPill = document.getElementById('location-pill');
+    const showClockPill = document.getElementById('show-clock-pill');
+    const stageSyncedBanner = document.getElementById('stage-synced-banner');
+    const stageQTitle = document.getElementById('stage-q-title');
+    const stageQText = document.getElementById('stage-q-text');
+    const audOptBoxes = [document.getElementById('aud-opt-0'), document.getElementById('aud-opt-1'), document.getElementById('aud-opt-2'), document.getElementById('aud-opt-3')];
+    const chatMessages = document.getElementById('chat-messages');
+    const chatTextInput = document.getElementById('chat-text-input');
+    const btnSendChat = document.getElementById('btn-send-chat');
 
-    const videoJake = document.createElement('video'); videoJake.autoplay = true; videoJake.muted = false;
-    const videoJune = document.createElement('video'); videoJune.autoplay = true; videoJune.muted = false;
-
-    document.getElementById('btn-join-studio').addEventListener('click', () => {
-      const entered = document.getElementById('audience-name-input').value.trim();
+    btnJoinStudio.addEventListener('click', () => {
+      const entered = audienceNameInput.value.trim();
       if (entered) audienceNickname = entered;
-      document.getElementById('user-display-name').textContent = audienceNickname.toUpperCase();
-      document.getElementById('entry-modal').style.display = 'none';
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      document.getElementById('spectator-ui').style.display = 'flex';
+      userDisplayName.textContent = audienceNickname.toUpperCase();
+      entryModal.style.display = 'none';
+      spectatorUi.style.display = 'flex';
       connectToStudio();
     });
 
     function connectToStudio() {
       peer = new Peer();
       peer.on('open', () => {
-        dataConn = peer.connect('goody-main-studio', { metadata: { role: 'AUDIENCE', name: audienceNickname, sessionToken: spectatorSessionToken } });
+        dataConn = peer.connect('goody-main-studio', { metadata: { role: 'AUDIENCE', name: audienceNickname } });
         dataConn.on('data', (data) => {
-          if (data.type === 'SYNC_MATCH_TIMER') document.getElementById('show-clock-pill').textContent = `SHOW: ${data.timeStr}`;
-          else if (data.type === 'SYNC_BOARD_STATE') {
-            if (data.p1Name) p1ContestantName = data.p1Name;
-            if (data.p2Name) p2ContestantName = data.p2Name;
-            if (data.isSoloMode !== undefined) isSoloMode = data.isSoloMode;
-            if (data.isVsGoodyMode !== undefined) isVsGoodyMode = data.isVsGoodyMode;
-            if (data.goodyPlayerSlot !== undefined) goodyPlayerSlot = data.goodyPlayerSlot;
-            if (data.soloPlayerId !== undefined) soloPlayerId = data.soloPlayerId;
-            if (data.p1Index !== undefined) p1Index = data.p1Index;
-            if (data.p2Index !== undefined) p2Index = data.p2Index;
-            renderStageQuestionBoard();
+          if (data.type === 'SYNC_MATCH_TIMER') {
+            showClockPill.textContent = `SHOW: ${data.timeStr}`;
           } else if (data.type === 'SHOW_QUESTION_LOCKED') {
-            activeQuestion = data.question; activeRecap = null; audienceSelectedOption = null; audienceHasAnswered = false; contestantSelectedAnswer = null;
-            renderStageQuestionBoard();
-            document.getElementById('audience-trivia-hud').style.display = 'block';
-            document.getElementById('aud-options-grid').style.display = 'grid';
-            document.getElementById('aud-q-country').textContent = `HOME PLAY-ALONG: ${data.question.country.toUpperCase()}`;
-            document.getElementById('aud-q-text').textContent = data.question.q;
-            document.getElementById('aud-status-msg').textContent = `Contestant (${data.activeContestantName}) is thinking... Pick your answer!`;
+            stageSyncedBanner.style.display = 'block';
+            stageQTitle.textContent = `${data.question.country.toUpperCase()} [${data.activeContestantName.toUpperCase()}]`;
+            stageQText.textContent = data.question.q || data.question.text;
             data.question.options.forEach((opt, idx) => {
-              const btn = document.getElementById(`aud-btn-${idx}`);
-              btn.textContent = `${["A","B","C","D"][idx]}) ${opt}`; btn.className = 'aud-opt-btn'; btn.disabled = false;
+              audOptBoxes[idx].textContent = `${["A","B","C","D"][idx]}) ${opt}`;
+              audOptBoxes[idx].className = 'opt-box';
             });
-          } else if (data.type === 'OPPONENT_ANSWERED') {
-            contestantSelectedAnswer = data.chosenAnswer;
-            renderStageQuestionBoard();
-            const cIdx = activeQuestion.options.indexOf(data.chosenAnswer);
-            if (cIdx !== -1) document.getElementById(`aud-btn-${cIdx}`).classList.add('contestant-picked');
           } else if (data.type === 'EVALUATION_RESULT') {
-            const correctIdx = activeQuestion.options.indexOf(activeQuestion.ans);
-            document.querySelectorAll('.aud-opt-btn').forEach((b, i) => {
-              b.disabled = true;
-              if (i === correctIdx) b.classList.add('correct');
-              else if (i === audienceSelectedOption && i !== correctIdx) b.classList.add('wrong');
-            });
+            const idx = data.chosenAnswer ? data.question?.options?.indexOf(data.chosenAnswer) : -1;
+            if (idx !== -1 && audOptBoxes[idx]) audOptBoxes[idx].className = `opt-box ${data.isCorrect ? 'correct' : 'wrong'}`;
+          } else if (data.type === 'AUDIENCE_CHAT_BROADCAST') {
+            const msg = document.createElement('div');
+            msg.innerHTML = `<strong style="color:#39ff14;">${data.author}:</strong> ${data.text}`;
+            chatMessages.appendChild(msg);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
           }
-        });
-
-        peer.on('call', (call) => {
-          call.answer();
-          call.on('stream', (stream) => {
-            if (call.metadata?.contestant === "goody-contestant-2") { videoJune.srcObject = stream; videoJune.muted = false; videoJune.play(); }
-            else { videoJake.srcObject = stream; videoJake.muted = false; videoJake.play(); }
-          });
         });
       });
     }
 
-    function submitAudienceAnswer(idx) {
-      if (audienceHasAnswered || !activeQuestion) return;
-      audienceHasAnswered = true; audienceSelectedOption = idx;
-      document.getElementById(`aud-btn-${idx}`).classList.add('selected');
-      document.getElementById('aud-status-msg').textContent = "Answer locked in! Waiting for studio reveal...";
-    }
+    btnSendChat.addEventListener('click', () => {
+      const text = chatTextInput.value.trim();
+      const now = performance.now();
+      if (!text || (now - lastMsgTime < 2500)) return;
+      lastMsgTime = now;
+      const msg = document.createElement('div');
+      msg.innerHTML = `<strong style="color:#00f0ff;">${audienceNickname}:</strong> ${text}`;
+      chatMessages.appendChild(msg);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      chatTextInput.value = '';
+      if (dataConn?.open) dataConn.send({ type: 'AUDIENCE_CHAT_MESSAGE', author: audienceNickname, text });
+    });
 
-    // 3D Scene setup
-    const scene = new THREE.Scene(); scene.background = new THREE.Color(0x040208);
-    const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 150);
+    // Simple 3D diorama canvas placeholder logic
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 100);
     const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas3d'), antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.position.set(0, 3, 6); camera.lookAt(0, 1, 0);
 
-    const miniDiorama = new THREE.Group(); miniDiorama.position.set(0, 3.95, -9);
-    scene.add(miniDiorama);
-
-    const qBoardCanvas = document.createElement('canvas'); qBoardCanvas.width = 512; qBoardCanvas.height = 384;
-    const qBoardCtx = qBoardCanvas.getContext('2d');
-    const qBoardTex = new THREE.CanvasTexture(qBoardCanvas);
-    function renderStageQuestionBoard() {
-      qBoardCtx.fillStyle = '#120726'; qBoardCtx.fillRect(0, 0, 512, 384);
-      if (activeQuestion) {
-        qBoardCtx.fillStyle = '#ffda66'; qBoardCtx.font = 'bold 18px monospace';
-        qBoardCtx.fillText(activeQuestion.q, 20, 72, 470);
-      }
-      qBoardTex.needsUpdate = true;
-    }
-    renderStageQuestionBoard();
-    const qBoardMesh = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 2.7), new THREE.MeshBasicMaterial({ map: qBoardTex }));
-    qBoardMesh.position.set(-4.8, 3.4, -3.2); qBoardMesh.rotation.y = 0.8; miniDiorama.add(qBoardMesh);
+    const light = new THREE.PointLight(0xffecd2, 1.2, 50); light.position.set(0, 8, 0); scene.add(light);
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.MeshStandardMaterial({ color: 0x1f140e }));
+    floor.rotation.x = -Math.PI / 2; scene.add(floor);
 
     function animate() {
       requestAnimationFrame(animate);
