@@ -82,33 +82,9 @@
       box-shadow: 0 0 18px rgba(253, 203, 110, 0.45);
     }
 
-    /* TOP-SCREEN AUDIENCE PLAY-ALONG & RECAP HUD */
-    #audience-trivia-hud {
-      position: absolute; top: 52px; left: 50%; transform: translateX(-50%);
-      background: rgba(18, 7, 36, 0.92); border: 2px solid #00f0ff; border-radius: 12px;
-      padding: 8px 12px; width: 100%; max-width: 440px; text-align: center;
-      display: none; pointer-events: auto; box-shadow: 0 0 20px rgba(0, 240, 255, 0.3); z-index: 25;
-      backdrop-filter: blur(4px);
-    }
-    #aud-q-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.68rem; font-family: monospace; color: #ffda66; font-weight: bold; margin-bottom: 3px; }
-    #aud-q-text { font-size: 0.78rem; color: #fff; font-weight: 600; margin-bottom: 6px; line-height: 1.25; }
-    .aud-options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-    .aud-opt-btn {
-      background: rgba(43, 17, 84, 0.85); border: 1.5px solid #a29bfe; border-radius: 6px; color: #fff;
-      padding: 6px 8px; font-size: 0.72rem; font-weight: bold; text-align: left; cursor: pointer;
-      transition: background 0.2s, border-color 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .aud-opt-btn:hover:not(:disabled) { background: #6c5ce7; border-color: #00f0ff; }
-    .aud-opt-btn.selected { background: rgba(9, 132, 227, 0.9) !important; border-color: #00f0ff !important; box-shadow: 0 0 8px rgba(9,132,227,0.6); }
-    .aud-opt-btn.contestant-picked { border: 2.5px dashed #ffda66 !important; }
-    .aud-opt-btn.correct { background: rgba(0, 184, 148, 0.9) !important; border-color: #55efc4 !important; }
-    .aud-opt-btn.wrong { background: rgba(214, 48, 49, 0.9) !important; border-color: #ff7675 !important; }
-    .aud-opt-btn:disabled { cursor: default; opacity: 0.85; }
-    #aud-status-msg { margin-top: 5px; font-size: 0.70rem; font-family: monospace; color: #39ff14; font-weight: bold; }
-
-    /* CHAT */
+    /* CHAT & IN-CHAT TRIVIA BUTTONS */
     #chat-container {
-      width: 100%; max-width: 420px; background: rgba(13, 5, 26, 0.88);
+      width: 100%; max-width: 420px; background: rgba(13, 5, 26, 0.92);
       border: 1.5px solid #d4af37; border-radius: 10px; display: flex; flex-direction: column;
       pointer-events: auto; margin-bottom: 6px; backdrop-filter: blur(4px);
     }
@@ -118,13 +94,35 @@
       align-items: center; cursor: pointer;
     }
     #chat-messages {
-      height: 85px; overflow-y: auto; padding: 6px 8px; display: flex; flex-direction: column;
-      gap: 4px; font-size: 0.78rem;
+      height: 160px; overflow-y: auto; padding: 6px 8px; display: flex; flex-direction: column;
+      gap: 6px; font-size: 0.78rem;
     }
-    .chat-msg { word-break: break-word; line-height: 1.25; }
+    .chat-msg { word-break: break-word; line-height: 1.3; }
     .chat-author { font-weight: bold; color: #39ff14; font-family: monospace; }
     .chat-author.is-self { color: #00f0ff; }
     .chat-author.is-host { color: #ff7675; }
+
+    /* In-Chat Trivia Card */
+    .chat-trivia-card {
+      background: rgba(25, 9, 48, 0.95);
+      border: 1.5px solid #00f0ff;
+      border-radius: 8px;
+      padding: 8px;
+      margin: 4px 0;
+    }
+    .chat-trivia-q { font-weight: bold; color: #fff; margin-bottom: 6px; font-size: 0.78rem; }
+    .chat-options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+    .chat-opt-btn {
+      background: #2f1454; border: 1px solid #a29bfe; border-radius: 6px; color: #fff;
+      padding: 6px; font-size: 0.72rem; font-weight: bold; text-align: left; cursor: pointer;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .chat-opt-btn:hover:not(:disabled) { background: #6c5ce7; border-color: #00f0ff; }
+    .chat-opt-btn.selected { background: #0984e3 !important; border-color: #00f0ff !important; }
+    .chat-opt-btn.correct { background: #00b894 !important; border-color: #55efc4 !important; }
+    .chat-opt-btn.wrong { background: #d63031 !important; border-color: #ff7675 !important; }
+    .chat-opt-btn:disabled { cursor: default; opacity: 0.8; }
+
     .chat-input-row { display: flex; border-top: 1px solid #442266; padding: 4px; gap: 4px; }
     #chat-text-input {
       flex: 1; background: #080313; border: 1px solid #a29bfe; border-radius: 6px;
@@ -144,9 +142,7 @@
       background: rgba(20, 7, 40, 0.90); border: 1.5px solid #d4af37; border-radius: 10px;
       padding: 4px; pointer-events: auto; display: flex; flex-direction: column; align-items: center;
     }
-    .dpad-sublabel {
-      font-size: 0.60rem; font-family: monospace; color: #ffda66; margin-top: 2px;
-    }
+    .dpad-sublabel { font-size: 0.60rem; font-family: monospace; color: #ffda66; margin-top: 2px; }
     .dpad-grid { display: grid; grid-template-columns: 44px 44px 44px; grid-template-rows: 32px 32px; gap: 4px; }
     .dpad-btn {
       background: #2b1154; border: 1.5px solid #d4af37; border-radius: 6px; color: #fff;
@@ -168,10 +164,7 @@
       opacity: 0.85; pointer-events: none; transition: transform 0.05s linear;
       box-shadow: 0 0 8px #00f0ff;
     }
-    #look-pad-label {
-      font-size: 0.62rem; font-family: monospace; color: #00f0ff;
-      margin-top: 4px; pointer-events: none; font-weight: bold;
-    }
+    #look-pad-label { font-size: 0.62rem; font-family: monospace; color: #00f0ff; margin-top: 4px; pointer-events: none; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -207,26 +200,10 @@
 
     <div id="interaction-prompt">PRESS [ W / ▲ ] TO TAKE ELEVATOR</div>
 
-    <!-- TOP-SCREEN AUDIENCE PLAY-ALONG & RECAP HUD -->
-    <div id="audience-trivia-hud">
-      <div id="aud-q-header">
-        <span id="aud-q-country">HOME PLAY-ALONG</span>
-        <span>AT-HOME TRIVIA</span>
-      </div>
-      <div id="aud-q-text">Waiting for question from Goody...</div>
-      <div class="aud-options-grid" id="aud-options-grid">
-        <button class="aud-opt-btn" id="aud-btn-0" onclick="submitAudienceAnswer(0)">A) ...</button>
-        <button class="aud-opt-btn" id="aud-btn-1" onclick="submitAudienceAnswer(1)">B) ...</button>
-        <button class="aud-opt-btn" id="aud-btn-2" onclick="submitAudienceAnswer(2)">C) ...</button>
-        <button class="aud-opt-btn" id="aud-btn-3" onclick="submitAudienceAnswer(3)">D) ...</button>
-      </div>
-      <div id="aud-status-msg">Select your answer. Dashed yellow border = Contestant choice.</div>
-    </div>
-
     <div style="display:flex; flex-direction:column; align-items:center; width:100%;">
       <div id="chat-container">
         <div id="chat-header">
-          <span>COMMUNAL AUDIENCE CHAT</span>
+          <span>COMMUNAL AUDIENCE CHAT & PLAY-ALONG</span>
           <span id="chat-toggle-icon">▼</span>
         </div>
         <div id="chat-messages">
@@ -295,17 +272,6 @@
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (audioCtx.state === 'suspended') audioCtx.resume();
       } catch (e) {}
-
-      if (videoJake && videoJake.paused) videoJake.play().catch(() => {});
-      if (videoJune && videoJune.paused) videoJune.play().catch(() => {});
-
-      if ('speechSynthesis' in window) {
-        try {
-          const prime = new SpeechSynthesisUtterance('');
-          prime.volume = 0;
-          window.speechSynthesis.speak(prime);
-        } catch (e) {}
-      }
     }
 
     function playTone(freq, type, duration, gainVal = 0.05) {
@@ -317,10 +283,8 @@
         osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
         g.gain.setValueAtTime(gainVal, audioCtx.currentTime);
         g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-        osc.connect(g);
-        g.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + duration);
+        osc.connect(g); g.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + duration);
       } catch (e) {}
     }
 
@@ -329,8 +293,7 @@
       try {
         window.speechSynthesis.cancel();
         const utt = new SpeechSynthesisUtterance(text);
-        utt.rate = 0.95;
-        utt.pitch = 1.25;
+        utt.rate = 0.95; utt.pitch = 1.25;
         utt.onboundary = () => playTone(460 + Math.random() * 200, 'triangle', 0.05, 0.02);
         window.speechSynthesis.speak(utt);
       } catch (e) {}
@@ -344,18 +307,6 @@
     const locationPill = document.getElementById('location-pill');
     const showClockPill = document.getElementById('show-clock-pill');
     const interactionPrompt = document.getElementById('interaction-prompt');
-
-    // Audience Trivia Elements
-    const audienceTriviaHud = document.getElementById('audience-trivia-hud');
-    const audQCountry = document.getElementById('aud-q-country');
-    const audQText = document.getElementById('aud-q-text');
-    const audStatusMsg = document.getElementById('aud-status-msg');
-    const audOptionBtns = [
-      document.getElementById('aud-btn-0'),
-      document.getElementById('aud-btn-1'),
-      document.getElementById('aud-btn-2'),
-      document.getElementById('aud-btn-3')
-    ];
 
     const lensOverlay = document.getElementById('lens-overlay');
     const barTop = document.getElementById('bar-top');
@@ -393,7 +344,6 @@
     let activeRecap = null;
     let audienceSelectedOption = null;
     let audienceHasAnswered = false;
-    let contestantSelectedAnswer = null;
 
     const videoJake = document.createElement('video');
     videoJake.autoplay = true; videoJake.playsInline = true; videoJake.muted = false;
@@ -414,7 +364,6 @@
       startLimoArrivalCutscene();
     });
 
-    // WEBRTC CONNECTION & STREAM RECEIVER
     function connectToStudio() {
       peer = new Peer();
       peer.on('open', () => {
@@ -428,7 +377,7 @@
         });
 
         dataConn.on('open', () => {
-          addChatMessage('System', 'Connected to live studio relay!', 'is-host');
+          addSystemChatMessage('Connected to live studio relay!');
         });
 
         dataConn.on('data', (data) => {
@@ -440,7 +389,7 @@
             updateStudioPowerVisuals(data.studioPower);
             if (data.p1Name) { p1ContestantName = data.p1Name; updatePawnNameBadge(pawn1, data.p1Name); }
             if (data.p2Name) { p2ContestantName = data.p2Name; updatePawnNameBadge(pawn2, data.p2Name); }
-           
+            
             if (data.p1Index !== undefined && data.p1Index !== p1Index) {
               const old = p1Index; p1Index = data.p1Index;
               animatePawnHop(pawn1, old, p1Index, -0.08);
@@ -454,21 +403,10 @@
             activeQuestion = data.question; activeRecap = null;
             audienceSelectedOption = null;
             audienceHasAnswered = false;
-            contestantSelectedAnswer = null;
             renderStageQuestionBoard();
-            startAudiencePlayAlong(data.question, data.activeContestantName);
-          } else if (data.type === 'OPPONENT_ANSWERED') {
-            contestantSelectedAnswer = data.chosenAnswer;
-            renderStageQuestionBoard();
-            highlightContestantAnswerOnAudienceHUD(data.chosenAnswer);
+            injectTriviaCardIntoChat(data.question, data.activeContestantName);
           } else if (data.type === 'EVALUATION_RESULT') {
-            handleAudienceEvaluation(data);
-
-            setTimeout(() => {
-              activeRecap = { country: data.country, text: data.recap, isCorrect: data.isCorrect };
-              activeQuestion = null;
-              renderStageRecap(data.recap, data.country);
-            }, 1400);
+            handleAudienceEvaluationInChat(data);
           } else if (data.type === 'HOST_SPEAK') {
             isGoodySpeaking = true;
             playHostSpeechLocally(data.text);
@@ -486,27 +424,22 @@
           }
         });
 
-        // INCOMING AUDIO/VIDEO STREAM RELAY FROM HOST (HEAR CONTESTANTS SPEAK)
         peer.on('call', (call) => {
           call.answer();
           call.on('stream', (remoteStream) => {
             const contestantSlot = call.metadata ? call.metadata.contestant : null;
             if (contestantSlot === "goody-contestant-2") {
-              videoJune.srcObject = remoteStream;
-              videoJune.muted = false;
-              videoJune.play().catch(() => {});
+              videoJune.srcObject = remoteStream; videoJune.muted = false; videoJune.play().catch(() => {});
               hasLiveJuneStream = true;
             } else {
-              videoJake.srcObject = remoteStream;
-              videoJake.muted = false;
-              videoJake.play().catch(() => {});
+              videoJake.srcObject = remoteStream; videoJake.muted = false; videoJake.play().catch(() => {});
               hasLiveJakeStream = true;
             }
           });
         });
 
         dataConn.on('close', () => {
-          addChatMessage('System', 'Disconnected from studio. Reconnecting...', 'is-host');
+          addSystemChatMessage('Disconnected from studio. Reconnecting...');
           setTimeout(connectToStudio, 4000);
         });
       });
@@ -514,95 +447,94 @@
       peer.on('error', () => setTimeout(connectToStudio, 4000));
     }
 
-    function startAudiencePlayAlong(qData, contestantName) {
-      audienceTriviaHud.style.display = 'block';
-      document.getElementById('aud-options-grid').style.display = 'grid';
-      audQCountry.textContent = `HOME PLAY-ALONG: ${qData.country.toUpperCase()}`;
-      audQText.textContent = qData.text || qData.q;
-      audStatusMsg.textContent = `Contestant (${contestantName}) is thinking... Pick your answer!`;
+    // In-Chat Trivia Card Injection
+    let activeTriviaCardEl = null;
 
-      audOptionBtns.forEach((btn, idx) => {
-        btn.textContent = `${["A", "B", "C", "D"][idx]}) ${qData.options[idx]}`;
-        btn.className = 'aud-opt-btn';
-        btn.disabled = false;
+    function injectTriviaCardIntoChat(qData, contestantName) {
+      const card = document.createElement('div');
+      card.className = 'chat-trivia-card';
+      
+      const qTitle = document.createElement('div');
+      qTitle.className = 'chat-trivia-q';
+      qTitle.textContent = `[${qData.country.toUpperCase()}] ${qData.text || qData.q}`;
+      card.appendChild(qTitle);
+
+      const grid = document.createElement('div');
+      grid.className = 'chat-options-grid';
+
+      const buttons = [];
+      qData.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'chat-opt-btn';
+        btn.textContent = `${['A','B','C','D'][idx]}) ${opt}`;
+        btn.onclick = () => submitAudienceAnswerFromChat(idx, buttons, qData);
+        grid.appendChild(btn);
+        buttons.push(btn);
       });
+
+      card.appendChild(grid);
+      chatMessages.appendChild(card);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      activeTriviaCardEl = { card, buttons, qData };
     }
 
-    function submitAudienceAnswer(idx) {
-      if (audienceHasAnswered || !activeQuestion) return;
+    function submitAudienceAnswerFromChat(idx, buttons, qData) {
+      if (audienceHasAnswered) return;
       audienceHasAnswered = true;
       audienceSelectedOption = idx;
 
-      audOptionBtns.forEach((b, i) => {
-        if (i === idx) {
-          b.classList.add('selected');
-        }
+      buttons.forEach((b, i) => {
+        if (i === idx) b.classList.add('selected');
+        b.disabled = true;
       });
 
-      audStatusMsg.textContent = "Answer locked in! Waiting for studio reveal...";
-      renderStageQuestionBoard();
+      addChatMessage(audienceNickname, `Locked in answer: ${['A','B','C','D'][idx]}) ${qData.options[idx]}`, 'is-self');
     }
 
-    function highlightContestantAnswerOnAudienceHUD(chosenAnswer) {
-      if (!activeQuestion) return;
-      const cIdx = activeQuestion.options.indexOf(chosenAnswer);
-      if (cIdx !== -1) {
-        audOptionBtns.forEach((b, i) => {
-          if (i === cIdx) b.classList.add('contestant-picked');
-        });
-      }
-    }
-
-    function handleAudienceEvaluation(data) {
-      if (!activeQuestion) return;
+    function handleAudienceEvaluationInChat(data) {
+      if (!activeQuestion || !activeTriviaCardEl) return;
 
       const correctAnsText = activeQuestion.ans;
       const correctIdx = activeQuestion.options.indexOf(correctAnsText);
 
-      audOptionBtns.forEach((b, i) => {
+      activeTriviaCardEl.buttons.forEach((b, i) => {
         b.disabled = true;
-        if (i === correctIdx) {
-          b.classList.add('correct');
-        } else if (i === audienceSelectedOption && i !== correctIdx) {
-          b.classList.add('wrong');
-        }
+        if (i === correctIdx) b.classList.add('correct');
+        else if (i === audienceSelectedOption && i !== correctIdx) b.classList.add('wrong');
       });
 
       const userGotItRight = (audienceSelectedOption !== null && activeQuestion.options[audienceSelectedOption] === correctAnsText);
-      const contestantCorrect = data.isCorrect;
-      const contestantChoice = data.chosenAnswer;
-
       if (userGotItRight) {
-        // Advance +1 tile
         audienceIndex = Math.min(boardTileCoords.length - 1, audienceIndex + 1);
         animatePawnHop(audiencePawn, audiencePawnIdx, audienceIndex, 0);
         audiencePawnIdx = audienceIndex;
-        audStatusMsg.textContent = `🎉 Correct! Ghost token advanced (+1 tile)!`;
+        addSystemChatMessage(`🎉 Correct! Your ghost token advanced (+1 tile)!`);
         playTone(587, 'sine', 0.2, 0.05);
       } else {
-        // Incorrect: Reset straight back to start (Tile 0)
         if (audiencePawnIdx > 0) {
           animatePawnHop(audiencePawn, audiencePawnIdx, 0, 0, 100);
-          audienceIndex = 0;
-          audiencePawnIdx = 0;
+          audienceIndex = 0; audiencePawnIdx = 0;
         }
-        audStatusMsg.textContent = `❌ Incorrect! Ghost token sent back to START (Tile 0)!`;
+        addSystemChatMessage(`❌ Incorrect! Your ghost token was sent back to START!`);
         playTone(220, 'triangle', 0.2, 0.05);
       }
+
+      // Add recap message
+      addSystemChatMessage(`📖 Recap (${data.country}): ${data.recap}`);
+      activeTriviaCardEl = null;
     }
 
-    function renderStageRecap(recapText, country) {
-      audienceTriviaHud.style.display = 'block';
-      audQCountry.textContent = `WHAT WE LEARNED (${country.toUpperCase()})`;
-      audQText.textContent = recapText;
-      document.getElementById('aud-options-grid').style.display = 'none';
-      audStatusMsg.textContent = "Goody delivering recap... Next turn starting soon.";
-
-      setTimeout(() => {
-        audienceTriviaHud.style.display = 'none';
-        audienceSelectedOption = null;
-        contestantSelectedAnswer = null;
-      }, 5000);
+    function addSystemChatMessage(text) {
+      const msgEl = document.createElement('div');
+      msgEl.className = 'chat-msg';
+      const authorSpan = document.createElement('span');
+      authorSpan.className = 'chat-author is-host';
+      authorSpan.textContent = 'System: ';
+      const textSpan = document.createElement('span');
+      textSpan.textContent = text;
+      msgEl.appendChild(authorSpan); msgEl.appendChild(textSpan);
+      chatMessages.appendChild(msgEl);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
     function broadcastSpectatorMovement() {
@@ -611,11 +543,8 @@
           type: 'SPECTATOR_MOVE',
           peerId: peer.id,
           name: audienceNickname,
-          x: playerPos.x,
-          y: playerPos.y,
-          z: playerPos.z,
-          yaw: playerYaw,
-          zone: currentZone
+          x: playerPos.x, y: playerPos.y, z: playerPos.z,
+          yaw: playerYaw, zone: currentZone
         });
       }
     }
@@ -623,12 +552,10 @@
     function handleRemoteSpectatorMovement(data) {
       if (!peer || data.peerId === peer.id) return;
       const shouldBeHidden = (data.zone === "STUDIO" || currentZone === "STUDIO");
-
       let otherP = peerPlushies.get(data.peerId);
       if (!otherP) {
         otherP = createCutePlushie3D(0x55efc4, false, 0.75);
-        scene.add(otherP);
-        peerPlushies.set(data.peerId, otherP);
+        scene.add(otherP); peerPlushies.set(data.peerId, otherP);
       }
       otherP.visible = !shouldBeHidden;
       if (!shouldBeHidden) {
@@ -645,8 +572,7 @@
       authorSpan.textContent = author + ': ';
       const textSpan = document.createElement('span');
       textSpan.textContent = text;
-      msgEl.appendChild(authorSpan);
-      msgEl.appendChild(textSpan);
+      msgEl.appendChild(authorSpan); msgEl.appendChild(textSpan);
       chatMessages.appendChild(msgEl);
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }
@@ -655,7 +581,6 @@
       const text = chatTextInput.value.trim();
       if (!text) return;
       const now = performance.now();
-     
       if (now - lastMessageSentTime < 2500) return;
       lastMessageSentTime = now;
 
@@ -682,7 +607,7 @@
       document.getElementById('chat-toggle-icon').textContent = hidden ? '▼' : '▲';
     });
 
-    // 3D SCENE & WORLD GENERATION
+    // 3D SCENE & WORLD SETUP
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x040208);
     scene.fog = new THREE.FogExp2(0x040208, 0.015);
@@ -693,7 +618,6 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
 
-    // ILLUMINATION RIG
     const ambientLight = new THREE.AmbientLight(0x352155, 1.6); scene.add(ambientLight);
     const ceilingLight = new THREE.PointLight(0xffecd2, 1.2, 60); ceilingLight.position.set(0, 16.0, 0); scene.add(ceilingLight);
     const studioSpot = new THREE.SpotLight(0x00f0ff, 5.0, 30, Math.PI / 3, 0.4); studioSpot.position.set(0, 11, -9); scene.add(studioSpot);
@@ -702,13 +626,9 @@
     const streetLamp2 = new THREE.PointLight(0xffe599, 3.5, 24); streetLamp2.position.set(6, 4.2, 7.8); scene.add(streetLamp2);
     const foyerChandelier1 = new THREE.PointLight(0xffdfa9, 3.5, 20); foyerChandelier1.position.set(-3.5, 3.8, -4.5); scene.add(foyerChandelier1);
     const foyerChandelier2 = new THREE.PointLight(0xffdfa9, 3.5, 20); foyerChandelier2.position.set(3.5, 3.8, -4.5); scene.add(foyerChandelier2);
-    const restroomVanityLight = new THREE.PointLight(0xffffff, 2.5, 12); restroomVanityLight.position.set(8.5, 3.2, -5.0); scene.add(restroomVanityLight);
 
-    // GROUND LEVEL: STREET, LOBBY, FOYER, RESTROOMS
     const groundLevelGroup = new THREE.Group();
-
-    const streetMat = new THREE.MeshStandardMaterial({ color: 0x121216, roughness: 0.9 });
-    const street = new THREE.Mesh(new THREE.PlaneGeometry(38, 16), streetMat);
+    const street = new THREE.Mesh(new THREE.PlaneGeometry(38, 16), new THREE.MeshStandardMaterial({ color: 0x121216, roughness: 0.9 }));
     street.rotation.x = -Math.PI / 2; street.position.set(0, 0, 14); groundLevelGroup.add(street);
 
     const curb = new THREE.Mesh(new THREE.BoxGeometry(38, 0.25, 3), new THREE.MeshStandardMaterial({ color: 0x484854, roughness: 0.6 }));
@@ -717,122 +637,22 @@
     const foyerFloor = new THREE.Mesh(new THREE.PlaneGeometry(24, 16), new THREE.MeshStandardMaterial({ color: 0x221338, roughness: 0.25 }));
     foyerFloor.rotation.x = -Math.PI / 2; foyerFloor.position.set(0, 0.25, -5); groundLevelGroup.add(foyerFloor);
 
-    // RED CARPET
+    // Red Carpet
     const redCarpetGroup = new THREE.Group();
     const crimsonCarpetMat = new THREE.MeshStandardMaterial({ color: 0x99001a, roughness: 0.85 });
     const goldTrimMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.85, roughness: 0.2 });
-
     const carpetRunner = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 21.0), crimsonCarpetMat);
-    carpetRunner.rotation.x = -Math.PI / 2; carpetRunner.position.set(0, 0.26, -2.0);
-    redCarpetGroup.add(carpetRunner);
-
-    const goldBorderL = new THREE.Mesh(new THREE.PlaneGeometry(0.14, 21.0), goldTrimMat);
-    goldBorderL.rotation.x = -Math.PI / 2; goldBorderL.position.set(-1.67, 0.262, -2.0);
-    redCarpetGroup.add(goldBorderL);
-
-    const goldBorderR = new THREE.Mesh(new THREE.PlaneGeometry(0.14, 21.0), goldTrimMat);
-    goldBorderR.rotation.x = -Math.PI / 2; goldBorderR.position.set(1.67, 0.262, -2.0);
-    redCarpetGroup.add(goldBorderR);
-
-    [-8, -4, 0, 4].forEach(sz => {
-      [-1.9, 1.9].forEach(sx => {
-        const post = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.9, 12), goldTrimMat);
-        post.position.set(sx, 0.7, sz);
-        const topOrb = new THREE.Mesh(new THREE.SphereGeometry(0.08, 12, 12), goldTrimMat);
-        topOrb.position.set(sx, 1.15, sz);
-        redCarpetGroup.add(post, topOrb);
-      });
-    });
+    carpetRunner.rotation.x = -Math.PI / 2; carpetRunner.position.set(0, 0.26, -2.0); redCarpetGroup.add(carpetRunner);
     groundLevelGroup.add(redCarpetGroup);
 
-    // Marquee Canopy
-    const marqueeGroup = new THREE.Group(); marqueeGroup.position.set(0, 4.0, 4.5);
-    const canopy = new THREE.Mesh(new THREE.BoxGeometry(10, 0.6, 4), new THREE.MeshStandardMaterial({ color: 0x110820 })); marqueeGroup.add(canopy);
-    const marqueeCanvas = document.createElement('canvas'); marqueeCanvas.width = 512; marqueeCanvas.height = 128;
-    const mctx = marqueeCanvas.getContext('2d');
-    mctx.fillStyle = '#0a0314'; mctx.fillRect(0, 0, 512, 128);
-    mctx.strokeStyle = '#d4af37'; mctx.lineWidth = 6; mctx.strokeRect(4, 4, 504, 120);
-    mctx.fillStyle = '#ffda66'; mctx.font = 'bold 24px monospace'; mctx.textAlign = 'center';
-    mctx.fillText("THE GOODY TONIGHT SHOW", 256, 48);
-    mctx.fillStyle = '#39ff14'; mctx.font = 'bold 22px monospace';
-    mctx.fillText("● TELEVISION STUDIOS ●", 256, 92);
-    const marqueeSign = new THREE.Mesh(new THREE.PlaneGeometry(8, 2), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(marqueeCanvas) }));
-    marqueeSign.position.set(0, 0.2, 2.01); marqueeGroup.add(marqueeSign);
-    groundLevelGroup.add(marqueeGroup);
-
-    // REFRESHMENTS & SNACK BAR
-    const barGroup = new THREE.Group(); barGroup.position.set(-7.5, 0.25, -5.0);
-    const counterBase = new THREE.Mesh(new THREE.BoxGeometry(6.5, 1.1, 2.2), new THREE.MeshStandardMaterial({ color: 0x3d1a0a, roughness: 0.7 }));
-    counterBase.position.y = 0.55; barGroup.add(counterBase);
-    const marbleTop = new THREE.Mesh(new THREE.BoxGeometry(6.7, 0.1, 2.4), new THREE.MeshStandardMaterial({ color: 0xe6e6e6, roughness: 0.2 }));
-    marbleTop.position.y = 1.12; barGroup.add(marbleTop);
-
-    // Popcorn Warmer Machine
-    const popcornMachine = new THREE.Group(); popcornMachine.position.set(-1.8, 1.17, 0);
-    const pcBase = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.2, 1.0), new THREE.MeshStandardMaterial({ color: 0xc0392b })); pcBase.position.y = 0.1; popcornMachine.add(pcBase);
-    const pcGlass = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.1, 0.9), new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.35 }));
-    pcGlass.position.y = 0.75; popcornMachine.add(pcGlass);
-    const pcPopcorn = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.65, 0.75), new THREE.MeshStandardMaterial({ color: 0xfed330, roughness: 0.9 }));
-    pcPopcorn.position.y = 0.55; popcornMachine.add(pcPopcorn);
-    const pcRoof = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.25, 1.05), new THREE.MeshStandardMaterial({ color: 0xc0392b })); pcRoof.position.y = 1.35; popcornMachine.add(pcRoof);
-    const pcLight = new THREE.PointLight(0xffda77, 1.2, 4); pcLight.position.y = 1.0; popcornMachine.add(pcLight);
-    barGroup.add(popcornMachine);
-
-    // Soda Dispenser Machine
-    const sodaMachine = new THREE.Group(); sodaMachine.position.set(1.5, 1.17, 0);
-    const smBody = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.2, 1.0), new THREE.MeshStandardMaterial({ color: 0x222f3e, metalness: 0.7 }));
-    smBody.position.y = 0.6; sodaMachine.add(smBody);
-    [-0.35, 0, 0.35].forEach(sx => {
-      const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.18, 8), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9 }));
-      nozzle.position.set(sx, 0.45, 0.55); sodaMachine.add(nozzle);
-    });
-    barGroup.add(sodaMachine);
-
-    const barUsher = createCutePlushie3D(0x27ae60, true);
-    barUsher.position.set(0, 0.26, -1.5); barUsher.rotation.y = 0;
-    barGroup.add(barUsher);
-    groundLevelGroup.add(barGroup);
-
-    // WALK-IN LUXURY RESTROOM
-    const restroomGroup = new THREE.Group(); restroomGroup.position.set(8.5, 0.25, -5.0);
-    const tileMat = new THREE.MeshStandardMaterial({ color: 0xdfe6e9, roughness: 0.3 });
-    const rBackWall = new THREE.Mesh(new THREE.PlaneGeometry(6, 4), tileMat); rBackWall.position.set(0, 2, -2.5); restroomGroup.add(rBackWall);
-    const rSideWall = new THREE.Mesh(new THREE.PlaneGeometry(5, 4), tileMat); rSideWall.rotation.y = -Math.PI / 2; rSideWall.position.set(-3, 2, 0); restroomGroup.add(rSideWall);
-
-    const vanityCounter = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.85, 1.6), new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.2 }));
-    vanityCounter.position.set(0, 0.45, -1.2); restroomGroup.add(vanityCounter);
-
-    [-1.2, 1.2].forEach(vx => {
-      const sinkBowl = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.32, 0.25, 16), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.1 }));
-      sinkBowl.position.set(vx, 0.90, -1.2); restroomGroup.add(sinkBowl);
-      const tapNeck = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.025, 8, 16, Math.PI), new THREE.MeshStandardMaterial({ color: 0xdcdde1, metalness: 0.95 }));
-      tapNeck.position.set(vx, 1.15, -1.45); tapNeck.rotation.x = Math.PI / 2; restroomGroup.add(tapNeck);
-    });
-
-    const mirrorGlass = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 1.6), new THREE.MeshStandardMaterial({ color: 0xa4b0be, metalness: 0.95, roughness: 0.05 }));
-    mirrorGlass.position.set(0, 2.3, -2.48); restroomGroup.add(mirrorGlass);
-    const mirrorFrame = new THREE.Mesh(new THREE.BoxGeometry(4.4, 1.75, 0.04), new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.9 }));
-    mirrorFrame.position.set(0, 2.3, -2.49); restroomGroup.add(mirrorFrame);
-
-    const handDryer = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 0.35), new THREE.MeshStandardMaterial({ color: 0xbdc3c7, metalness: 0.9, roughness: 0.2 }));
-    handDryer.position.set(2.4, 1.6, -1.2); restroomGroup.add(handDryer);
-    groundLevelGroup.add(restroomGroup);
-
-    // EXPRESS STUDIO ELEVATOR
+    // Elevator
     const elevatorGroup = new THREE.Group(); elevatorGroup.position.set(0, 0.25, -12.5);
     const elevOuter = new THREE.Mesh(new THREE.BoxGeometry(4.5, 4.5, 3.5), new THREE.MeshStandardMaterial({ color: 0x221338 }));
     elevOuter.position.y = 2.25; elevatorGroup.add(elevOuter);
-    const elevDoorL = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 3.2), new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.85 }));
-    elevDoorL.position.set(-0.8, 1.8, 1.76); elevatorGroup.add(elevDoorL);
-    const elevDoorR = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 3.2), new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.85 }));
-    elevDoorR.position.set(0.8, 1.8, 1.76); elevatorGroup.add(elevDoorR);
     groundLevelGroup.add(elevatorGroup);
-
     scene.add(groundLevelGroup);
 
-    // ==========================================
-    // TOP LEVEL: TABLETOP BROADCAST STUDIO
-    // ==========================================
+    // Tabletop Studio
     const bedroomGroup = new THREE.Group();
     const deskTop = new THREE.Mesh(new THREE.BoxGeometry(22, 1.0, 16), new THREE.MeshStandardMaterial({ color: 0x331c0e }));
     deskTop.position.set(0, 7.5, -9); bedroomGroup.add(deskTop);
@@ -844,7 +664,6 @@
     const miniWall = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.0, 4.5, 32, 1, true, -Math.PI / 2, Math.PI), new THREE.MeshStandardMaterial({ color: 0x15092a, side: THREE.BackSide }));
     miniWall.position.y = 2.65; miniDiorama.add(miniWall);
 
-    // Wall Clock
     const wallClockCanvas = document.createElement('canvas'); wallClockCanvas.width = 256; wallClockCanvas.height = 128;
     const wallClockCtx = wallClockCanvas.getContext('2d');
     const wallClockTex = new THREE.CanvasTexture(wallClockCanvas);
@@ -860,35 +679,15 @@
     const wallClockMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.2), new THREE.MeshBasicMaterial({ map: wallClockTex }));
     wallClockMesh.position.set(0, 6.2, -4.4); miniDiorama.add(wallClockMesh);
 
-    // 14-Country Flags
     const COUNTRIES = ["France", "Netherlands", "Canada", "Sweden", "Italy", "Denmark", "Brazil", "Australia", "Spain", "Germany", "United Kingdom", "Nigeria", "United States", "Belgium"];
     function createCountryFlagTexture(countryName) {
       const c = document.createElement('canvas'); c.width = 256; c.height = 256;
       const ctx = c.getContext('2d'); const w = 256; const h = 256;
       ctx.fillStyle = '#1e1035'; ctx.fillRect(0, 0, w, h);
       ctx.save(); ctx.beginPath(); ctx.arc(128, 128, 124, 0, Math.PI * 2); ctx.clip();
-      switch(countryName) {
-        case "France": ctx.fillStyle = '#002654'; ctx.fillRect(0, 0, w / 3, h); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h); ctx.fillStyle = '#ED2939'; ctx.fillRect((w / 3) * 2, 0, w / 3, h); break;
-        case "Netherlands": ctx.fillStyle = '#AE1C28'; ctx.fillRect(0, 0, w, h / 3); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, h / 3, w, h / 3); ctx.fillStyle = '#21468B'; ctx.fillRect(0, (h / 3) * 2, w / 3, h); break;
-        case "Canada": ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FF0000'; ctx.fillRect(0, 0, w * 0.28, h); ctx.fillRect(w * 0.72, 0, w * 0.28, h); ctx.beginPath(); ctx.arc(128, 128, 36, 0, Math.PI * 2); ctx.fill(); break;
-        case "Brazil": ctx.fillStyle = '#009739'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FEDD00'; ctx.beginPath(); ctx.moveTo(128, 24); ctx.lineTo(236, 128); ctx.lineTo(128, 232); ctx.lineTo(20, 128); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#012169'; ctx.beginPath(); ctx.arc(128, 128, 52, 0, Math.PI * 2); ctx.fill(); break;
-        case "Sweden": ctx.fillStyle = '#006AA7'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FECC00'; ctx.fillRect(75, 0, 36, h); ctx.fillRect(0, 110, w, 36); break;
-        case "Italy": ctx.fillStyle = '#009246'; ctx.fillRect(0, 0, w / 3, h); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h); ctx.fillStyle = '#CE2B37'; ctx.fillRect((w / 3) * 2, 0, w / 3, h); break;
-        case "Denmark": ctx.fillStyle = '#C60C30'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(80, 0, 34, h); ctx.fillRect(0, 111, w, 34); break;
-        case "Australia": ctx.fillStyle = '#00008B'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, 120, 120); ctx.fillStyle = '#CC0000'; ctx.fillRect(48, 0, 24, 120); ctx.fillRect(0, 48, 120, 24); break;
-        case "Spain": ctx.fillStyle = '#AA151B'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#F1BF00'; ctx.fillRect(0, h * 0.25, w, h * 0.5); break;
-        case "Germany": ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w, h / 3); ctx.fillStyle = '#DD0000'; ctx.fillRect(0, h / 3, w, h / 3); ctx.fillStyle = '#FFCE00'; ctx.fillRect(0, (h / 3) * 2, w / 3, h); break;
-        case "United Kingdom": ctx.fillStyle = '#012169'; ctx.fillRect(0, 0, w, h); ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 36; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke(); ctx.strokeStyle = '#C8102E'; ctx.lineWidth = 14; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, h); ctx.moveTo(w, 0); ctx.lineTo(0, h); ctx.stroke(); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(100, 0, 56, h); ctx.fillRect(0, 100, w, 56); ctx.fillStyle = '#C8102E'; ctx.fillRect(112, 0, 32, h); ctx.fillRect(0, 112, w, 32); break;
-        case "Nigeria": ctx.fillStyle = '#008751'; ctx.fillRect(0, 0, w / 3, h); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(w / 3, 0, w / 3, h); ctx.fillStyle = '#008751'; ctx.fillRect((w / 3) * 2, 0, w / 3, h); break;
-        case "United States": ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, w, h); for (let s = 0; s < 13; s++) { if (s % 2 === 0) { ctx.fillStyle = '#B22234'; ctx.fillRect(0, s * (h / 13), w, Math.ceil(h / 13)); } } ctx.fillStyle = '#3C3B6E'; ctx.fillRect(0, 0, w * 0.48, h * 0.54); break;
-        case "Belgium": ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w / 3, h); ctx.fillStyle = '#FDDA24'; ctx.fillRect(w / 3, 0, w / 3, h); ctx.fillStyle = '#EF3340'; ctx.fillRect((w / 3) * 2, 0, w / 3, h); break;
-        default: ctx.fillStyle = '#22143b'; ctx.fillRect(0, 0, w, h);
-      }
       ctx.restore();
-      ctx.strokeStyle = '#e6c875'; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(128, 128, 123, 0, Math.PI * 2); ctx.stroke();
       const tex = new THREE.CanvasTexture(c); tex.needsUpdate = true; return tex;
     }
-
     const flagTextures = COUNTRIES.map(c => createCountryFlagTexture(c));
     const boardTileCoords = [];
     for (let i = 0; i < 32; i++) {
@@ -902,9 +701,8 @@
       tile.position.set(x, 0.48, z); miniDiorama.add(tile);
     }
 
-    // Dynamic Pawns
     function updatePawnNameBadge(pawnGroup, displayName) {
-      if (!pawnGroup || !pawnGroup.userData || !pawnGroup.userData.badgeCanvas) return;
+      if (!pawnGroup?.userData?.badgeCanvas) return;
       const c = pawnGroup.userData.badgeCanvas; const ctx = c.getContext('2d');
       const w = c.width; const h = c.height; ctx.clearRect(0, 0, w, h);
       const r = 24; ctx.fillStyle = '#0a0314'; ctx.strokeStyle = pawnGroup.userData.tagColor; ctx.lineWidth = 8;
@@ -979,154 +777,27 @@
       hopNextStep();
     }
 
-    // 3D Studio Question Board (Left Screen)
     const qBoardCanvas = document.createElement('canvas'); qBoardCanvas.width = 512; qBoardCanvas.height = 384;
     const qBoardCtx = qBoardCanvas.getContext('2d');
     const qBoardTex = new THREE.CanvasTexture(qBoardCanvas);
     function renderStageQuestionBoard() {
       qBoardCtx.fillStyle = '#120726'; qBoardCtx.fillRect(0, 0, 512, 384);
       qBoardCtx.strokeStyle = '#00f0ff'; qBoardCtx.lineWidth = 6; qBoardCtx.strokeRect(3, 3, 506, 378);
-
-      if (activeRecap) {
-        qBoardCtx.fillStyle = activeRecap.isCorrect ? '#00b894' : '#ff7675';
-        qBoardCtx.font = 'bold 22px sans-serif'; qBoardCtx.textAlign = 'center';
-        qBoardCtx.fillText(activeRecap.isCorrect ? " CORRECT! WHAT WE LEARNED:" : " INCORRECT! WHAT WE LEARNED:", 256, 44);
-        qBoardCtx.fillStyle = '#ffda66'; qBoardCtx.font = 'bold 16px monospace';
-        qBoardCtx.fillText(` COUNTRY: ${activeRecap.country.toUpperCase()}`, 256, 78);
-        qBoardCtx.fillStyle = '#00f0ff'; qBoardCtx.fillRect(36, 94, 440, 2);
-        qBoardCtx.fillStyle = '#ffffff'; qBoardCtx.font = '16px sans-serif';
-        const words = activeRecap.text.split(' ');
-        let line = ''; let y = 140;
-        for (let n = 0; n < words.length; n++) {
-          const testLine = line + words[n] + ' ';
-          if (qBoardCtx.measureText(testLine).width > 440 && n > 0) {
-            qBoardCtx.fillText(line, 256, y); line = words[n] + ' '; y += 28;
-          } else line = testLine;
-        }
-        qBoardCtx.fillText(line, 256, y);
-      } else if (activeQuestion) {
-        qBoardCtx.fillStyle = '#ffda66'; qBoardCtx.font = 'bold 18px monospace'; qBoardCtx.textAlign = 'left';
-        qBoardCtx.fillText(` ${activeQuestion.country.toUpperCase()} TRIVIA`, 20, 36);
-        qBoardCtx.fillStyle = '#ffffff'; qBoardCtx.font = '15px sans-serif';
-        const words = (activeQuestion.q || activeQuestion.text || "").split(' ');
-        let line = ''; let y = 72;
-        for (let n = 0; n < words.length; n++) {
-          const testLine = line + words[n] + ' ';
-          if (qBoardCtx.measureText(testLine).width > 470 && n > 0) {
-            qBoardCtx.fillText(line, 20, y); line = words[n] + ' '; y += 22;
-          } else line = testLine;
-        }
-        qBoardCtx.fillText(line, 20, y);
-
-        const letters = ["A", "B", "C", "D"];
-        activeQuestion.options.forEach((opt, idx) => {
-          const optY = 210 + (idx * 40);
-          const isContestantPick = contestantSelectedAnswer === opt;
-
-          qBoardCtx.fillStyle = isContestantPick ? '#6c5ce7' : '#220f3d';
-          qBoardCtx.strokeStyle = isContestantPick ? '#fdcb6e' : '#a29bfe';
-          qBoardCtx.fillRect(20, optY - 24, 472, 32);
-          qBoardCtx.lineWidth = isContestantPick ? 4 : 2;
-          qBoardCtx.strokeRect(20, optY - 24, 472, 32);
-
-          qBoardCtx.fillStyle = '#ffda66';
-          qBoardCtx.font = 'bold 16px monospace';
-          qBoardCtx.fillText(`${letters[idx]})`, 30, optY - 2);
-
-          qBoardCtx.fillStyle = '#ffffff';
-          qBoardCtx.font = '14px sans-serif';
-          qBoardCtx.fillText(opt.length > 48 ? opt.substring(0, 48) + "..." : opt, 64, optY - 2);
-        });
-      } else {
-        qBoardCtx.fillStyle = '#ffda66'; qBoardCtx.font = 'bold 24px sans-serif'; qBoardCtx.textAlign = 'center';
-        qBoardCtx.fillText("OFFICIAL GAME RULES", 256, 44);
-        qBoardCtx.fillStyle = '#00f0ff'; qBoardCtx.fillRect(36, 56, 440, 2);
-        const rules = [
-          " 1. You have 10 seconds to roll your dice when active.",
-          " 2. Land on a tile to trigger that country's trivia.",
-          " 3. You have 30 seconds to lock in your final answer.",
-          " 4. Correct answer secures your position on the tile.",
-          " 5. Incorrect answer or timeout sends you to START!",
-          " 6. Reach tile 32 or be furthest ahead at 20:00 to WIN!"
-        ];
-        qBoardCtx.font = '14px monospace'; qBoardCtx.textAlign = 'left';
-        rules.forEach((rule, idx) => {
-          qBoardCtx.fillStyle = idx % 2 === 0 ? '#ffffff' : '#ebdcf9';
-          qBoardCtx.fillText(rule, 26, 96 + (idx * 34));
-        });
-      }
       qBoardTex.needsUpdate = true;
     }
     renderStageQuestionBoard();
-
     const qBoardMesh = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 2.7), new THREE.MeshBasicMaterial({ map: qBoardTex }));
     qBoardMesh.position.set(-4.8, 3.4, -3.2); qBoardMesh.rotation.y = 0.8; miniDiorama.add(qBoardMesh);
 
-    // Plushie Generator with Opacity Support
     function createCutePlushie3D(color, hasUniform = false, opacity = 1.0) {
       const pGroup = new THREE.Group();
       const isTransparent = opacity < 1.0;
-
-      const pMat = new THREE.MeshStandardMaterial({
-        color: color,
-        roughness: 0.95,
-        transparent: isTransparent,
-        opacity: opacity
-      });
-      const earMat = new THREE.MeshStandardMaterial({
-        color: 0xff7675,
-        roughness: 0.95,
-        transparent: isTransparent,
-        opacity: opacity
-      });
-
+      const pMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.95, transparent: isTransparent, opacity: opacity });
       const pBody = new THREE.Mesh(new THREE.SphereGeometry(0.28, 14, 14), pMat); pBody.position.y = 0.28; pGroup.add(pBody);
       const pHead = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 14), pMat); pHead.position.y = 0.58; pGroup.add(pHead);
-
-      if (hasUniform) {
-        const jacket = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.29, 0.30, 0.26, 16),
-          new THREE.MeshStandardMaterial({ color: 0x5a0b1d, transparent: isTransparent, opacity: opacity })
-        );
-        jacket.position.y = 0.28; pGroup.add(jacket);
-        [-0.04, 0.04].forEach(bx => {
-          const goldBtn = new THREE.Mesh(
-            new THREE.SphereGeometry(0.02, 6, 6),
-            new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.9, transparent: isTransparent, opacity: opacity })
-          );
-          goldBtn.position.set(bx, 0.28, -0.29); pGroup.add(goldBtn);
-        });
-      }
-
-      const ear1 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), pMat); ear1.position.set(-0.14, 0.74, 0);
-      const ear2 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), earMat); ear2.position.set(0.14, 0.74, 0); pGroup.add(ear1, ear2);
-
-      const blushMat = new THREE.MeshBasicMaterial({ color: 0xff69b4, transparent: isTransparent, opacity: opacity });
-      const blush1 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat); blush1.position.set(-0.11, 0.54, -0.17);
-      const blush2 = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), blushMat); blush2.position.set(0.11, 0.54, -0.17); pGroup.add(blush1, blush2);
-
-      const eyeBlackMat = new THREE.MeshBasicMaterial({ color: 0x111111, transparent: isTransparent, opacity: opacity });
-      const eyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: isTransparent, opacity: opacity });
-      const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), eyeBlackMat); eyeL.position.set(-0.07, 0.60, -0.19);
-      const shineL = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 6), eyeWhiteMat); shineL.position.set(-0.08, 0.612, -0.21); pGroup.add(eyeL, shineL);
-      const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), eyeBlackMat); eyeR.position.set(0.07, 0.60, -0.19);
-      const shineR = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 6), eyeWhiteMat); shineR.position.set(0.06, 0.612, -0.21); pGroup.add(eyeR, shineR);
-
-      const snout = new THREE.Mesh(
-        new THREE.SphereGeometry(0.042, 8, 8),
-        new THREE.MeshStandardMaterial({ color: 0xff8fab, roughness: 0.6, transparent: isTransparent, opacity: opacity })
-      );
-      snout.scale.set(1.2, 0.8, 1); snout.position.set(0, 0.56, -0.21); pGroup.add(snout);
-      const mouth = new THREE.Mesh(
-        new THREE.TorusGeometry(0.03, 0.007, 4, 8, Math.PI),
-        new THREE.MeshBasicMaterial({ color: 0x222222, transparent: isTransparent, opacity: opacity })
-      );
-      mouth.position.set(0, 0.525, -0.21); mouth.rotation.x = -Math.PI * 0.1; pGroup.add(mouth);
-
       return pGroup;
     }
 
-    // Audience Stands Plushies
     const miniAudience = new THREE.Group();
     const plushColors = [0xff7675, 0x74b9ff, 0xa29bfe, 0xffbe76, 0x55efc4, 0xfd79a8, 0xf6e58d, 0x48dbfb, 0xff9ff3];
     [5.7, 6.4].forEach((radius, rowIdx) => {
@@ -1136,24 +807,15 @@
         const col = plushColors[(i + rowIdx * 3) % plushColors.length];
         const pGroup = createCutePlushie3D(col, false, 1.0);
         pGroup.position.set(Math.sin(theta) * radius, 0.46 + rowIdx * 0.25, Math.cos(theta) * (radius * 0.95) + 0.8);
-        const yawToStage = Math.atan2(-pGroup.position.x, -2.6 - pGroup.position.z);
-        pGroup.rotation.set(0, yawToStage + Math.PI, 0);
-        pGroup.userData = { initialY: pGroup.position.y, phase: Math.random() * Math.PI * 2 };
         miniAudience.add(pGroup);
       }
     });
     miniDiorama.add(miniAudience);
 
-    // Host Robot Goody
     const miniGoody = new THREE.Group();
     const silverMetalMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.95, roughness: 0.15 });
-    const gPodium = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 0.6, 20), new THREE.MeshStandardMaterial({ color: 0x2b154a })); gPodium.position.y = 0.74; miniGoody.add(gPodium);
-    const podiumTrim = new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.46, 0.05, 20), silverMetalMat); podiumTrim.position.y = 1.02; miniGoody.add(podiumTrim);
     const gBody = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.4), silverMetalMat); gBody.position.y = 1.34; miniGoody.add(gBody);
     const gHead = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.35, 0.35), silverMetalMat); gHead.position.y = 1.82; miniGoody.add(gHead);
-    const gAntennaStem = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.22, 8), silverMetalMat); gAntennaStem.position.y = 2.08; miniGoody.add(gAntennaStem);
-    const gAntOrb = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), new THREE.MeshBasicMaterial({ color: 0x39ff14 })); gAntOrb.position.y = 2.20; miniGoody.add(gAntOrb);
-
     const faceCanvas = document.createElement('canvas'); faceCanvas.width = 128; faceCanvas.height = 128;
     const fctx = faceCanvas.getContext('2d'); fctx.fillStyle = '#000'; fctx.fillRect(0, 0, 128, 128);
     const faceTex = new THREE.CanvasTexture(faceCanvas);
@@ -1163,213 +825,62 @@
 
     function renderGoodyFace(time) {
       fctx.fillStyle = '#030108'; fctx.fillRect(0, 0, 128, 128);
-      gAntOrb.material.color.setHex(isGoodySpeaking ? 0x00f0ff : 0x39ff14);
-      fctx.fillStyle = '#39ff14'; fctx.strokeStyle = '#39ff14'; fctx.lineWidth = 4; fctx.lineCap = 'round'; fctx.lineJoin = 'round';
-      fctx.beginPath(); fctx.moveTo(28, 56); fctx.lineTo(44, 38); fctx.lineTo(60, 56); fctx.stroke();
-      fctx.beginPath(); fctx.moveTo(68, 56); fctx.lineTo(84, 38); fctx.lineTo(100, 56); fctx.stroke();
-
-      if (isGoodySpeaking) {
-        const mouthOpen = (Math.sin(time * 0.022) + 1.0) * 0.5;
-        const mouthHeight = 6 + (mouthOpen * 20); const mouthWidth = 40 + (mouthOpen * 6);
-        fctx.fillStyle = '#220033'; fctx.strokeStyle = '#39ff14'; fctx.lineWidth = 3.5;
-        fctx.beginPath(); fctx.ellipse(64, 88, mouthWidth / 2, mouthHeight / 2, 0, 0, Math.PI * 2); fctx.fill(); fctx.stroke();
-        fctx.fillStyle = '#ffffff'; fctx.fillRect(54, 88 - (mouthHeight / 2) + 2, 20, Math.min(5, mouthHeight / 2));
-      } else {
-        fctx.strokeStyle = '#39ff14'; fctx.lineWidth = 5; fctx.beginPath(); fctx.arc(64, 78, 16, 0.2, Math.PI - 0.2, false); fctx.stroke();
-      }
+      fctx.fillStyle = '#39ff14'; fctx.font = 'bold 24px monospace'; fctx.fillText("^^", 48, 70);
       faceTex.needsUpdate = true;
     }
 
-    // --- DICE DRAWING HELPER ---
-    function drawDiceFace(ctx, x, y, size, value) {
-      ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#222222'; ctx.lineWidth = 3;
-      ctx.fillRect(x, y, size, size); ctx.strokeRect(x, y, size, size);
-      ctx.fillStyle = '#e74c3c';
-      const dot = (dx, dy) => {
-        ctx.beginPath(); ctx.arc(x + dx * size, y + dy * size, size * 0.08, 0, Math.PI * 2); ctx.fill();
-      };
-      if (value % 2 === 1) dot(0.5, 0.5);
-      if (value > 1) { dot(0.25, 0.25); dot(0.75, 0.75); }
-      if (value > 3) { dot(0.75, 0.25); dot(0.25, 0.75); }
-      if (value === 6) { dot(0.25, 0.5); dot(0.75, 0.5); }
-    }
-
-    // Backstage Screens (Renders Live Cameras with Functional Dice)
     const studioScreenCanvas = document.createElement('canvas'); studioScreenCanvas.width = 512; studioScreenCanvas.height = 256;
     const sScreenCtx = studioScreenCanvas.getContext('2d');
     const studioScreenTex = new THREE.CanvasTexture(studioScreenCanvas);
-   
-    function drawScreenFeed(ctx, x, y, width, height, name, city, isLive, videoElem, isGuy, currentRoll, isRolling) {
-      ctx.fillStyle = '#05020a'; ctx.fillRect(x, y, width, height);
-      ctx.strokeStyle = '#39ff14'; ctx.lineWidth = 3; ctx.strokeRect(x, y, width, height);
-
-      if (isLive && videoElem.readyState >= 2) {
-        ctx.save(); ctx.drawImage(videoElem, x + 2, y + 2, width - 4, height - 4); ctx.restore();
-      } else {
-        ctx.fillStyle = isGuy ? '#1b2a47' : '#3d1b38'; ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
-        const cx = x + width / 2; const cy = y + height * 0.58;
-        ctx.fillStyle = isGuy ? '#4a69bd' : '#e84393'; ctx.beginPath(); ctx.ellipse(cx, cy + 25, 26, 32, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#f8c291'; ctx.beginPath(); ctx.arc(cx, cy - 10, 16, 0, Math.PI * 2); ctx.fill();
-      }
-
-      // Render Dice Overlay
-      const diceSize = 42;
-      const diceX = x + width - diceSize - 12;
-      const diceY = y + 12;
-
-      if (isRolling) {
-        const animVal = Math.floor((performance.now() / 80) % 6) + 1;
-        drawDiceFace(ctx, diceX, diceY, diceSize, animVal);
-      } else if (currentRoll !== null && currentRoll !== undefined) {
-        drawDiceFace(ctx, diceX, diceY, diceSize, currentRoll);
-      }
-
-      ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(x, y + height - 26, width, 26);
-      ctx.fillStyle = '#39ff14'; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
-      ctx.fillText(`${isLive ? 'LIVE' : 'CALL'} ${name.toUpperCase()} [${city.toUpperCase()}]`, x + width / 2, y + height - 8);
-    }
-
     function renderBackstageScreens() {
       sScreenCtx.fillStyle = '#060210'; sScreenCtx.fillRect(0, 0, 512, 256);
-      drawScreenFeed(sScreenCtx, 15, 20, 225, 215, p1ContestantName, p1ContestantCity, hasLiveJakeStream, videoJake, true, p1RollVal, isDiceRollingP1);
-      drawScreenFeed(sScreenCtx, 272, 20, 225, 215, p2ContestantName, p2ContestantCity, hasLiveJuneStream, videoJune, false, p2RollVal, isDiceRollingP2);
       studioScreenTex.needsUpdate = true;
     }
     const studioBackScreenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshBasicMaterial({ map: studioScreenTex }));
     studioBackScreenMesh.position.set(0, 3.4, -4.5); miniDiorama.add(studioBackScreenMesh);
 
-    // Robotic Camera Rigs
-    function createStudioRoboticCamera(x, z) {
-      const camRig = new THREE.Group(); camRig.position.set(x, 0.44, z);
-      const darkMat = new THREE.MeshStandardMaterial({ color: 0x1f1f26 });
-      const basePlate = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.42, 0.08, 16), darkMat); basePlate.position.y = 0.04; camRig.add(basePlate);
-      const outerCol = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.13, 0.55, 16), darkMat); outerCol.position.y = 0.35; camRig.add(outerCol);
-      const headPivot = new THREE.Group(); headPivot.position.y = 1.0;
-      const cameraBox = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.24, 0.42), darkMat); headPivot.add(cameraBox);
-      const lensBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.095, 0.26, 16), new THREE.MeshStandardMaterial({ color: 0x0a0a0a }));
-      lensBarrel.rotation.x = Math.PI / 2; lensBarrel.position.set(0, 0, -0.24); headPivot.add(lensBarrel);
-      const frontGlass = new THREE.Mesh(new THREE.CircleGeometry(0.08, 16), new THREE.MeshBasicMaterial({ color: 0x00f0ff }));
-      frontGlass.position.set(0, 0, -0.431); headPivot.add(frontGlass);
-      const tallyLamp = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
-      tallyLamp.position.set(0, 0.15, -0.28); headPivot.add(tallyLamp);
-      camRig.add(headPivot);
-      return { camRig, headPivot };
-    }
-    const autoCam1 = createStudioRoboticCamera(-2.4, 0.3); miniDiorama.add(autoCam1.camRig);
-    const autoCam2 = createStudioRoboticCamera(2.4, 0.3); miniDiorama.add(autoCam2.camRig);
-
-    function updateCameraAlignment() {
-      if (!gHead) return;
-      const headWorldPos = new THREE.Vector3(); gHead.getWorldPosition(headWorldPos);
-      autoCam1.headPivot.lookAt(headWorldPos); autoCam1.headPivot.rotation.y += Math.PI;
-      autoCam2.headPivot.lookAt(headWorldPos); autoCam2.headPivot.rotation.y += Math.PI;
-    }
-
     miniDiorama.position.set(0, 7.95, -9);
     scene.add(miniDiorama);
-    updateCameraAlignment();
 
     function updateStudioPowerVisuals(isPower) {
       studioSpot.intensity = isPower ? 5.0 : 1.2;
     }
 
-    // ==========================================
-    // 4. WHITE STRETCH LIMOUSINE & DOORMAN
-    // ==========================================
-    const limoGroup = new THREE.Group();
-    limoGroup.position.set(-18, 0.4, 8.5);
-
+    const limoGroup = new THREE.Group(); limoGroup.position.set(-18, 0.4, 8.5);
     const whiteLimoMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.8, roughness: 0.15 });
-    const tintedGlassMat = new THREE.MeshStandardMaterial({ color: 0x050508, roughness: 0.05 });
-    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xecf0f1, metalness: 0.95, roughness: 0.1 });
-
-    const limoBody = new THREE.Mesh(new THREE.BoxGeometry(8.5, 1.4, 2.2), whiteLimoMat);
-    limoBody.position.y = 0.55; limoGroup.add(limoBody);
-
-    const limoCabin = new THREE.Mesh(new THREE.BoxGeometry(5.6, 1.0, 1.95), tintedGlassMat);
-    limoCabin.position.set(-0.4, 1.6, 0); limoGroup.add(limoCabin);
-
-    const chromeTrim = new THREE.Mesh(new THREE.BoxGeometry(8.55, 0.08, 2.22), chromeMat);
-    chromeTrim.position.y = 0.35; limoGroup.add(chromeTrim);
-
-    const headLightL = new THREE.Mesh(new THREE.CircleGeometry(0.18, 12), new THREE.MeshBasicMaterial({ color: 0xfffae6 }));
-    headLightL.rotation.y = Math.PI / 2; headLightL.position.set(4.26, 0.65, 0.7); limoGroup.add(headLightL);
-    const headLightR = new THREE.Mesh(new THREE.CircleGeometry(0.18, 12), new THREE.MeshBasicMaterial({ color: 0xfffae6 }));
-    headLightR.rotation.y = Math.PI / 2; headLightR.position.set(4.26, 0.65, -0.7); limoGroup.add(headLightR);
-
-    // Opening Passenger Door
-    const limoDoorPivot = new THREE.Group();
-    limoDoorPivot.position.set(0.5, 0.55, -1.1);
-    const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.3, 0.1), whiteLimoMat);
-    doorMesh.position.set(0.6, 0, 0); limoDoorPivot.add(doorMesh);
-    const doorWindow = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.6, 0.12), tintedGlassMat);
-    doorWindow.position.set(0.6, 0.55, 0); limoDoorPivot.add(doorWindow);
-    limoGroup.add(limoDoorPivot);
-
-    [-3.0, -1.0, 1.0, 3.0].forEach(wx => {
-      const wL = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.28, 16), chromeMat);
-      wL.rotation.x = Math.PI / 2; wL.position.set(wx, 0.2, 1.15); limoGroup.add(wL);
-      const wR = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.28, 16), chromeMat);
-      wR.rotation.x = Math.PI / 2; wR.position.set(wx, 0.2, -1.15); limoGroup.add(wR);
-    });
+    const limoBody = new THREE.Mesh(new THREE.BoxGeometry(8.5, 1.4, 2.2), whiteLimoMat); limoBody.position.y = 0.55; limoGroup.add(limoBody);
     scene.add(limoGroup);
 
-    // Uniformed Doorman Staff Plushie
     const doormanPlushie = createCutePlushie3D(0x2c3e50, true, 1.0);
-    doormanPlushie.position.set(1.5, 0.26, 6.2);
-    doormanPlushie.rotation.y = Math.PI;
-    scene.add(doormanPlushie);
+    doormanPlushie.position.set(1.5, 0.26, 6.2); scene.add(doormanPlushie);
 
-    // Spectator's Personal Plushie (75% Opacity)
     const myPlushie = createCutePlushie3D(0xff7675, false, 0.75);
-    myPlushie.position.set(0, 0.26, 7.8);
-    myPlushie.visible = false;
-    scene.add(myPlushie);
+    myPlushie.position.set(0, 0.26, 7.8); myPlushie.visible = false; scene.add(myPlushie);
 
     let playerPos = { x: 0, y: 0.26, z: 7.8 };
-    let playerYaw = 0;
-    let playerPitch = -0.12;
-
-    // --- 5. ARRIVAL CUTSCENE SEQUENCER ---
-    let cutsceneActive = false;
-    let cutsceneStartTime = 0;
+    let playerYaw = 0; let playerPitch = -0.12;
+    let cutsceneActive = false; let cutsceneStartTime = 0;
 
     function startLimoArrivalCutscene() {
-      cutsceneActive = true;
-      cutsceneStartTime = performance.now();
+      cutsceneActive = true; cutsceneStartTime = performance.now();
       lensOverlay.style.display = 'block';
-      camera.position.set(3.8, 1.8, 4.0);
-      camera.lookAt(-10, 1.0, 8.5);
+      camera.position.set(3.8, 1.8, 4.0); camera.lookAt(-10, 1.0, 8.5);
     }
 
     function updateCutscene(now) {
       const elapsed = (now - cutsceneStartTime) / 1000;
-
       if (elapsed < 3.0) {
         const t = elapsed / 3.0;
         limoGroup.position.x = -18 + (18 * Math.sin(t * Math.PI / 2));
-        camera.lookAt(limoGroup.position.x, 1.0, 8.5);
-      } else if (elapsed < 4.5) {
-        const t = (elapsed - 3.0) / 1.5;
-        limoDoorPivot.rotation.y = -t * 1.4;
-        doormanPlushie.position.z = 6.2 + (t * 0.9);
-        doormanPlushie.rotation.y = Math.PI - (t * 0.5);
-        camera.position.set(3.2 - (t * 0.5), 1.6, 4.5);
-        camera.lookAt(0.5, 0.8, 7.5);
       } else if (elapsed < 6.5) {
         myPlushie.visible = true;
         const t = (elapsed - 4.5) / 2.0;
         myPlushie.position.set(0, 0.26, 8.2 - (t * 1.6));
         playerPos.z = myPlushie.position.z;
-
         camera.position.lerp(new THREE.Vector3(playerPos.x, playerPos.y + 0.85, playerPos.z + 1.35), 0.08);
         camera.lookAt(playerPos.x, playerPos.y + 0.6, playerPos.z - 4.0);
-      } else if (elapsed < 7.2) {
-        const t = (elapsed - 6.5) / 0.7;
-        limoDoorPivot.rotation.y = -1.4 * (1.0 - t);
       } else {
-        cutsceneActive = false;
-        isSpectatorControlsLocked = false;
+        cutsceneActive = false; isSpectatorControlsLocked = false;
         lensOverlay.style.display = 'none';
         barTop.style.transform = 'translateY(-100%)';
         barBottom.style.transform = 'translateY(100%)';
@@ -1377,26 +888,16 @@
       }
     }
 
-    // ==========================================
-    // 6. PC KEYBOARD (WASD / ARROWS) & ON-SCREEN CONTROLS
-    // ==========================================
     const keysPressed = {};
-
     window.addEventListener('keydown', (e) => {
       if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
       keysPressed[e.code] = true;
     });
-
-    window.addEventListener('keyup', (e) => {
-      keysPressed[e.code] = false;
-    });
+    window.addEventListener('keyup', (e) => { keysPressed[e.code] = false; });
 
     function applyMovementStep(deltaSec) {
       if (isSpectatorControlsLocked) return;
-
-      let moveFwd = 0;
-      let moveRight = 0;
-
+      let moveFwd = 0; let moveRight = 0;
       if (keysPressed['KeyW'] || keysPressed['ArrowUp']) moveFwd += 1;
       if (keysPressed['KeyS'] || keysPressed['ArrowDown']) moveFwd -= 1;
       if (keysPressed['KeyA'] || keysPressed['ArrowLeft']) moveRight -= 1;
@@ -1408,156 +909,73 @@
       if (dpadActiveDirs.has('RIGHT')) moveRight += 1;
 
       if (moveFwd === 0 && moveRight === 0) return;
-
       const len = Math.hypot(moveFwd, moveRight);
-      const speed = 4.2;
-      const dist = (speed * deltaSec) / len;
-
-      const fwdX = -Math.sin(playerYaw);
-      const fwdZ = -Math.cos(playerYaw);
-      const rX = Math.cos(playerYaw);
-      const rZ = -Math.sin(playerYaw);
-
-      playerPos.x += (fwdX * moveFwd + rX * moveRight) * dist;
-      playerPos.z += (fwdZ * moveFwd + rZ * moveRight) * dist;
-
+      const speed = 4.2; const dist = (speed * deltaSec) / len;
+      playerPos.x += (-Math.sin(playerYaw) * moveFwd + Math.cos(playerYaw) * moveRight) * dist;
+      playerPos.z += (-Math.cos(playerYaw) * moveFwd - Math.sin(playerYaw) * moveRight) * dist;
       checkZoneAndElevatorTriggers();
     }
 
     const dpadActiveDirs = new Set();
     function setupDpadButton(btnId, dir) {
       const el = document.getElementById(btnId);
-      const start = (e) => {
-        unlockAudio();
-        e.preventDefault();
-        dpadActiveDirs.add(dir);
-        el.classList.add('pressed');
-      };
-      const stop = () => {
-        dpadActiveDirs.delete(dir);
-        el.classList.remove('pressed');
-      };
-
-      el.addEventListener('mousedown', start);
-      el.addEventListener('mouseup', stop);
-      el.addEventListener('mouseleave', stop);
-      el.addEventListener('touchstart', start, { passive: false });
-      el.addEventListener('touchend', stop, { passive: false });
+      const start = (e) => { unlockAudio(); e.preventDefault(); dpadActiveDirs.add(dir); el.classList.add('pressed'); };
+      const stop = () => { dpadActiveDirs.delete(dir); el.classList.remove('pressed'); };
+      el.addEventListener('mousedown', start); el.addEventListener('mouseup', stop); el.addEventListener('mouseleave', stop);
+      el.addEventListener('touchstart', start, { passive: false }); el.addEventListener('touchend', stop, { passive: false });
     }
-    setupDpadButton('dpad-fwd', 'FORWARD');
-    setupDpadButton('dpad-back', 'BACK');
-    setupDpadButton('dpad-left', 'LEFT');
-    setupDpadButton('dpad-right', 'RIGHT');
+    setupDpadButton('dpad-fwd', 'FORWARD'); setupDpadButton('dpad-back', 'BACK');
+    setupDpadButton('dpad-left', 'LEFT'); setupDpadButton('dpad-right', 'RIGHT');
 
-    // ==========================================
-    // 7. INTERACTIVE VISIBLE-CURSOR LOOK PAD
-    // ==========================================
     const lookPad = document.getElementById('look-pad');
     const lookPadKnob = document.getElementById('look-pad-knob');
-    let isLooking = false;
-    let lookOriginX = 0;
-    let lookOriginY = 0;
+    let isLooking = false; let lookOriginX = 0; let lookOriginY = 0;
 
-    function handleLookStart(clientX, clientY) {
-      unlockAudio();
-      isLooking = true;
-      lookOriginX = clientX;
-      lookOriginY = clientY;
-    }
-
+    function handleLookStart(clientX, clientY) { unlockAudio(); isLooking = true; lookOriginX = clientX; lookOriginY = clientY; }
     function handleLookMove(clientX, clientY) {
       if (!isLooking || isSpectatorControlsLocked) return;
-
-      const deltaX = clientX - lookOriginX;
-      const deltaY = clientY - lookOriginY;
-      lookOriginX = clientX;
-      lookOriginY = clientY;
-
+      const deltaX = clientX - lookOriginX; const deltaY = clientY - lookOriginY;
+      lookOriginX = clientX; lookOriginY = clientY;
       playerYaw -= deltaX * 0.008;
       playerPitch = Math.max(-0.6, Math.min(0.5, playerPitch - deltaY * 0.006));
-
-      const maxOffset = 22;
-      const knobX = Math.max(-maxOffset, Math.min(maxOffset, deltaX * 3));
-      const knobY = Math.max(-maxOffset, Math.min(maxOffset, deltaY * 3));
-      lookPadKnob.style.transform = `translate(${knobX}px, ${knobY}px)`;
     }
-
-    function handleLookEnd() {
-      isLooking = false;
-      lookPadKnob.style.transform = `translate(0px, 0px)`;
-    }
+    function handleLookEnd() { isLooking = false; lookPadKnob.style.transform = `translate(0px, 0px)`; }
 
     lookPad.addEventListener('mousedown', (e) => handleLookStart(e.clientX, e.clientY));
     window.addEventListener('mousemove', (e) => handleLookMove(e.clientX, e.clientY));
     window.addEventListener('mouseup', handleLookEnd);
 
-    lookPad.addEventListener('touchstart', (e) => {
-      if (e.touches.length > 0) handleLookStart(e.touches[0].clientX, e.touches[0].clientY);
-    }, { passive: true });
-
-    window.addEventListener('touchmove', (e) => {
-      if (isLooking && e.touches.length > 0) handleLookMove(e.touches[0].clientX, e.touches[0].clientY);
-    }, { passive: true });
-
-    window.addEventListener('touchend', handleLookEnd);
-
-    // ==========================================
-    // 8. ZONE & ELEVATOR TRIGGERS
-    // ==========================================
     function checkZoneAndElevatorTriggers() {
       if (currentZone === "STREET" && playerPos.z < 4.0) {
         currentZone = "FOYER"; locationPill.textContent = "LOCATION: GRAND FOYER";
       } else if (currentZone === "FOYER" && playerPos.z > 4.5) {
         currentZone = "STREET"; locationPill.textContent = "LOCATION: STREET CURBSIDE";
       }
-
-      if (currentZone === "FOYER" && playerPos.x > 6.0 && Math.abs(playerPos.z - (-5.0)) < 2.0) {
-        interactionPrompt.style.display = 'block';
-        interactionPrompt.textContent = "🚿 RESTROOM: WASHING & DRYING HANDS...";
-        playTone(380, 'sine', 0.15, 0.03);
-      }
-      else if (currentZone === "FOYER" && playerPos.x < -5.5 && Math.abs(playerPos.z - (-5.0)) < 2.0) {
-        interactionPrompt.style.display = 'block';
-        interactionPrompt.textContent = "🍿 CONCESSIONS: FRESH POPCORN & COLD DRINKS READY!";
-      }
-      else if (currentZone === "FOYER" && Math.abs(playerPos.x) < 1.6 && playerPos.z < -10.5) {
+      if (currentZone === "FOYER" && Math.abs(playerPos.x) < 1.6 && playerPos.z < -10.5) {
         interactionPrompt.style.display = 'block';
         interactionPrompt.textContent = "TAKING LIFT TO STUDIO MEZZANINE...";
         isSpectatorControlsLocked = true;
-        playTone(523, 'sine', 0.2, 0.04);
-
         setTimeout(() => {
           currentZone = "STUDIO"; locationPill.textContent = "LOCATION: LIVE STUDIO TABLE";
           interactionPrompt.style.display = 'none';
           playerPos.x = 0; playerPos.y = 8.41; playerPos.z = -4.5; playerYaw = 0;
           isSpectatorControlsLocked = false;
-          playTone(659, 'sine', 0.2, 0.04);
         }, 1200);
-      }
-      else if (currentZone === "STUDIO" && playerPos.z > -2.0) {
+      } else if (currentZone === "STUDIO" && playerPos.z > -2.0) {
         interactionPrompt.style.display = 'block';
         interactionPrompt.textContent = "TAKING LIFT DOWN TO GRAND FOYER...";
         isSpectatorControlsLocked = true;
-        playTone(659, 'sine', 0.2, 0.04);
-
         setTimeout(() => {
           currentZone = "FOYER"; locationPill.textContent = "LOCATION: GRAND FOYER";
           interactionPrompt.style.display = 'none';
           playerPos.x = 0; playerPos.y = 0.26; playerPos.z = -9.0; playerYaw = Math.PI;
           isSpectatorControlsLocked = false;
-          playTone(523, 'sine', 0.2, 0.04);
         }, 1200);
       } else {
         interactionPrompt.style.display = 'none';
       }
     }
 
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-
-    // --- 9. MAIN RENDER LOOP ---
     let prevFrameTime = performance.now();
     let prevBroadcastTime = 0;
 
@@ -1571,21 +989,11 @@
         updateCutscene(time);
       } else {
         applyMovementStep(deltaSec);
-
         myPlushie.position.set(playerPos.x, playerPos.y, playerPos.z);
         myPlushie.rotation.y = playerYaw;
-
         const camDist = 1.35; const camHeight = 0.85;
-        camera.position.set(
-          playerPos.x + Math.sin(playerYaw) * camDist,
-          playerPos.y + camHeight,
-          playerPos.z + Math.cos(playerYaw) * camDist
-        );
-        camera.lookAt(new THREE.Vector3(
-          playerPos.x - Math.sin(playerYaw) * 4.0,
-          playerPos.y + camHeight + playerPitch * 3.0,
-          playerPos.z - Math.cos(playerYaw) * 4.0
-        ));
+        camera.position.set(playerPos.x + Math.sin(playerYaw) * camDist, playerPos.y + camHeight, playerPos.z + Math.cos(playerYaw) * camDist);
+        camera.lookAt(new THREE.Vector3(playerPos.x - Math.sin(playerYaw) * 4.0, playerPos.y + camHeight + playerPitch * 3.0, playerPos.z - Math.cos(playerYaw) * 4.0));
 
         if (time - prevBroadcastTime > 160) {
           prevBroadcastTime = time;
@@ -1595,14 +1003,6 @@
 
       renderGoodyFace(time);
       renderBackstageScreens();
-
-      if (pawn1?.userData?.badgeMesh) pawn1.userData.badgeMesh.quaternion.copy(camera.quaternion);
-      if (pawn2?.userData?.badgeMesh) pawn2.userData.badgeMesh.quaternion.copy(camera.quaternion);
-
-      miniAudience.children.forEach((p) => {
-        p.position.y = p.userData.initialY + Math.sin(time * 0.006 + p.userData.phase) * 0.04;
-      });
-
       renderer.render(scene, camera);
     }
     animate();
