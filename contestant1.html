@@ -308,7 +308,6 @@
 
     <button id="btn-roll-dice" disabled> ROLL DICE (LOCKED)</button>
 
-    <!-- IN-CHAT TRIVIA & CHAT CONTAINER -->
     <div id="chat-container">
       <div id="chat-header">
         <span>COMMUNAL CHAT & TRIVIA [CLOCK: <span id="c1-chat-clock" style="color:#ffda66;">20:00</span>]</span>
@@ -338,22 +337,6 @@
 
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script>
-    function generateDeviceFingerprint() {
-      try {
-        const c = document.createElement('canvas');
-        const gl = c.getContext('webgl') || c.getContext('experimental-webgl');
-        const d = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
-        const rend = d && gl ? gl.getParameter(d.UNMASKED_RENDERER_WEBGL) : 'gpu';
-        const str = `${rend}|${window.screen.width}x${window.screen.height}|${navigator.hardwareConcurrency || 4}`;
-        let h = 0;
-        for (let i = 0; i < str.length; i++) { h = ((h << 5) - h) + str.charCodeAt(i); h |= 0; }
-        return 'hw_' + Math.abs(h).toString(16);
-      } catch (e) {
-        return 'hw_' + Math.random().toString(36).substring(2, 9);
-      }
-    }
-    const deviceHardwareId = generateDeviceFingerprint();
-
     let playerSessionToken = localStorage.getItem("goody_session_token_c1");
     if (!playerSessionToken) {
       playerSessionToken = "s1_" + Math.random().toString(36).substring(2, 9);
@@ -405,9 +388,7 @@
     function setLocalMicEnabled(enabled) {
       if (localStream) {
         const audioTracks = localStream.getAudioTracks();
-        if (audioTracks.length > 0) {
-          audioTracks[0].enabled = enabled;
-        }
+        if (audioTracks.length > 0) audioTracks[0].enabled = enabled;
       }
       micStatusBadge.style.display = enabled ? 'inline-block' : 'none';
     }
@@ -456,9 +437,7 @@
         dataConn.send({
           type: "AUDIENCE_CHAT_MESSAGE",
           author: contestantName || "Alex",
-          text: text,
-          sessionToken: playerSessionToken,
-          hardwareId: deviceHardwareId
+          text: text
         });
       }
     }
@@ -784,7 +763,6 @@
     }
     btnRollDice.addEventListener('click', () => executeRoll());
 
-    // IN-CHAT TRIVIA SYSTEM
     function injectTriviaCardIntoChat(qData, isMyTurn, activeName) {
       currentQuestionData = qData;
       selectedOptionIndex = null;
