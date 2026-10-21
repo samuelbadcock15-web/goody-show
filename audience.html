@@ -42,7 +42,7 @@
     }
     .btn-join:active { transform: scale(0.98); }
 
-    /* LENS CUTSCENE */
+    /* LENS CUTSCENE OVERLAY */
     #lens-overlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       pointer-events: none; z-index: 50; display: none;
@@ -59,7 +59,7 @@
     .rec-indicator { color: #ff3838; font-weight: bold; animation: blinkRec 1s infinite alternate; }
     @keyframes blinkRec { from { opacity: 1; } to { opacity: 0.2; } }
 
-    /* HUD */
+    /* IN-GAME HUD */
     #spectator-ui {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       display: none; flex-direction: column; justify-content: space-between;
@@ -72,6 +72,7 @@
     }
     #location-pill { color: #39ff14; font-weight: bold; }
 
+    /* PROMPTS */
     #interaction-prompt {
       position: absolute; top: 20%; left: 50%; transform: translateX(-50%);
       background: rgba(18, 7, 36, 0.94); border: 2px solid #fdcb6e; border-radius: 10px;
@@ -87,7 +88,7 @@
       display: none; pointer-events: auto; box-shadow: 0 0 16px rgba(0, 240, 255, 0.35);
     }
     #stage-q-title { font-size: 0.75rem; color: #ffda66; font-weight: bold; font-family: monospace; }
-    #stage-feedback-tag { font-size: 0.82rem; font-weight: 900; font-family: monospace; margin-top: 2px; }
+    #stage-feedback-tag { font-size: 0.82rem; font-weight: 900; font-family: monospace; margin: 3px 0; }
     #stage-q-text { font-size: 0.85rem; color: #ffffff; margin: 4px 0 8px 0; font-weight: 600; line-height: 1.3; }
     
     .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
@@ -156,9 +157,10 @@
       align-items: center; position: relative; box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
       touch-action: none;
     }
+    #look-pad:active { cursor: grabbing; border-color: #ffda66; }
     #look-pad-knob {
       width: 32px; height: 32px; border-radius: 50%; background: #00f0ff;
-      opacity: 0.85; pointer-events: none;
+      opacity: 0.85; pointer-events: none; transition: transform 0.05s linear;
       box-shadow: 0 0 8px #00f0ff;
     }
     #look-pad-label { font-size: 0.62rem; font-family: monospace; color: #00f0ff; margin-top: 4px; pointer-events: none; }
@@ -172,7 +174,7 @@
       <div class="badge-audience">VIP PASS</div>
       <h2 style="color: #ffda66; font-size: 1.35rem; margin-bottom: 8px;">The Goody Tonight Show</h2>
       <p style="color: #ebdcf9; font-size: 0.85rem; margin-bottom: 16px;">
-        Step out of the stretch limo, explore the studio foyer, and take the express lift to play along live from the stands!
+        Step out of the white stretch limo onto the red carpet, visit the refreshments bar & restrooms, and ride the elevator to the live taping!
       </p>
       <input type="text" id="audience-name-input" class="text-field" maxlength="14" placeholder="Your Name" autocomplete="off" />
       <button class="btn-join" id="btn-join-studio">Arrive in Limousine</button>
@@ -376,6 +378,7 @@
     let stageSelectedOption = null;
     let stageOptionStatus = null;
     let stageTimerSeconds = 0;
+    let timerInterval = null;
 
     // Audience Play-Along State
     let audienceSelectedOption = null;
@@ -441,7 +444,7 @@
             if (data.p1Name) { p1ContestantName = data.p1Name; updatePawnNameBadge(pawn1, data.p1Name); }
             if (data.p2Name) { p2ContestantName = data.p2Name; updatePawnNameBadge(pawn2, data.p2Name); }
             
-            // Sync dice rolls and rolling animations
+            // Sync dice rolls and animations
             p1RollVal = data.p1Roll !== undefined ? data.p1Roll : p1RollVal;
             p2RollVal = data.p2Roll !== undefined ? data.p2Roll : p2RollVal;
             isDiceRollingP1 = Boolean(data.p1Rolling);
@@ -463,7 +466,18 @@
             stageOptionStatus = null;
             stageTimerSeconds = 30;
 
-            // Reset home play-along
+            // Start 3D Studio countdown timer
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+              if (stageTimerSeconds > 0) {
+                stageTimerSeconds--;
+                renderStageQuestionBoard();
+              } else {
+                clearInterval(timerInterval);
+              }
+            }, 1000);
+
+            // Reset home play-along state
             audienceSelectedOption = null;
             audienceLocked = false;
             stageFeedbackTag.textContent = "";
@@ -476,6 +490,7 @@
 
             if (data.question.options && data.question.options.length === 4) {
               data.question.options.forEach((opt, idx) => {
+                audOptBoxes[idx].style.display = 'block';
                 audOptBoxes[idx].textContent = `${["A", "B", "C", "D"][idx]}) ${opt}`;
                 audOptBoxes[idx].className = 'opt-btn';
                 audOptBoxes[idx].disabled = false;
@@ -486,6 +501,7 @@
             stageOptionStatus = 'selected';
             renderStageQuestionBoard();
           } else if (data.type === 'EVALUATION_RESULT') {
+            if (timerInterval) clearInterval(timerInterval);
             audienceLocked = true;
             stageOptionStatus = data.isCorrect ? 'correct' : 'wrong';
             stageSelectedOption = data.chosenAnswer;
@@ -493,7 +509,7 @@
 
             renderStageQuestionBoard();
 
-            // Evaluate Audience Guess
+            // Reveal correct and wrong choices on viewer screen
             if (activeQuestion && activeQuestion.options) {
               activeQuestion.options.forEach((opt, idx) => {
                 if (actualCorrect && opt === actualCorrect) {
@@ -504,6 +520,7 @@
               });
             }
 
+            // Provide Instant Home-Play Feedback
             if (audienceSelectedOption) {
               const userGotItRight = actualCorrect ? (audienceSelectedOption === actualCorrect) : (data.isCorrect && audienceSelectedOption === data.chosenAnswer);
               if (userGotItRight) {
@@ -517,7 +534,7 @@
               }
             } else {
               stageFeedbackTag.style.color = '#ffda66';
-              stageFeedbackTag.textContent = 'YOU DID NOT GUESS IN TIME!';
+              stageFeedbackTag.textContent = 'TIME UP! YOU DID NOT LOCK IN A GUESS.';
             }
 
             setTimeout(() => {
@@ -695,7 +712,7 @@
     });
     groundLevelGroup.add(redCarpetGroup);
 
-    // Elevator & Restroom
+    // Elevator
     const elevatorGroup = new THREE.Group(); elevatorGroup.position.set(0, 0.25, -12.5);
     const elevOuter = new THREE.Mesh(new THREE.BoxGeometry(4.5, 4.5, 3.5), new THREE.MeshStandardMaterial({ color: 0x221338 }));
     elevOuter.position.y = 2.25; elevatorGroup.add(elevOuter);
@@ -838,9 +855,11 @@
         qBoardCtx.fillStyle = '#ffda66'; qBoardCtx.font = 'bold 18px monospace'; qBoardCtx.textAlign = 'left';
         qBoardCtx.fillText(` ${activeQuestion.country.toUpperCase()} [${p1ContestantName.toUpperCase()}]`, 20, 36);
 
-        // Studio Screen 30s Countdown Timer
-        qBoardCtx.fillStyle = '#ff7675'; qBoardCtx.font = 'bold 20px monospace'; qBoardCtx.textAlign = 'right';
-        qBoardCtx.fillText(` 30s`, 492, 36);
+        // 3D Studio Board displays countdown timer
+        if (stageTimerSeconds > 0) {
+          qBoardCtx.fillStyle = '#ff7675'; qBoardCtx.font = 'bold 20px monospace'; qBoardCtx.textAlign = 'right';
+          qBoardCtx.fillText(` ${stageTimerSeconds}s`, 492, 36);
+        }
 
         qBoardCtx.fillStyle = '#ffffff'; qBoardCtx.font = '15px sans-serif'; qBoardCtx.textAlign = 'left';
         const words = (activeQuestion.q || activeQuestion.text || "").split(' ');
@@ -853,7 +872,7 @@
         }
         qBoardCtx.fillText(line, 20, y);
 
-        // Render Options A, B, C, D on 3D Studio Board
+        // Options A, B, C, D on 3D Studio Stage Screen
         if (activeQuestion.options && activeQuestion.options.length === 4) {
           const letters = ["A", "B", "C", "D"];
           activeQuestion.options.forEach((opt, idx) => {
@@ -1007,7 +1026,7 @@
       playerPos.x += (-Math.sin(playerYaw) * moveFwd + Math.cos(playerYaw) * moveRight) * speed;
       playerPos.z += (-Math.cos(playerYaw) * moveFwd - Math.sin(playerYaw) * moveRight) * speed;
 
-      // Lift Trigger
+      // Lift Trigger to Studio
       if (currentZone === "FOYER" && Math.abs(playerPos.x) < 1.6 && playerPos.z < -10.5) {
         playerPos.x = 0; playerPos.y = 8.41; playerPos.z = -4.5;
         currentZone = "STUDIO"; locationPill.textContent = "LOCATION: LIVE STUDIO TABLE";
