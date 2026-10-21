@@ -492,6 +492,7 @@
       }
     }
 
+    // Broadcasts full board state including active dice rolls to Audience and Contestants
     function broadcastBoardState() {
       connectedDataConns.forEach(c => {
         if (c.open) {
@@ -501,7 +502,11 @@
             p1Name: contestantNames["goody-contestant-1"] || "Jake",
             p2Name: contestantNames["goody-contestant-2"] || "June",
             p1Index: p1Index,
-            p2Index: p2Index
+            p2Index: p2Index,
+            p1Roll: p1RollVal,
+            p2Roll: p2RollVal,
+            p1Rolling: isDiceRollingP1,
+            p2Rolling: isDiceRollingP2
           });
         }
       });
@@ -939,6 +944,7 @@
       const isGoodyP2 = goodyPlayerSlot === "goody-contestant-2";
       if (isGoodyP2) isDiceRollingP2 = true;
       else isDiceRollingP1 = true;
+      broadcastBoardState();
 
       const rollVal = Math.floor(Math.random() * 6) + 1;
       setTimeout(() => {
@@ -1304,13 +1310,18 @@
               const secs = Math.max(0, (matchTimerSeconds % 60)).toString().padStart(2, '0');
               conn.send({ type: "SYNC_MATCH_TIMER", timeStr: `${mins}:${secs}`, secondsLeft: matchTimerSeconds });
 
+              // Send complete synchronized board and dice state
               conn.send({
                 type: "SYNC_BOARD_STATE",
                 studioPower: studioPower,
                 p1Name: contestantNames["goody-contestant-1"] || "Jake",
                 p2Name: contestantNames["goody-contestant-2"] || "June",
                 p1Index: p1Index,
-                p2Index: p2Index
+                p2Index: p2Index,
+                p1Roll: p1RollVal,
+                p2Roll: p2RollVal,
+                p1Rolling: isDiceRollingP1,
+                p2Rolling: isDiceRollingP2
               });
 
               if (activeQuestion) {
@@ -1628,6 +1639,7 @@
       connectedDataConns.forEach(c => {
         if (c.open) c.send({ type: "START_DICE_COUNTDOWN" });
       });
+      broadcastBoardState();
 
       if (diceInterval) clearInterval(diceInterval);
       diceInterval = setInterval(() => {
@@ -1651,6 +1663,7 @@
 
       broadcastMicState("goody-contestant-1", false);
       broadcastMicState("goody-contestant-2", false);
+      broadcastBoardState();
 
       if (diceInterval) clearInterval(diceInterval);
       diceInterval = setInterval(() => {
@@ -1677,6 +1690,7 @@
           p1RollVal = roll; isDiceRollingP1 = false;
         }
         playTone(587, 'sine', 0.15, 0.08);
+        broadcastBoardState();
 
         if (p1RollVal !== null && p2RollVal !== null) {
           clearInterval(diceInterval);
@@ -1686,6 +1700,7 @@
         if (contestant !== activePlayer || hasPlayerRolledThisTurn || isPawnMoving) {
           if (contestant === "goody-contestant-2") isDiceRollingP2 = false;
           else isDiceRollingP1 = false;
+          broadcastBoardState();
           return;
         }
         hasPlayerRolledThisTurn = true;
@@ -1700,6 +1715,7 @@
           p1RollVal = roll; isDiceRollingP1 = false;
         }
         playTone(587, 'sine', 0.15, 0.08);
+        broadcastBoardState();
 
         const speech = contestant === goodyPlayerSlot
           ? `I rolled a ${roll}! Moving forwards ${roll} spaces!`
@@ -1743,6 +1759,7 @@
       if (p2RollVal === null) p2RollVal = Math.floor(Math.random() * 6) + 1;
       isDiceRollingP1 = false;
       isDiceRollingP2 = false;
+      broadcastBoardState();
 
       if (p1RollVal === p2RollVal) {
         const tieVal = p1RollVal;
@@ -1938,6 +1955,7 @@
       }, 1000);
     }
 
+    // Sends evaluation result with true correctAnswer key to enable audience play-along
     function evaluateAnswer(contestant, chosen) {
       if (questionInterval) clearInterval(questionInterval);
       isQuestionTimerActive = false;
@@ -1958,6 +1976,7 @@
           type: "EVALUATION_RESULT",
           forContestant: contestant,
           chosenAnswer: chosen,
+          correctAnswer: activeQuestion.ans,
           isCorrect: isCorrect,
           recap: activeQuestion.recap,
           country: activeQuestion.country
@@ -2010,6 +2029,7 @@
           type: "EVALUATION_RESULT",
           forContestant: contestant,
           chosenAnswer: null,
+          correctAnswer: activeQuestion.ans,
           isCorrect: false,
           recap: activeQuestion.recap,
           country: activeQuestion.country
@@ -2085,6 +2105,7 @@
       isQuestionTimerActive = false;
       questionTimer = 0;
       renderStageQuestionBoard();
+      broadcastBoardState();
 
       if (activePlayer === goodyPlayerSlot) {
         speakGoody(`It is my turn! Goody is rolling the dice!`, () => {
@@ -2454,11 +2475,19 @@
       }
       ctx.restore();
 
-      ctx.strokeStyle = '#e6c875'; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(128, 128, 123, 0, Math.PI * 2); ctx.stroke();
-      const tex = new THREE.CanvasTexture(c); tex.needsUpdate = true; return tex;
+      ctx.strokeStyle = '#e6c875';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.arc(128, 128, 123, 0, Math.PI * 2);
+      ctx.stroke();
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.needsUpdate = true;
+      return tex;
     }
 
     const flagTextures = COUNTRIES.map(cName => createCountryFlagTexture(cName));
+
     const boardTileCoords = [];
     const spiralCenterZ = 1.8;
     const totalTiles = 32;
@@ -2488,22 +2517,35 @@
       if (!pawnGroup || !pawnGroup.userData || !pawnGroup.userData.badgeCanvas) return;
       const canvas = pawnGroup.userData.badgeCanvas;
       const ctx = canvas.getContext('2d');
-      const w = canvas.width; const h = canvas.height;
+      const w = canvas.width;
+      const h = canvas.height;
       const tagColor = pawnGroup.userData.tagColor || '#00d2d3';
 
       ctx.clearRect(0, 0, w, h);
 
       const r = 24;
-      ctx.fillStyle = '#0a0314'; ctx.strokeStyle = tagColor; ctx.lineWidth = 8;
+      ctx.fillStyle = '#0a0314';
+      ctx.strokeStyle = tagColor;
+      ctx.lineWidth = 8;
       ctx.beginPath();
-      ctx.moveTo(r, 4); ctx.lineTo(w - r, 4); ctx.quadraticCurveTo(w - 4, 4, w - 4, r);
-      ctx.lineTo(w - 4, h - r); ctx.quadraticCurveTo(w - 4, h - 4, w - r, h - 4);
-      ctx.lineTo(r, h - 4); ctx.quadraticCurveTo(4, h - 4, 4, h - r);
-      ctx.lineTo(4, r); ctx.quadraticCurveTo(4, 4, r, 4);
-      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.moveTo(r, 4);
+      ctx.lineTo(w - r, 4);
+      ctx.quadraticCurveTo(w - 4, 4, w - 4, r);
+      ctx.lineTo(w - 4, h - r);
+      ctx.quadraticCurveTo(w - 4, h - 4, w - r, h - 4);
+      ctx.lineTo(r, h - 4);
+      ctx.quadraticCurveTo(4, h - 4, 4, h - r);
+      ctx.lineTo(4, r);
+      ctx.quadraticCurveTo(4, 4, r, 4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
 
-      ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
       const cleanName = (displayName || "PLAYER").toUpperCase().trim();
+      
       let fontSize = 48;
       if (cleanName.length > 8) fontSize = 36;
       if (cleanName.length > 12) fontSize = 28;
@@ -2527,20 +2569,29 @@
       head.position.y = 0.22; pawn.add(head);
 
       const bCanvas = document.createElement('canvas');
-      bCanvas.width = 256; bCanvas.height = 96;
+      bCanvas.width = 256;
+      bCanvas.height = 96;
       const bTex = new THREE.CanvasTexture(bCanvas);
 
       const badgeMat = new THREE.MeshBasicMaterial({
-        map: bTex, transparent: true, side: THREE.DoubleSide, depthWrite: false
+        map: bTex,
+        transparent: true,
+        side: THREE.DoubleSide,
+        depthWrite: false
       });
+
       const badgeMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.13), badgeMat);
       badgeMesh.position.set(0, 0.35, 0);
       pawn.add(badgeMesh);
 
       const hexStr = '#' + colorHex.toString(16).padStart(6, '0');
       pawn.userData = {
-        badgeCanvas: bCanvas, badgeTexture: bTex, badgeMesh: badgeMesh, tagColor: hexStr
+        badgeCanvas: bCanvas,
+        badgeTexture: bTex,
+        badgeMesh: badgeMesh,
+        tagColor: hexStr
       };
+
       updatePawnNameBadge(pawn, initialName);
       return pawn;
     }
@@ -3016,7 +3067,9 @@
 
     const miniGoody = new THREE.Group();
     const silverMetalMat = new THREE.MeshStandardMaterial({
-      color: 0xcccccc, metalness: 0.95, roughness: 0.15
+      color: 0xcccccc,
+      metalness: 0.95,
+      roughness: 0.15
     });
 
     const gPodium = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 0.6, 20), new THREE.MeshStandardMaterial({ color: 0x2b154a }));
@@ -3055,28 +3108,43 @@
 
       gAntOrb.material.color.setHex(isGoodySpeaking ? 0x00f0ff : 0x39ff14);
 
-      fctx.fillStyle = '#39ff14'; fctx.strokeStyle = '#39ff14'; fctx.lineWidth = 4;
-      fctx.lineCap = 'round'; fctx.lineJoin = 'round';
+      fctx.fillStyle = '#39ff14';
+      fctx.strokeStyle = '#39ff14';
+      fctx.lineWidth = 4;
+      fctx.lineCap = 'round';
+      fctx.lineJoin = 'round';
 
       fctx.beginPath();
-      fctx.moveTo(28, 56); fctx.lineTo(44, 38); fctx.lineTo(60, 56); fctx.stroke();
+      fctx.moveTo(28, 56);
+      fctx.lineTo(44, 38);
+      fctx.lineTo(60, 56);
+      fctx.stroke();
+
       fctx.beginPath();
-      fctx.moveTo(68, 56); fctx.lineTo(84, 38); fctx.lineTo(100, 56); fctx.stroke();
+      fctx.moveTo(68, 56);
+      fctx.lineTo(84, 38);
+      fctx.lineTo(100, 56);
+      fctx.stroke();
 
       if (isGoodySpeaking) {
         const mouthOpen = (Math.sin(time * 0.022) + 1.0) * 0.5;
         const mouthHeight = 6 + (mouthOpen * 20);
         const mouthWidth = 40 + (mouthOpen * 6);
 
-        fctx.fillStyle = '#220033'; fctx.strokeStyle = '#39ff14'; fctx.lineWidth = 3.5;
+        fctx.fillStyle = '#220033';
+        fctx.strokeStyle = '#39ff14';
+        fctx.lineWidth = 3.5;
+
         fctx.beginPath();
         fctx.ellipse(64, 88, mouthWidth / 2, mouthHeight / 2, 0, 0, Math.PI * 2);
-        fctx.fill(); fctx.stroke();
+        fctx.fill();
+        fctx.stroke();
 
         fctx.fillStyle = '#ffffff';
         fctx.fillRect(54, 88 - (mouthHeight / 2) + 2, 20, Math.min(5, mouthHeight / 2));
       } else {
-        fctx.strokeStyle = '#39ff14'; fctx.lineWidth = 5;
+        fctx.strokeStyle = '#39ff14';
+        fctx.lineWidth = 5;
         fctx.beginPath();
         fctx.arc(64, 78, 16, 0.2, Math.PI - 0.2, false);
         fctx.stroke();
@@ -3136,11 +3204,13 @@
     });
 
     function syncContestantCameras() {
-      const dist = 1.8; const height = 1.2;
+      const dist = 1.8;
+      const height = 1.2;
 
       if (playerPlushie1) {
         const rot = contestantRotations["goody-contestant-1"];
         playerPlushie1.rotation.y = rot.yaw;
+
         const worldX = playerPlushie1.position.x;
         const worldY = playerPlushie1.position.y + 3.95;
         const worldZ = playerPlushie1.position.z - 9.0;
@@ -3150,16 +3220,19 @@
           worldY + height,
           worldZ + Math.cos(rot.yaw) * dist
         );
-        camJake.lookAt(new THREE.Vector3(
+
+        const lookTarget = new THREE.Vector3(
           worldX - Math.sin(rot.yaw) * 4.0,
           worldY + 0.5 + rot.pitch * 3.0,
           worldZ - Math.cos(rot.yaw) * 4.0
-        ));
+        );
+        camJake.lookAt(lookTarget);
       }
 
       if (playerPlushie2) {
         const rot = contestantRotations["goody-contestant-2"];
         playerPlushie2.rotation.y = rot.yaw;
+
         const worldX = playerPlushie2.position.x;
         const worldY = playerPlushie2.position.y + 3.95;
         const worldZ = playerPlushie2.position.z - 9.0;
@@ -3169,11 +3242,13 @@
           worldY + height,
           worldZ + Math.cos(rot.yaw) * dist
         );
-        camJune.lookAt(new THREE.Vector3(
+
+        const lookTarget = new THREE.Vector3(
           worldX - Math.sin(rot.yaw) * 4.0,
           worldY + 0.5 + rot.pitch * 3.0,
           worldZ - Math.cos(rot.yaw) * 4.0
-        ));
+        );
+        camJune.lookAt(lookTarget);
       }
     }
 
@@ -3214,6 +3289,7 @@
       }
 
       prevTime = time;
+
       syncContestantCameras();
 
       if (playerPlushie1) playerPlushie1.visible = false;
