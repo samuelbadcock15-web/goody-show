@@ -97,7 +97,7 @@
       transition: background 0.2s, border-color 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .aud-opt-btn:hover { background: #6c5ce7; border-color: #00f0ff; }
-    .aud-opt-btn.selected { background: #0984e3; border-color: #00f0ff; }
+    .aud-opt-btn.selected { background: #34495e; border-color: #f1c40f; }
     .aud-opt-btn.correct { background: #00b894 !important; border-color: #55efc4 !important; }
     .aud-opt-btn.wrong { background: #d63031 !important; border-color: #ff7675 !important; }
     #aud-status-msg { margin-top: 6px; font-size: 0.74rem; font-family: monospace; color: #39ff14; font-weight: bold; }
@@ -203,11 +203,11 @@
 
     <div id="interaction-prompt">PRESS [ W / ▲ ] TO TAKE ELEVATOR</div>
 
-    <!-- AUDIENCE PLAY-ALONG TRIVIA PANEL -->
+    <!-- AUDIENCE PLAY-ALONG TRIVIA HUD -->
     <div id="audience-trivia-hud">
       <div id="aud-q-header">
-        <span id="aud-q-country">COUNTRY TRIVIA</span>
-        <span id="aud-q-timer">PLAY ALONG (35s)</span>
+        <span id="aud-q-country">HOME PLAY-ALONG</span>
+        <span>AT-HOME TRIVIA</span>
       </div>
       <div id="aud-q-text">Waiting for question from Goody...</div>
       <div class="aud-options-grid" id="aud-options-grid">
@@ -216,7 +216,7 @@
         <button class="aud-opt-btn" id="aud-btn-2" onclick="submitAudienceAnswer(2)">C) ...</button>
         <button class="aud-opt-btn" id="aud-btn-3" onclick="submitAudienceAnswer(3)">D) ...</button>
       </div>
-      <div id="aud-status-msg">Tap an option to lock in your answer at home!</div>
+      <div id="aud-status-msg">Select your answer. Results reveal when the studio decides!</div>
     </div>
 
     <div style="display:flex; flex-direction:column; align-items:center; width:100%;">
@@ -344,7 +344,6 @@
     // Audience Trivia Elements
     const audienceTriviaHud = document.getElementById('audience-trivia-hud');
     const audQCountry = document.getElementById('aud-q-country');
-    const audQTimer = document.getElementById('aud-q-timer');
     const audQText = document.getElementById('aud-q-text');
     const audStatusMsg = document.getElementById('aud-status-msg');
     const audOptionBtns = [
@@ -379,13 +378,14 @@
     let p2ContestantCity = "Nottingham";
     let p1RollVal = null;
     let p2RollVal = null;
+    let isDiceRollingP1 = false;
+    let isDiceRollingP2 = false;
     let p1Index = 0;
     let p2Index = 0;
 
     let activeQuestion = null;
     let activeRecap = null;
     let audienceSelectedOption = null;
-    let audienceTriviaTimer = null;
     let audienceHasAnswered = false;
 
     const videoJake = document.createElement('video');
@@ -452,10 +452,9 @@
             // TRIGGER AUDIENCE PLAY-ALONG EARLY
             startAudiencePlayAlong(data.question, data.activeContestantName);
           } else if (data.type === 'OPPONENT_ANSWERED') {
-            // Show contestant selection on 3D board
+            // Contestant choice received
             renderStageQuestionBoard();
           } else if (data.type === 'EVALUATION_RESULT') {
-            if (audienceTriviaTimer) clearInterval(audienceTriviaTimer);
             handleAudienceEvaluation(data);
 
             setTimeout(() => {
@@ -508,82 +507,64 @@
 
     function startAudiencePlayAlong(qData, contestantName) {
       audienceTriviaHud.style.display = 'block';
-      audQCountry.textContent = `TRIVIA: ${qData.country.toUpperCase()}`;
+      audQCountry.textContent = `HOME TRIVIA: ${qData.country.toUpperCase()}`;
       audQText.textContent = qData.text || qData.q;
-      audStatusMsg.textContent = `Contestant ${contestantName} is answering... Play along at home!`;
+      audStatusMsg.textContent = `Contestant (${contestantName}) is answering... Play along at home!`;
 
       audOptionBtns.forEach((btn, idx) => {
         btn.textContent = `${["A", "B", "C", "D"][idx]}) ${qData.options[idx]}`;
         btn.className = 'aud-opt-btn';
         btn.disabled = false;
       });
-
-      let timeLeft = 35; // Extra time for audience
-      audQTimer.textContent = `TIME: ${timeLeft}s`;
-
-      if (audienceTriviaTimer) clearInterval(audienceTriviaTimer);
-      audienceTriviaTimer = setInterval(() => {
-        timeLeft--;
-        if (timeLeft > 0) {
-          audQTimer.textContent = `TIME: ${timeLeft}s`;
-        } else {
-          clearInterval(audienceTriviaTimer);
-          audQTimer.textContent = "TIME OUT!";
-          if (!audienceHasAnswered) {
-            audStatusMsg.textContent = "Time expired at home!";
-            audOptionBtns.forEach(b => b.disabled = true);
-          }
-        }
-      }, 1000);
     }
 
     function submitAudienceAnswer(idx) {
       if (audienceHasAnswered || !activeQuestion) return;
       audienceHasAnswered = true;
       audienceSelectedOption = idx;
-      if (audienceTriviaTimer) clearInterval(audienceTriviaTimer);
 
       audOptionBtns.forEach((b, i) => {
-        b.disabled = true;
         if (i === idx) b.classList.add('selected');
       });
 
-      const chosenVal = activeQuestion.options[idx];
-      const isCorrect = chosenVal === activeQuestion.ans;
-
-      if (isCorrect) {
-        audOptionBtns[idx].className = 'aud-opt-btn correct';
-        audStatusMsg.textContent = "🎉 Spot on! You got it right at home!";
-        playTone(587, 'sine', 0.2, 0.05);
-      } else {
-        audOptionBtns[idx].className = 'aud-opt-btn wrong';
-        // Highlight correct one
-        const correctIdx = activeQuestion.options.indexOf(activeQuestion.ans);
-        if (correctIdx !== -1) audOptionBtns[correctIdx].classList.add('correct');
-        audStatusMsg.textContent = `❌ Incorrect! The correct answer was: ${activeQuestion.ans}`;
-        playTone(220, 'triangle', 0.2, 0.05);
-      }
+      audStatusMsg.textContent = "Answer locked in! Waiting for studio reveal...";
+      renderStageQuestionBoard();
     }
 
     function handleAudienceEvaluation(data) {
-      if (audienceTriviaTimer) clearInterval(audienceTriviaTimer);
-      audOptionBtns.forEach(b => b.disabled = true);
+      if (!activeQuestion) return;
 
-      const correctIdx = activeQuestion ? activeQuestion.options.indexOf(activeQuestion.ans) : -1;
-      if (correctIdx !== -1) audOptionBtns[correctIdx].classList.add('correct');
+      const correctAnsText = activeQuestion.ans;
+      const correctIdx = activeQuestion.options.indexOf(correctAnsText);
 
+      // Light up audience buttons based on actual correct answer
+      audOptionBtns.forEach((b, i) => {
+        b.disabled = true;
+        if (i === correctIdx) {
+          b.classList.add('correct');
+        } else if (i === audienceSelectedOption && i !== correctIdx) {
+          b.classList.add('wrong');
+        }
+      });
+
+      const userGotItRight = (audienceSelectedOption !== null && activeQuestion.options[audienceSelectedOption] === correctAnsText);
       const contestantCorrect = data.isCorrect;
       const contestantChoice = data.chosenAnswer;
 
-      if (!audienceHasAnswered) {
-        audStatusMsg.textContent = `Contestant answered: "${contestantChoice}" (${contestantCorrect ? "Correct" : "Incorrect"})`;
+      if (audienceSelectedOption === null) {
+        audStatusMsg.textContent = `Time up! Contestant answered "${contestantChoice}" (${contestantCorrect ? "Correct" : "Incorrect"}).`;
+      } else if (userGotItRight) {
+        audStatusMsg.textContent = `🎉 Well done! You were CORRECT! Contestant was ${contestantCorrect ? "correct" : "incorrect"}.`;
+        playTone(587, 'sine', 0.2, 0.05);
       } else {
-        audStatusMsg.textContent += ` | Contestant answered: "${contestantChoice}"`;
+        audStatusMsg.textContent = `❌ Unlucky! The correct answer was "${correctAnsText}". Contestant was ${contestantCorrect ? "correct" : "incorrect"}.`;
+        playTone(220, 'triangle', 0.2, 0.05);
       }
 
       setTimeout(() => {
         audienceTriviaHud.style.display = 'none';
-      }, 5000);
+        audienceSelectedOption = null;
+      }, 5500);
     }
 
     function broadcastSpectatorMovement() {
@@ -950,7 +931,7 @@
       hopNextStep();
     }
 
-    // 3D Studio Question Board (Left Screen)
+    // 3D Studio Question Board (Left Screen) - Renders active question & options accurately
     const qBoardCanvas = document.createElement('canvas'); qBoardCanvas.width = 512; qBoardCanvas.height = 384;
     const qBoardCtx = qBoardCanvas.getContext('2d');
     const qBoardTex = new THREE.CanvasTexture(qBoardCanvas);
@@ -992,11 +973,10 @@
         const letters = ["A", "B", "C", "D"];
         activeQuestion.options.forEach((opt, idx) => {
           const optY = 210 + (idx * 40);
-          const isSelected = audienceSelectedOption === idx;
-          qBoardCtx.fillStyle = isSelected ? '#6c5ce7' : '#220f3d';
-          qBoardCtx.strokeStyle = isSelected ? '#fdcb6e' : '#a29bfe';
+          qBoardCtx.fillStyle = '#220f3d';
+          qBoardCtx.strokeStyle = '#a29bfe';
           qBoardCtx.fillRect(20, optY - 24, 472, 32);
-          qBoardCtx.lineWidth = isSelected ? 4 : 2;
+          qBoardCtx.lineWidth = 2;
           qBoardCtx.strokeRect(20, optY - 24, 472, 32);
 
           qBoardCtx.fillStyle = '#ffda66';
@@ -1164,7 +1144,7 @@
       if (value === 6) { dot(0.25, 0.5); dot(0.75, 0.5); }
     }
 
-    // Backstage Screens (Renders Live Cameras with Dice)
+    // Backstage Screens (Renders Live Cameras with Functional Dice)
     const studioScreenCanvas = document.createElement('canvas'); studioScreenCanvas.width = 512; studioScreenCanvas.height = 256;
     const sScreenCtx = studioScreenCanvas.getContext('2d');
     const studioScreenTex = new THREE.CanvasTexture(studioScreenCanvas);
@@ -1201,8 +1181,8 @@
 
     function renderBackstageScreens() {
       sScreenCtx.fillStyle = '#060210'; sScreenCtx.fillRect(0, 0, 512, 256);
-      drawScreenFeed(sScreenCtx, 15, 20, 225, 215, p1ContestantName, p1ContestantCity, hasLiveJakeStream, videoJake, true, p1RollVal, false);
-      drawScreenFeed(sScreenCtx, 272, 20, 225, 215, p2ContestantName, p2ContestantCity, hasLiveJuneStream, videoJune, false, p2RollVal, false);
+      drawScreenFeed(sScreenCtx, 15, 20, 225, 215, p1ContestantName, p1ContestantCity, hasLiveJakeStream, videoJake, true, p1RollVal, isDiceRollingP1);
+      drawScreenFeed(sScreenCtx, 272, 20, 225, 215, p2ContestantName, p2ContestantCity, hasLiveJuneStream, videoJune, false, p2RollVal, isDiceRollingP2);
       studioScreenTex.needsUpdate = true;
     }
     const studioBackScreenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshBasicMaterial({ map: studioScreenTex }));
