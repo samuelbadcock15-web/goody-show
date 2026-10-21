@@ -1,1017 +1,2033 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
   <meta charset="UTF-8">
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
   <title>Goody Tonight Show - Contestant 1</title>
+
   <style>
+
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
-    
+
+   
+
     html, body {
+
       width: 100%;
+
       height: 100%;
+
       height: 100dvh;
+
       overflow: hidden;
+
       background: #090314;
+
       color: #fff;
+
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
     }
+
+
 
     body {
+
       display: flex;
+
       flex-direction: column;
+
       align-items: center;
+
       padding: 6px;
+
     }
+
+
 
     #setup-card {
+
       width: 100%; max-width: 420px; background: #1b0933; border: 2px solid #0984e3;
+
       border-radius: 16px; padding: 20px; text-align: center; margin-top: 14px;
+
       box-shadow: 0 0 20px rgba(9, 132, 227, 0.35);
+
     }
+
     .badge-podium {
+
       display: inline-block;
+
       padding: 4px 10px;
+
       background: #0984e3;
+
       color: #fff;
+
       font-family: monospace;
+
       font-weight: 900;
+
       font-size: 0.8rem;
+
       border-radius: 6px;
+
       margin-bottom: 10px;
+
       letter-spacing: 1px;
+
     }
+
     .input-label {
+
       font-size: 0.72rem;
+
       font-family: monospace;
+
       color: #ffda66;
+
       text-transform: uppercase;
+
       letter-spacing: 1px;
+
       margin-bottom: 3px;
+
       display: block;
+
       text-align: left;
+
     }
+
     .form-group {
+
       margin-bottom: 10px;
+
       text-align: left;
+
     }
+
     #passcode-input {
+
       width: 100%;
+
       padding: 8px;
+
       font-size: 1.6rem;
+
       font-family: monospace;
+
       font-weight: 900;
+
       letter-spacing: 8px;
+
       text-align: center;
+
       background: #080313;
+
       color: #39ff14;
+
       border: 2px solid #a29bfe;
+
       border-radius: 10px;
+
       outline: none;
+
       transition: border-color 0.2s;
+
     }
+
     #passcode-input:focus {
+
       border-color: #39ff14;
+
       box-shadow: 0 0 10px rgba(57, 255, 20, 0.4);
+
     }
+
     .text-field {
+
       width: 100%;
+
       padding: 10px 12px;
+
       font-size: 1rem;
+
       font-weight: bold;
+
       background: #080313;
+
       color: #00f0ff;
+
       border: 2px solid #a29bfe;
+
       border-radius: 10px;
+
       outline: none;
+
       transition: border-color 0.2s;
+
     }
+
     .text-field:focus {
+
       border-color: #00f0ff;
+
       box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+
     }
+
     .btn-enter {
+
       width: 100%; padding: 14px; margin-top: 6px; border-radius: 12px; border: none;
+
       font-size: 1rem; font-weight: 900; text-transform: uppercase; cursor: pointer; color: #fff;
+
       background: linear-gradient(180deg, #0984e3, #0652dd);
+
       box-shadow: 0 3px 0 #003366, 0 0 14px rgba(9, 132, 227, 0.5);
+
     }
+
     .btn-enter:active { transform: scale(0.98); }
 
+
+
     #live-stage-portal {
+
       width: 100%;
+
       max-width: 440px;
+
       height: 100%;
+
       display: none;
+
       flex-direction: column;
+
       justify-content: space-between;
+
       gap: 4px;
+
     }
+
+
 
     .badge-bar {
+
       display: flex; justify-content: space-between; align-items: center;
+
       background: #18092d; padding: 4px 8px; border-radius: 6px;
+
       font-family: monospace; font-size: 0.72rem; flex-shrink: 0;
+
     }
+
+
 
     #mic-status-badge {
+
       display: none;
+
       background: #27ae60;
+
       color: #fff;
+
       padding: 2px 6px;
+
       border-radius: 4px;
+
       font-weight: 900;
+
       animation: pulseMic 0.8s infinite alternate;
+
     }
+
     @keyframes pulseMic {
+
       from { box-shadow: 0 0 4px #2ecc71; opacity: 0.85; }
+
       to { box-shadow: 0 0 12px #2ecc71; opacity: 1; }
+
     }
+
+
 
     .screens-container {
+
       position: relative;
+
       width: 100%;
+
       aspect-ratio: 16 / 9;
+
       max-height: 25vh;
+
       background: #000;
+
       border: 2px solid #ffda66;
+
       border-radius: 10px;
+
       overflow: hidden;
+
       touch-action: none;
+
       flex-shrink: 0;
+
       margin: 0 auto;
+
       cursor: grab;
+
     }
+
     .screens-container:active {
+
       cursor: grabbing;
+
     }
+
     #studio-stream-video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+
     #local-selfie-pip {
+
       position: absolute; bottom: 4px; right: 4px; width: 26%; aspect-ratio: 4 / 3;
+
       border: 2px solid #39ff14; border-radius: 6px; object-fit: cover;
+
       transform: scaleX(-1); background: #111; z-index: 5; pointer-events: none;
+
     }
+
     .swipe-hint {
+
       position: absolute; top: 4px; left: 6px; font-size: 0.62rem;
+
       background: rgba(0,0,0,0.65); padding: 2px 4px; border-radius: 4px;
+
       color: #00f0ff; font-family: monospace; pointer-events: none; z-index: 6;
+
     }
+
+
 
     #turn-banner {
+
       width: 100%; padding: 5px 8px; border-radius: 6px; text-align: center;
+
       font-weight: 900; font-size: 0.75rem; font-family: monospace; text-transform: uppercase;
+
       letter-spacing: 0.5px; display: none; flex-shrink: 0;
+
     }
+
     .turn-mine {
+
       background: #00b894; color: #fff; border: 1.5px solid #55efc4;
+
       animation: pulseGlow 1.2s infinite alternate;
+
     }
+
     .turn-theirs {
+
       background: #2d1847; color: #dfe6e9; border: 1.5px solid #636e72;
+
     }
+
     .turn-tie {
+
       background: #e17055; color: #fff; border: 1.5px solid #fdcb6e;
+
       animation: pulseGlow 0.8s infinite alternate;
+
     }
+
     .turn-paused {
+
       background: #d63031; color: #fff; border: 1.5px solid #ff7675;
+
       animation: pulseGlow 0.9s infinite alternate;
+
     }
+
     @keyframes pulseGlow {
+
       from { box-shadow: 0 0 4px #00b894; }
+
       to { box-shadow: 0 0 10px #55efc4; }
+
     }
+
+
 
     #status-pill {
+
       text-align: center; font-family: monospace; font-size: 0.78rem;
+
       color: #39ff14; min-height: 18px; line-height: 18px; flex-shrink: 0;
+
     }
+
+
 
     #choice-card {
+
       background: #1f0b3b;
+
       border: 2px solid #f1c40f;
+
       border-radius: 12px;
+
       padding: 10px;
+
       display: none;
+
       flex-direction: column;
+
       gap: 8px;
+
       text-align: center;
+
       box-shadow: 0 0 14px rgba(241, 196, 15, 0.4);
+
       flex-shrink: 0;
+
     }
+
     #choice-title {
+
       color: #ffda66;
+
       font-size: 0.85rem;
+
       font-weight: 900;
+
       letter-spacing: 0.5px;
+
       text-transform: uppercase;
+
     }
+
     .choice-btn {
+
       width: 100%;
+
       padding: 12px;
+
       border-radius: 8px;
+
       border: 2px solid;
+
       font-size: 0.85rem;
+
       font-weight: 900;
+
       text-transform: uppercase;
+
       cursor: pointer;
+
       color: #fff;
+
       transition: transform 0.1s;
+
     }
+
     .choice-btn:active { transform: scale(0.98); }
+
     .btn-choice-solo {
+
       background: #2980b9;
+
       border-color: #3498db;
+
     }
+
     .btn-choice-goody {
+
       background: #8e44ad;
+
       border-color: #9b59b6;
+
     }
+
+
 
     #btn-roll-dice {
+
       width: 100%; padding: 10px; background: #444; border: 2px solid #777;
+
       border-radius: 10px; font-size: 0.95rem; font-weight: 900; color: #888;
+
       text-transform: uppercase; letter-spacing: 0.5px; cursor: not-allowed; transition: all 0.2s;
+
       flex-shrink: 0;
+
     }
+
     #btn-roll-dice.active-roll {
+
       background: linear-gradient(180deg, #fdcb6e, #e17055);
+
       border-color: #ffeaa7; color: #2d3436; cursor: pointer;
+
       box-shadow: 0 2px 0 #b3392b, 0 0 10px #fdcb6e;
+
     }
+
+
 
     #trivia-card {
+
       background: #190930; border: 2px solid #00f0ff; border-radius: 10px;
+
       padding: 8px; display: none; flex-direction: column; gap: 6px; flex-shrink: 1;
+
     }
+
     #q-country-tag {
+
       font-size: 0.75rem; font-weight: bold; color: #ffda66; text-transform: uppercase;
+
     }
+
     #q-timer { font-family: monospace; font-weight: bold; color: #ff7675; font-size: 0.8rem; text-align: right; }
-    
+
+   
+
     #q-text {
+
       font-size: 0.82rem; font-weight: 600; line-height: 1.3; color: #ffffff;
+
       background: rgba(0,0,0,0.35); padding: 6px; border-radius: 6px; border-left: 3px solid #00f0ff;
+
     }
+
+
 
     .options-grid {
+
       display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+
     }
+
     .btn-opt {
+
       padding: 8px 6px; background: #2f1454; border: 1.5px solid #9c4dd6; border-radius: 8px;
+
       color: #fff; font-size: 0.75rem; font-weight: bold; text-align: left; cursor: not-allowed;
+
       opacity: 0.6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+
     }
+
     .btn-opt.unlocked { cursor: pointer; opacity: 1; border-color: #00f0ff; }
+
     .btn-opt.selected { background: #6c5ce7; border-color: #a29bfe; }
+
     .btn-opt.flash-green { background: #00b894 !important; border-color: #55efc4 !important; }
+
     .btn-opt.flash-red { background: #d63031 !important; border-color: #ff7675 !important; }
 
+
+
     #recap-card {
+
       background: #1c0a32; border: 2px solid #fdcb6e; border-radius: 10px;
+
       padding: 8px 10px; display: none; flex-direction: column; gap: 4px; flex-shrink: 1;
+
     }
+
     #recap-header { font-size: 0.76rem; font-weight: bold; color: #fdcb6e; text-transform: uppercase; }
+
     #recap-body { font-size: 0.82rem; line-height: 1.3; color: #ffffff; }
 
+
+
     .dpad-section {
+
       background: #140728; border: 1.5px solid #a29bfe; border-radius: 10px;
+
       padding: 4px; display: flex; flex-direction: column; align-items: center;
+
       gap: 2px; flex-shrink: 0; margin-bottom: 2px;
+
     }
+
     .dpad-grid {
+
       display: grid;
+
       grid-template-columns: 46px 46px 46px;
+
       grid-template-rows: 32px 32px;
+
       gap: 4px;
+
     }
+
     .dpad-btn {
+
       background: #2b1154; border: 2px solid #ff79b0; border-radius: 6px; color: #fff;
+
       font-size: 1rem; font-weight: bold; display: flex; justify-content: center; align-items: center;
+
       cursor: pointer;
+
     }
+
   </style>
+
 </head>
+
 <body>
 
+
+
   <div id="setup-card">
+
     <div class="badge-podium">PODIUM 1</div>
+
     <h2 style="color: #ffda66; margin-bottom: 12px; font-size: 1.25rem;">The Goody Tonight Show</h2>
-    
+
+   
+
     <div class="form-group">
+
       <span class="input-label">Host Screen 4-Digit Code:</span>
+
       <input type="text" id="passcode-input" maxlength="4" placeholder="0000" inputmode="numeric" pattern="[0-9]*" autocomplete="off" />
+
     </div>
 
+
+
     <div class="form-group">
+
       <span class="input-label">First Name:</span>
+
       <input type="text" id="name-input" class="text-field" maxlength="15" placeholder="e.g. Alex" autocomplete="given-name" />
+
     </div>
 
+
+
     <div class="form-group">
+
       <span class="input-label">Hometown / City:</span>
+
       <input type="text" id="city-input" class="text-field" maxlength="20" placeholder="e.g. London" autocomplete="address-level2" />
+
     </div>
+
+
 
     <button class="btn-enter" id="btn-enter-studio">Enter Live Studio</button>
+
   </div>
 
+
+
   <main id="live-stage-portal">
+
     <div class="badge-bar">
+
       <span id="role-tag" style="color: #00f0ff;">CONNECTING...</span>
+
       <span id="mic-status-badge">🎙️ MIC LIVE (ON AIR)</span>
+
       <span id="match-timer-badge" style="color: #ffda66;"> 20:00</span>
+
       <span style="color: #39ff14;"> LIVE</span>
+
     </div>
 
+
+
     <div class="screens-container" id="interactive-viewport">
+
       <div class="swipe-hint">🖱️ Drag to look | WASD to move</div>
+
       <video id="studio-stream-video" autoplay playsinline></video>
+
       <video id="local-selfie-pip" autoplay playsinline muted></video>
+
     </div>
+
+
 
     <div id="turn-banner"></div>
 
+
+
     <div id="status-pill">Waiting for host...</div>
 
+
+
     <!-- CHOICE CARD WHEN OFFERED BY HOST -->
+
     <div id="choice-card">
+
       <div id="choice-title">Make Your Choice, Contestant!</div>
+
       <button class="choice-btn btn-choice-solo" id="btn-pick-solo">Race Solo Against Clock</button>
+
       <button class="choice-btn btn-choice-goody" id="btn-pick-goody">Battle Goody Head-To-Head</button>
+
     </div>
+
+
 
     <button id="btn-roll-dice" disabled> ROLL DICE (LOCKED)</button>
 
+
+
     <div id="trivia-card">
+
       <div style="display: flex; justify-content: space-between; align-items: center;">
+
         <span id="q-country-tag">COUNTRY</span>
+
         <span id="q-timer"> 30s</span>
+
       </div>
+
       <div id="q-text">Loading question...</div>
+
       <div class="options-grid">
+
         <button class="btn-opt" id="opt-0" disabled>A) ...</button>
+
         <button class="btn-opt" id="opt-1" disabled>B) ...</button>
+
         <button class="btn-opt" id="opt-2" disabled>C) ...</button>
+
         <button class="btn-opt" id="opt-3" disabled>D) ...</button>
+
       </div>
+
     </div>
+
+
 
     <div id="recap-card">
+
       <div id="recap-header"> RECAP: WHAT WE LEARNED</div>
+
       <div id="recap-body">Recap loading...</div>
+
     </div>
+
+
 
     <div class="dpad-section">
+
       <div style="font-size: 0.65rem; color: #ff9ff3; font-family: monospace;"> STUDIO NAVIGATION (WASD / D-PAD)</div>
+
       <div class="dpad-grid">
+
         <div></div>
+
         <button class="dpad-btn" id="dpad-fwd">▲</button>
+
         <div></div>
+
         <button class="dpad-btn" id="dpad-left">◀</button>
+
         <button class="dpad-btn" id="dpad-back">▼</button>
+
         <button class="dpad-btn" id="dpad-right">▶</button>
+
       </div>
+
     </div>
+
   </main>
 
+
+
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
   <script>
+
     // AUTOMATIC SESSION TOKEN FAIL-SAFE
+
     let playerSessionToken = sessionStorage.getItem("goody_session_token_c1");
+
     if (!playerSessionToken) {
+
       playerSessionToken = "s1_" + Math.random().toString(36).substring(2, 9);
+
       sessionStorage.setItem("goody_session_token_c1", playerSessionToken);
+
     }
+
+
 
     const CONTESTANT_ID = "goody-contestant-1";
+
     let localStream = null;
+
     let peer = null;
+
     let dataConn = null;
+
     let mediaCall = null;
+
     let contestantName = "";
+
     let contestantCity = "";
+
     let hasRolled = false;
+
     let rollTimer = null;
+
     let questionTimer = null;
+
     let currentQuestionData = null;
+
     let selectedOptionIndex = null;
+
     let isTieBreaker = false;
+
     let mobileAudioUnlocked = false;
 
+
+
     const passcodeInput = document.getElementById('passcode-input');
+
     const nameInput = document.getElementById('name-input');
+
     const cityInput = document.getElementById('city-input');
+
     const btnEnterStudio = document.getElementById('btn-enter-studio');
 
+
+
     const setupCard = document.getElementById('setup-card');
+
     const liveStagePortal = document.getElementById('live-stage-portal');
+
     const localSelfiePip = document.getElementById('local-selfie-pip');
+
     const studioStreamVideo = document.getElementById('studio-stream-video');
+
     const roleTag = document.getElementById('role-tag');
+
     const micStatusBadge = document.getElementById('mic-status-badge');
+
     const matchTimerBadge = document.getElementById('match-timer-badge');
+
     const turnBanner = document.getElementById('turn-banner');
+
     const statusPill = document.getElementById('status-pill');
+
     const btnRollDice = document.getElementById('btn-roll-dice');
+
     const interactiveViewport = document.getElementById('interactive-viewport');
 
+
+
     const choiceCard = document.getElementById('choice-card');
+
     const btnPickSolo = document.getElementById('btn-pick-solo');
+
     const btnPickGoody = document.getElementById('btn-pick-goody');
 
+
+
     const triviaCard = document.getElementById('trivia-card');
+
     const qCountryTag = document.getElementById('q-country-tag');
+
     const qText = document.getElementById('q-text');
+
     const qTimer = document.getElementById('q-timer');
+
     const optButtons = [
+
       document.getElementById('opt-0'),
+
       document.getElementById('opt-1'),
+
       document.getElementById('opt-2'),
+
       document.getElementById('opt-3')
+
     ];
 
+
+
     const recapCard = document.getElementById('recap-card');
+
     const recapHeader = document.getElementById('recap-header');
+
     const recapBody = document.getElementById('recap-body');
 
+
+
     function setLocalMicEnabled(enabled) {
+
       if (localStream) {
+
         const audioTracks = localStream.getAudioTracks();
+
         if (audioTracks.length > 0) {
+
           audioTracks[0].enabled = enabled;
+
         }
+
       }
+
       micStatusBadge.style.display = enabled ? 'inline-block' : 'none';
+
     }
 
+
+
     function unlockMobileAudio() {
+
       if (mobileAudioUnlocked) return;
+
       mobileAudioUnlocked = true;
+
+
 
       studioStreamVideo.muted = false;
 
+
+
       if ('speechSynthesis' in window) {
+
         const primeUtterance = new SpeechSynthesisUtterance('');
+
         primeUtterance.volume = 0;
+
         window.speechSynthesis.speak(primeUtterance);
+
       }
+
     }
+
+
 
     function playHostSpeechLocally(text) {
+
       if (!('speechSynthesis' in window)) return;
+
       window.speechSynthesis.cancel();
+
       const utt = new SpeechSynthesisUtterance(text);
+
       utt.rate = 0.95;
+
       utt.pitch = 1.25;
+
       window.speechSynthesis.speak(utt);
+
     }
+
+
 
     function resetToSetupScreen() {
+
       setLocalMicEnabled(false);
+
       if (dataConn) { try { dataConn.close(); } catch(e){} dataConn = null; }
+
       if (mediaCall) { try { mediaCall.close(); } catch(e){} mediaCall = null; }
+
       if (peer) { try { peer.destroy(); } catch(e){} peer = null; }
 
+
+
       liveStagePortal.style.display = 'none';
+
       setupCard.style.display = 'block';
+
       statusPill.textContent = "Waiting for host...";
+
     }
+
+
 
     btnEnterStudio.addEventListener('click', () => {
+
       const code = passcodeInput.value.trim();
+
       const name = nameInput.value.trim();
+
       const city = cityInput.value.trim() || "London";
 
+
+
       if (!/^\d{4}$/.test(code)) {
+
         alert("Please enter the 4-digit code shown on the host screen.");
+
         passcodeInput.focus();
+
         return;
+
       }
+
       if (!name || name.length < 2) {
+
         alert("Please enter your first name (at least 2 letters).");
+
         nameInput.focus();
+
         return;
+
       }
+
+
 
       unlockMobileAudio();
+
       joinGame(name, city, code);
+
     });
+
+
 
     async function joinGame(name, city, enteredCode) {
+
       contestantName = name;
+
       contestantCity = city;
+
       setupCard.style.display = 'none';
+
       liveStagePortal.style.display = 'flex';
+
       roleTag.textContent = `${name.toUpperCase()} (CONNECTING...)`;
 
+
+
       try {
+
         if (!localStream) {
+
           localStream = await navigator.mediaDevices.getUserMedia({
+
             video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
+
             audio: { echoCancellation: true, noiseSuppression: true }
+
           });
+
           localSelfiePip.srcObject = localStream;
+
           setLocalMicEnabled(false);
+
         }
+
+
 
         if (peer) { try { peer.destroy(); } catch(e){} }
+
         peer = new Peer();
 
+
+
         peer.on('open', () => {
+
           mediaCall = peer.call("goody-main-studio", localStream, {
+
             metadata: {
+
               contestant: CONTESTANT_ID,
+
               name: contestantName,
+
               city: contestantCity,
+
               passcode: enteredCode,
+
               sessionToken: playerSessionToken
+
             }
+
           });
+
+
 
           mediaCall.on('stream', (returnStudioStream) => {
+
             studioStreamVideo.srcObject = returnStudioStream;
+
             studioStreamVideo.muted = false;
+
             studioStreamVideo.play().catch(console.error);
+
           });
+
+
 
           dataConn = peer.connect("goody-main-studio", {
+
             metadata: {
+
               contestant: CONTESTANT_ID,
+
               name: contestantName,
+
               city: contestantCity,
+
               passcode: enteredCode,
+
               sessionToken: playerSessionToken
+
             }
+
           });
+
+
 
           dataConn.on('open', () => {
+
             statusPill.textContent = "Verifying availability with studio...";
+
           });
+
+
 
           dataConn.on('data', (data) => {
+
             if (data.type === "AUTH_FAILED") {
+
               alert("Incorrect 4-digit code! Please check the host screen and try again.");
+
               resetToSetupScreen();
+
               return;
+
             } else if (data.type === "SLOT_TAKEN") {
+
               alert(`Podium 1 (${data.slotName}) is already occupied! If you are the other player, please open the Contestant 2 link.`);
+
               resetToSetupScreen();
+
               return;
+
             } else if (data.type === "HOST_EJECTED_PLAYER") {
+
               alert(data.message || "You have been disconnected by the studio director.");
+
               resetToSetupScreen();
+
               return;
+
             } else if (data.type === "AUTH_SUCCESS") {
+
               roleTag.textContent = `${contestantName.toUpperCase()} (CONTESTANT 1)`;
+
               statusPill.textContent = "Connected! Standby for host...";
+
             } else if (data.type === "SET_MIC_STATE") {
+
               setLocalMicEnabled(Boolean(data.enabled));
+
               if (data.enabled) {
+
                 statusPill.textContent = data.promptText || "🎙️ Your microphone is LIVE!";
+
               } else {
+
                 statusPill.textContent = "Microphone muted.";
+
               }
+
             } else if (data.type === "HOST_SPEAK") {
+
               playHostSpeechLocally(data.text);
+
             } else if (data.type === "START_DICE_COUNTDOWN") {
+
               setLocalMicEnabled(false);
+
               choiceCard.style.display = 'none';
+
               startTenSecondRoll();
+
             } else if (data.type === "SYNC_MATCH_TIMER") {
+
               matchTimerBadge.textContent = ` ${data.timeStr}`;
+
             } else if (data.type === "INTERMISSION_PAUSE") {
+
               setLocalMicEnabled(false);
+
               if (rollTimer) clearInterval(rollTimer);
+
               if (questionTimer) clearInterval(questionTimer);
+
               if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-              
+
+             
+
               choiceCard.style.display = 'none';
+
               btnRollDice.disabled = true;
+
               btnRollDice.classList.remove('active-roll');
+
               btnRollDice.textContent = "GAME PAUSED";
+
               triviaCard.style.display = 'none';
+
               recapCard.style.display = 'none';
 
+
+
               turnBanner.style.display = 'block';
+
               turnBanner.className = 'turn-paused';
+
               turnBanner.textContent = "STUDIO INTERMISSION IN PROGRESS";
+
               statusPill.textContent = "A contestant disconnected! Standby for replacement...";
+
             } else if (data.type === "OFFER_CONTESTANT_CHOICE") {
+
               setLocalMicEnabled(false);
+
               turnBanner.style.display = 'block';
+
               turnBanner.className = 'turn-mine';
+
               turnBanner.textContent = "DECISION TIME: CHOOSE YOUR PATH!";
+
               statusPill.textContent = "Listen to Goody, then make your selection!";
+
               btnRollDice.style.display = 'none';
+
               triviaCard.style.display = 'none';
+
               recapCard.style.display = 'none';
+
               choiceCard.style.display = 'flex';
+
             } else if (data.type === "ENABLE_TURN_ROLL") {
+
               setLocalMicEnabled(false);
+
               choiceCard.style.display = 'none';
+
               recapCard.style.display = 'none';
+
               btnRollDice.style.display = 'block';
 
+
+
               const isMe = data.activeContestantId === CONTESTANT_ID;
+
               updateTurnBanner(isMe, `${data.activeContestantName}'S TURN TO ROLL`);
+
               if (isMe) {
+
                 startTenSecondRoll();
+
               } else {
+
                 statusPill.textContent = `Waiting for ${data.activeContestantName} to roll...`;
+
                 btnRollDice.disabled = true;
+
                 btnRollDice.classList.remove('active-roll');
+
                 btnRollDice.textContent = ` WAITING FOR ${data.activeContestantName.toUpperCase()}...`;
+
               }
+
             } else if (data.type === "SHOW_QUESTION_LOCKED") {
+
               setLocalMicEnabled(false);
+
               choiceCard.style.display = 'none';
+
               isTieBreaker = false;
+
               recapCard.style.display = 'none';
+
               const isMe = data.activeContestantId === CONTESTANT_ID;
+
               updateTurnBanner(isMe, `${data.activeContestantName}'S QUESTION`);
+
               showQuestionLocked(data.question, isMe, data.activeContestantName);
+
             } else if (data.type === "UNLOCK_QUESTION_INPUT") {
+
               if (data.activeContestantId === CONTESTANT_ID) {
+
                 unlockQuestionInput();
+
                 setLocalMicEnabled(true);
+
               }
+
             } else if (data.type === "START_TIE_BREAKER") {
+
               setLocalMicEnabled(false);
+
               choiceCard.style.display = 'none';
+
               isTieBreaker = true;
+
               recapCard.style.display = 'none';
+
               btnRollDice.style.display = 'none';
+
               turnBanner.style.display = 'block';
+
               turnBanner.className = 'turn-tie';
+
               turnBanner.textContent = ' TIE-BREAKER! FIRST TO BUZZ WINS!';
+
               startTieBreakerQuestion(data.question);
+
             } else if (data.type === "OPPONENT_ANSWERED") {
+
               if (data.contestant !== CONTESTANT_ID) {
+
                 const chosenIdx = currentQuestionData ? currentQuestionData.options.indexOf(data.chosenAnswer) : -1;
+
                 if (chosenIdx !== -1) {
+
                   optButtons.forEach(b => {
+
                     b.disabled = true;
+
                     b.classList.remove('unlocked');
+
                   });
+
                   optButtons[chosenIdx].classList.add('selected');
+
                   statusPill.textContent = `${data.contestant === "goody-host-bot" ? "Goody" : "Opponent"} locked in! Checking...`;
+
                 }
+
               }
+
             } else if (data.type === "EVALUATION_RESULT") {
+
               setLocalMicEnabled(false);
+
               handleEvaluationResult(data);
+
             } else if (data.type === "TIE_BREAKER_RESULT") {
+
               setLocalMicEnabled(false);
+
               handleTieBreakerResult(data);
+
             } else if (data.type === "GAME_OVER") {
+
               setLocalMicEnabled(false);
+
               handleGameOver(data);
+
             }
+
           });
+
         });
+
+
 
       } catch (err) {
+
         alert("Camera & microphone permissions required: " + err.message);
+
         resetToSetupScreen();
+
       }
+
     }
+
+
 
     btnPickSolo.addEventListener('click', () => {
+
       choiceCard.style.display = 'none';
+
       statusPill.textContent = "Choice confirmed: Solo Race against time!";
+
       if (dataConn && dataConn.open) {
+
         dataConn.send({ type: "CONTESTANT_CHOSE_PATH", choice: "SOLO", contestant: CONTESTANT_ID });
+
       }
+
     });
+
+
 
     btnPickGoody.addEventListener('click', () => {
+
       choiceCard.style.display = 'none';
+
       statusPill.textContent = "Choice confirmed: Battling Goody Head-To-Head!";
+
       if (dataConn && dataConn.open) {
+
         dataConn.send({ type: "CONTESTANT_CHOSE_PATH", choice: "GOODY", contestant: CONTESTANT_ID });
+
       }
+
     });
+
+
 
     function updateTurnBanner(isMe, subText) {
+
       turnBanner.style.display = 'block';
+
       if (isMe) {
+
         turnBanner.className = 'turn-mine';
+
         turnBanner.textContent = ` YOUR TURN (${subText})!`;
+
       } else {
+
         turnBanner.className = 'turn-theirs';
+
         turnBanner.textContent = ` WAITING: ${subText}`;
+
       }
+
     }
+
+
 
     // --- LOOK CONTROLS (TOUCH + DESKTOP MOUSE DRAG) ---
+
     let isMouseDown = false;
+
     let lookStartX = 0;
+
     let lookStartY = 0;
 
+
+
     function handleLookDelta(dx, dy) {
+
       if (dataConn && dataConn.open) {
+
         dataConn.send({
+
           type: "PLUSHIE_LOOK",
+
           contestant: CONTESTANT_ID,
+
           deltaX: -dx,
+
           deltaY: dy
+
         });
+
       }
+
     }
+
+
 
     // Touch Support (Mobile)
+
     interactiveViewport.addEventListener('touchstart', (e) => {
+
       if (e.touches.length === 1) {
+
         lookStartX = e.touches[0].clientX;
+
         lookStartY = e.touches[0].clientY;
+
       }
+
     }, { passive: true });
+
+
 
     interactiveViewport.addEventListener('touchmove', (e) => {
+
       if (e.touches.length === 1) {
+
         const deltaX = e.touches[0].clientX - lookStartX;
+
         const deltaY = e.touches[0].clientY - lookStartY;
+
         lookStartX = e.touches[0].clientX;
+
         lookStartY = e.touches[0].clientY;
+
         handleLookDelta(deltaX, deltaY);
+
       }
+
     }, { passive: true });
 
+
+
     // Mouse Drag Support (Desktop PC)
+
     interactiveViewport.addEventListener('mousedown', (e) => {
+
       if (e.button === 0) {
+
         isMouseDown = true;
+
         lookStartX = e.clientX;
+
         lookStartY = e.clientY;
+
       }
+
     });
+
+
 
     window.addEventListener('mousemove', (e) => {
+
       if (!isMouseDown) return;
+
       const deltaX = e.clientX - lookStartX;
+
       const deltaY = e.clientY - lookStartY;
+
       lookStartX = e.clientX;
+
       lookStartY = e.clientY;
+
       handleLookDelta(deltaX, deltaY);
+
     });
+
+
 
     window.addEventListener('mouseup', () => {
+
       isMouseDown = false;
+
     });
 
+
+
     // --- DICE ROLLING ---
+
     function startTenSecondRoll() {
+
       hasRolled = false;
+
       btnRollDice.disabled = false;
+
       btnRollDice.classList.add('active-roll');
+
       btnRollDice.textContent = " ROLL DICE NOW!";
 
+
+
       let timeLeft = 10;
+
       statusPill.textContent = ` ROLL TIMER: ${timeLeft}s`;
 
+
+
       if (rollTimer) clearInterval(rollTimer);
+
       rollTimer = setInterval(() => {
+
         timeLeft--;
+
         if (timeLeft > 0) {
+
           statusPill.textContent = ` ROLL TIMER: ${timeLeft}s`;
+
         } else {
+
           clearInterval(rollTimer);
+
           if (!hasRolled) executeRoll(true);
+
         }
+
       }, 1000);
+
     }
+
+
 
     function executeRoll(isAuto = false) {
+
       if (hasRolled) return;
+
       hasRolled = true;
+
       if (rollTimer) clearInterval(rollTimer);
 
+
+
       btnRollDice.disabled = true;
+
       btnRollDice.classList.remove('active-roll');
+
       btnRollDice.textContent = "DICE ROLLED!";
 
+
+
       const rollValue = Math.floor(Math.random() * 6) + 1;
+
       statusPill.textContent = isAuto ? ` Auto-rolled: ${rollValue}` : ` You rolled: ${rollValue}!`;
 
+
+
       if (dataConn && dataConn.open) {
+
         dataConn.send({
+
           type: "PLAYER_ROLLED_DICE",
+
           contestant: CONTESTANT_ID,
+
           name: contestantName,
+
           roll: rollValue
+
         });
+
       }
+
     }
+
     btnRollDice.addEventListener('click', () => executeRoll(false));
 
+
+
     function showQuestionLocked(qData, isMyTurn, activeName) {
+
       currentQuestionData = qData;
+
       selectedOptionIndex = null;
+
       btnRollDice.style.display = 'none';
+
       recapCard.style.display = 'none';
+
       triviaCard.style.display = 'flex';
-      
+
+     
+
       qCountryTag.textContent = ` ${qData.country} (${isMyTurn ? "YOUR QUESTION" : activeName.toUpperCase() + "'S QUESTION"})`;
+
       qText.textContent = qData.text || qData.q || "Listen to host:";
+
       qTimer.textContent = " LISTENING...";
 
+
+
       qData.options.forEach((opt, idx) => {
+
         optButtons[idx].textContent = `${["A", "B", "C", "D"][idx]}) ${opt}`;
+
         optButtons[idx].className = "btn-opt";
+
         optButtons[idx].disabled = true;
+
       });
+
     }
+
+
 
     function unlockQuestionInput() {
+
       qTimer.textContent = " 30s";
+
       optButtons.forEach(btn => {
+
         btn.disabled = false;
+
         btn.classList.add('unlocked');
+
       });
+
+
 
       let timeLeft = 30;
+
       if (questionTimer) clearInterval(questionTimer);
+
       questionTimer = setInterval(() => {
+
         timeLeft--;
+
         if (timeLeft > 0) {
+
           qTimer.textContent = ` ${timeLeft}s`;
+
         } else {
+
           clearInterval(questionTimer);
+
           qTimer.textContent = "TIME OUT!";
+
           setLocalMicEnabled(false);
+
           optButtons.forEach(b => b.disabled = true);
+
           if (dataConn && dataConn.open) {
+
             dataConn.send({ type: "PLAYER_TIMEOUT", contestant: CONTESTANT_ID });
+
           }
+
         }
+
       }, 1000);
+
     }
+
+
 
     function startTieBreakerQuestion(qData) {
+
       currentQuestionData = qData;
+
       selectedOptionIndex = null;
+
       triviaCard.style.display = 'flex';
+
       qCountryTag.textContent = " SUDDEN DEATH TIE-BREAKER";
+
       qText.textContent = qData.text || qData.q;
+
       qTimer.textContent = "BUZZ IN NOW!";
+
       statusPill.textContent = "First correct answer wins!";
 
+
+
       qData.options.forEach((opt, idx) => {
+
         optButtons[idx].textContent = `${["A", "B", "C", "D"][idx]}) ${opt}`;
+
         optButtons[idx].className = "btn-opt unlocked";
+
         optButtons[idx].disabled = false;
+
       });
+
     }
 
+
+
     optButtons.forEach((btn, idx) => {
+
       btn.addEventListener('click', () => {
+
         if (selectedOptionIndex !== null) return;
+
         selectedOptionIndex = idx;
+
         if (questionTimer) clearInterval(questionTimer);
+
+
 
         setLocalMicEnabled(false);
 
+
+
         optButtons.forEach(b => {
+
           b.disabled = true;
+
           b.classList.remove('unlocked');
+
         });
+
         btn.classList.add('selected');
+
         statusPill.textContent = "Locked in! Checking...";
 
+
+
         if (dataConn && dataConn.open) {
+
           dataConn.send({
+
             type: "PLAYER_ANSWERED",
+
             contestant: CONTESTANT_ID,
+
             chosenAnswer: currentQuestionData.options[idx]
+
           });
+
         }
+
       });
+
     });
+
+
 
     function handleEvaluationResult(data) {
+
       if (questionTimer) clearInterval(questionTimer);
+
       setLocalMicEnabled(false);
+
       const isMe = data.forContestant === CONTESTANT_ID;
+
       const targetName = data.forContestant === "goody-host-bot" ? "Goody" : "Opponent";
 
+
+
       const targetIdx = selectedOptionIndex !== null
+
         ? selectedOptionIndex
+
         : (currentQuestionData ? currentQuestionData.options.indexOf(data.chosenAnswer) : -1);
 
+
+
       if (targetIdx !== -1 && optButtons[targetIdx]) {
+
         if (data.isCorrect) {
+
           optButtons[targetIdx].classList.add('flash-green');
+
           statusPill.textContent = isMe ? " CORRECT! Tile secured." : ` ${targetName} was CORRECT!`;
+
         } else {
+
           optButtons[targetIdx].classList.add('flash-red');
+
           statusPill.textContent = isMe ? " INCORRECT! Back to start." : ` ${targetName} was INCORRECT!`;
+
         }
+
       }
 
+
+
       setTimeout(() => {
+
         triviaCard.style.display = 'none';
+
         recapHeader.textContent = ` WHAT WE LEARNED (${data.country}):`;
+
         recapBody.textContent = data.recap;
+
         recapCard.style.display = 'flex';
+
         statusPill.textContent = "Goody is reviewing the recap...";
+
       }, 1200);
+
     }
+
+
 
     function handleTieBreakerResult(data) {
+
       setLocalMicEnabled(false);
+
       const isMeWinner = data.winner.toLowerCase() === contestantName.toLowerCase();
+
       statusPill.textContent = isMeWinner ? ` YOU WON THE TIE-BREAKER!` : ` ${data.winner.toUpperCase()} WON THE TIE-BREAKER!`;
 
+
+
       const targetIdx = currentQuestionData ? currentQuestionData.options.indexOf(data.chosenAnswer) : -1;
+
       if (targetIdx !== -1 && optButtons[targetIdx]) {
+
         optButtons[targetIdx].classList.add(data.isCorrect ? 'flash-green' : 'flash-red');
+
       }
+
+
 
       setTimeout(() => {
+
         triviaCard.style.display = 'none';
+
       }, 4000);
+
     }
+
+
 
     function handleGameOver(data) {
+
       if (rollTimer) clearInterval(rollTimer);
+
       setLocalMicEnabled(false);
+
       choiceCard.style.display = 'none';
+
       turnBanner.style.display = 'block';
 
+
+
       if (data.winner === "NOBODY") {
+
         turnBanner.className = 'turn-theirs';
+
         turnBanner.textContent = " NOBODY WINS! PRIZE ROLLS OVER!";
+
         statusPill.textContent = "Show ended without completion. Prize rolls over!";
+
       } else {
+
         const isMe = data.winner.toLowerCase() === contestantName.toLowerCase();
+
         turnBanner.className = isMe ? 'turn-mine' : 'turn-theirs';
+
         turnBanner.textContent = ` ${data.winner.toUpperCase()} WINS THE GAME!`;
+
         statusPill.textContent = isMe ? "Well done! Congratulations!" : "Commiserations! Thanks for playing!";
+
       }
+
+
 
       btnRollDice.disabled = true;
+
       btnRollDice.classList.remove('active-roll');
+
     }
+
+
 
     // --- MOVEMENT ENGINE (ON-SCREEN D-PAD + DESKTOP KEYBOARD WASD) ---
+
     let dpadInterval = null;
+
     let activeMovementDir = null;
 
+
+
     function sendPlushieMove(direction) {
+
       if (dataConn && dataConn.open) {
+
         dataConn.send({ type: "PLUSHIE_MOVE", contestant: CONTESTANT_ID, direction: direction });
+
       }
+
     }
+
     function startPlushieMove(direction) {
+
       if (activeMovementDir === direction) return;
+
       activeMovementDir = direction;
+
       sendPlushieMove(direction);
+
       if (dpadInterval) clearInterval(dpadInterval);
+
       dpadInterval = setInterval(() => sendPlushieMove(direction), 100);
+
     }
+
     function stopPlushieMove(direction = null) {
+
       if (direction === null || activeMovementDir === direction) {
+
         activeMovementDir = null;
+
         if (dpadInterval) { clearInterval(dpadInterval); dpadInterval = null; }
+
       }
+
     }
+
+
 
     const bindDpad = (btnId, dir) => {
+
       const el = document.getElementById(btnId);
+
       el.addEventListener('touchstart', (e) => { e.preventDefault(); startPlushieMove(dir); });
+
       el.addEventListener('touchend', (e) => { e.preventDefault(); stopPlushieMove(dir); });
+
       el.addEventListener('mousedown', () => startPlushieMove(dir));
+
       el.addEventListener('mouseup', () => stopPlushieMove(dir));
+
       el.addEventListener('mouseleave', () => stopPlushieMove(dir));
+
     };
+
+
 
     bindDpad('dpad-fwd', 'FORWARD');
+
     bindDpad('dpad-back', 'BACK');
+
     bindDpad('dpad-left', 'LEFT');
+
     bindDpad('dpad-right', 'RIGHT');
 
+
+
     // Desktop Keyboard Listeners (WASD + Arrow Keys)
+
     const keyMap = {
+
       'KeyW': 'FORWARD', 'ArrowUp': 'FORWARD',
+
       'KeyS': 'BACK',    'ArrowDown': 'BACK',
+
       'KeyA': 'LEFT',    'ArrowLeft': 'LEFT',
+
       'KeyD': 'RIGHT',   'ArrowRight': 'RIGHT'
+
     };
 
+
+
     window.addEventListener('keydown', (e) => {
+
+      // Ignore if user is currently typing in an input field
+
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
       if (keyMap[e.code]) {
+
         e.preventDefault();
+
         startPlushieMove(keyMap[e.code]);
+
       }
+
     });
 
+
+
     window.addEventListener('keyup', (e) => {
+
       if (keyMap[e.code]) {
+
         stopPlushieMove(keyMap[e.code]);
+
       }
+
     });
+
   </script>
+
 </body>
-</html>
