@@ -244,7 +244,7 @@
 
   <div id="live-hud-chat">
     <div id="live-hud-chat-header">
-      <span>AUDIENCE STREAM</span>
+      <span>AUDIENCE STREAM [CLOCK: <span id="host-chat-clock" style="color:#ffda66;">20:00</span>]</span>
       <span style="color:#39ff14;">● ON AIR</span>
     </div>
     <div id="live-hud-chat-stream">
@@ -393,6 +393,7 @@
     let matchTimerInterval = null;
     let isTimeExpired = false;
     let gameClockValEl = document.getElementById('game-clock-val');
+    let hostChatClockEl = document.getElementById('host-chat-clock');
 
     let activePlayer = "goody-contestant-1";
     let activeQuestion = null;
@@ -1722,6 +1723,7 @@
         const timeStr = `${mins}:${secs}`;
        
         gameClockValEl.textContent = timeStr;
+        hostChatClockEl.textContent = timeStr;
         renderWallClockTexture(timeStr);
 
         connectedDataConns.forEach(c => {
