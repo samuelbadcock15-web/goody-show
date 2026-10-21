@@ -82,7 +82,7 @@
       box-shadow: 0 0 18px rgba(253, 203, 110, 0.45);
     }
 
-    /* CHAT & IN-CHAT TRIVIA BUTTONS */
+    /* CHAT & DYNAMIC IN-CHAT TRIVIA/RECAP CARD */
     #chat-container {
       width: 100%; max-width: 420px; background: rgba(13, 5, 26, 0.92);
       border: 1.5px solid #d4af37; border-radius: 10px; display: flex; flex-direction: column;
@@ -94,7 +94,7 @@
       align-items: center; cursor: pointer;
     }
     #chat-messages {
-      height: 160px; overflow-y: auto; padding: 6px 8px; display: flex; flex-direction: column;
+      height: 170px; overflow-y: auto; padding: 6px 8px; display: flex; flex-direction: column;
       gap: 6px; font-size: 0.78rem;
     }
     .chat-msg { word-break: break-word; line-height: 1.3; }
@@ -102,26 +102,44 @@
     .chat-author.is-self { color: #00f0ff; }
     .chat-author.is-host { color: #ff7675; }
 
-    /* In-Chat Trivia Card */
+    /* Dynamic Chat Trivia/Recap Card with Glitch Transition */
     .chat-trivia-card {
-      background: rgba(25, 9, 48, 0.95);
+      background: rgba(25, 9, 48, 0.96);
       border: 1.5px solid #00f0ff;
       border-radius: 8px;
       padding: 8px;
       margin: 4px 0;
+      transition: all 0.3s ease;
     }
+    .chat-trivia-card.glitching {
+      animation: cardGlitch 0.4s steps(3, end) forwards;
+    }
+    @keyframes cardGlitch {
+      0% { transform: translate(0, 0); filter: hue-rotate(0deg) blur(0px); opacity: 1; }
+      20% { transform: translate(-4px, 2px); filter: hue-rotate(90deg) blur(1.5px); opacity: 0.7; }
+      40% { transform: translate(4px, -2px); filter: hue-rotate(180deg) blur(0px); opacity: 0.9; }
+      60% { transform: translate(-2px, -1px); filter: hue-rotate(270deg) blur(1px); opacity: 0.6; }
+      80% { transform: translate(2px, 2px); filter: hue-rotate(45deg) blur(0.5px); opacity: 0.95; }
+      100% { transform: translate(0, 0); filter: hue-rotate(0deg) blur(0px); opacity: 1; }
+    }
+
     .chat-trivia-q { font-weight: bold; color: #fff; margin-bottom: 6px; font-size: 0.78rem; }
     .chat-options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
     .chat-opt-btn {
       background: #2f1454; border: 1px solid #a29bfe; border-radius: 6px; color: #fff;
       padding: 6px; font-size: 0.72rem; font-weight: bold; text-align: left; cursor: pointer;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      transition: background 0.15s, border-color 0.15s;
     }
     .chat-opt-btn:hover:not(:disabled) { background: #6c5ce7; border-color: #00f0ff; }
     .chat-opt-btn.selected { background: #0984e3 !important; border-color: #00f0ff !important; }
     .chat-opt-btn.correct { background: #00b894 !important; border-color: #55efc4 !important; }
     .chat-opt-btn.wrong { background: #d63031 !important; border-color: #ff7675 !important; }
-    .chat-opt-btn:disabled { cursor: default; opacity: 0.8; }
+    .chat-opt-btn:disabled { cursor: default; opacity: 0.85; }
+
+    .recap-content-box {
+      font-size: 0.76rem; color: #ebdcf9; line-height: 1.35; padding: 4px 0;
+    }
 
     .chat-input-row { display: flex; border-top: 1px solid #442266; padding: 4px; gap: 4px; }
     #chat-text-input {
@@ -331,10 +349,6 @@
     let p2ContestantName = "June";
     let p1ContestantCity = "London";
     let p2ContestantCity = "Nottingham";
-    let p1RollVal = null;
-    let p2RollVal = null;
-    let isDiceRollingP1 = false;
-    let isDiceRollingP2 = false;
     let p1Index = 0;
     let p2Index = 0;
     let audienceIndex = 0;
@@ -344,6 +358,7 @@
     let activeRecap = null;
     let audienceSelectedOption = null;
     let audienceHasAnswered = false;
+    let activeTriviaCardEl = null;
 
     const videoJake = document.createElement('video');
     videoJake.autoplay = true; videoJake.playsInline = true; videoJake.muted = false;
@@ -406,7 +421,7 @@
             renderStageQuestionBoard();
             injectTriviaCardIntoChat(data.question, data.activeContestantName);
           } else if (data.type === 'EVALUATION_RESULT') {
-            handleAudienceEvaluationInChat(data);
+            morphTriviaCardIntoRecap(data);
           } else if (data.type === 'HOST_SPEAK') {
             isGoodySpeaking = true;
             playHostSpeechLocally(data.text);
@@ -448,8 +463,6 @@
     }
 
     // In-Chat Trivia Card Injection
-    let activeTriviaCardEl = null;
-
     function injectTriviaCardIntoChat(qData, contestantName) {
       const card = document.createElement('div');
       card.className = 'chat-trivia-card';
@@ -467,7 +480,7 @@
         const btn = document.createElement('button');
         btn.className = 'chat-opt-btn';
         btn.textContent = `${['A','B','C','D'][idx]}) ${opt}`;
-        btn.onclick = () => submitAudienceAnswerFromChat(idx, buttons, qData);
+        btn.onclick = () => submitAudienceAnswerFromChat(idx, buttons, qData, card);
         grid.appendChild(btn);
         buttons.push(btn);
       });
@@ -475,10 +488,11 @@
       card.appendChild(grid);
       chatMessages.appendChild(card);
       chatMessages.scrollTop = chatMessages.scrollHeight;
+      
       activeTriviaCardEl = { card, buttons, qData };
     }
 
-    function submitAudienceAnswerFromChat(idx, buttons, qData) {
+    function submitAudienceAnswerFromChat(idx, buttons, qData, card) {
       if (audienceHasAnswered) return;
       audienceHasAnswered = true;
       audienceSelectedOption = idx;
@@ -488,40 +502,63 @@
         b.disabled = true;
       });
 
-      addChatMessage(audienceNickname, `Locked in answer: ${['A','B','C','D'][idx]}) ${qData.options[idx]}`, 'is-self');
+      const chosenText = `${['A','B','C','D'][idx]}) ${qData.options[idx]}`;
+      addChatMessage(audienceNickname, `Locked in answer: ${chosenText}`, 'is-self');
     }
 
-    function handleAudienceEvaluationInChat(data) {
+    // Glitch Morph from Question to Recap
+    function morphTriviaCardIntoRecap(data) {
       if (!activeQuestion || !activeTriviaCardEl) return;
 
+      const { card, buttons } = activeTriviaCardEl;
       const correctAnsText = activeQuestion.ans;
       const correctIdx = activeQuestion.options.indexOf(correctAnsText);
 
-      activeTriviaCardEl.buttons.forEach((b, i) => {
+      // Highlight correct/wrong buttons before glitch
+      buttons.forEach((b, i) => {
         b.disabled = true;
         if (i === correctIdx) b.classList.add('correct');
         else if (i === audienceSelectedOption && i !== correctIdx) b.classList.add('wrong');
       });
 
+      // Update ghost token position based on correctness
       const userGotItRight = (audienceSelectedOption !== null && activeQuestion.options[audienceSelectedOption] === correctAnsText);
       if (userGotItRight) {
         audienceIndex = Math.min(boardTileCoords.length - 1, audienceIndex + 1);
         animatePawnHop(audiencePawn, audiencePawnIdx, audienceIndex, 0);
         audiencePawnIdx = audienceIndex;
-        addSystemChatMessage(`🎉 Correct! Your ghost token advanced (+1 tile)!`);
         playTone(587, 'sine', 0.2, 0.05);
       } else {
         if (audiencePawnIdx > 0) {
           animatePawnHop(audiencePawn, audiencePawnIdx, 0, 0, 100);
           audienceIndex = 0; audiencePawnIdx = 0;
         }
-        addSystemChatMessage(`❌ Incorrect! Your ghost token was sent back to START!`);
         playTone(220, 'triangle', 0.2, 0.05);
       }
 
-      // Add recap message
-      addSystemChatMessage(`📖 Recap (${data.country}): ${data.recap}`);
-      activeTriviaCardEl = null;
+      // Trigger Cyber-Glitch Transition
+      card.classList.add('glitching');
+
+      setTimeout(() => {
+        card.innerHTML = '';
+        card.style.borderColor = userGotItRight ? '#00b894' : '#ff7675';
+
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'chat-trivia-q';
+        headerDiv.style.color = userGotItRight ? '#55efc4' : '#ff7675';
+        headerDiv.textContent = userGotItRight 
+          ? `🎉 CORRECT! (${data.country.toUpperCase()}) - TOKEN +1` 
+          : `❌ INCORRECT! (${data.country.toUpperCase()}) - SENT TO START`;
+        card.appendChild(headerDiv);
+
+        const bodyDiv = document.createElement('div');
+        bodyDiv.className = 'recap-content-box';
+        bodyDiv.textContent = data.recap;
+        card.appendChild(bodyDiv);
+
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        activeTriviaCardEl = null;
+      }, 400);
     }
 
     function addSystemChatMessage(text) {
