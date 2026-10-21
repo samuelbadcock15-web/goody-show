@@ -396,9 +396,9 @@
     let contestantSelectedAnswer = null;
 
     const videoJake = document.createElement('video');
-    videoJake.autoplay = true; videoJake.playsInline = true; videoJake.muted = false;
+    videoJake.autoplay = true; videoJake.playsInline = true; videoJake.muted = true;
     const videoJune = document.createElement('video');
-    videoJune.autoplay = true; videoJune.playsInline = true; videoJune.muted = false;
+    videoJune.autoplay = true; videoJune.playsInline = true; videoJune.muted = true;
     let hasLiveJakeStream = false;
     let hasLiveJuneStream = false;
 
@@ -486,19 +486,17 @@
           }
         });
 
-        // INCOMING AUDIO/VIDEO STREAM RELAY FROM HOST (HEAR CONTESTANTS SPEAK)
+        // INCOMING VIDEO RELAY FROM HOST
         peer.on('call', (call) => {
           call.answer();
           call.on('stream', (remoteStream) => {
             const contestantSlot = call.metadata ? call.metadata.contestant : null;
             if (contestantSlot === "goody-contestant-2") {
               videoJune.srcObject = remoteStream;
-              videoJune.muted = false;
               videoJune.play().catch(() => {});
               hasLiveJuneStream = true;
             } else {
               videoJake.srcObject = remoteStream;
-              videoJake.muted = false;
               videoJake.play().catch(() => {});
               hasLiveJakeStream = true;
             }
@@ -573,20 +571,13 @@
       const contestantChoice = data.chosenAnswer;
 
       if (userGotItRight) {
-        // Advance +1 tile
         audienceIndex = Math.min(boardTileCoords.length - 1, audienceIndex + 1);
         animatePawnHop(audiencePawn, audiencePawnIdx, audienceIndex, 0);
         audiencePawnIdx = audienceIndex;
-        audStatusMsg.textContent = `🎉 Correct! Ghost token advanced (+1 tile)!`;
+        audStatusMsg.textContent = `🎉 Correct! You advanced your ghost token (+1 tile)!`;
         playTone(587, 'sine', 0.2, 0.05);
       } else {
-        // Incorrect: Reset straight back to start (Tile 0)
-        if (audiencePawnIdx > 0) {
-          animatePawnHop(audiencePawn, audiencePawnIdx, 0, 0, 100);
-          audienceIndex = 0;
-          audiencePawnIdx = 0;
-        }
-        audStatusMsg.textContent = `❌ Incorrect! Ghost token sent back to START (Tile 0)!`;
+        audStatusMsg.textContent = `❌ Unlucky! The correct answer was "${correctAnsText}".`;
         playTone(220, 'triangle', 0.2, 0.05);
       }
     }
