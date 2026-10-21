@@ -389,6 +389,10 @@
     let audienceIndex = 0;
     let audiencePawnIdx = 0;
 
+    let isSoloMode = false;
+    let isVsGoodyMode = false;
+    let goodyPlayerSlot = null;
+
     let activeQuestion = null;
     let activeRecap = null;
     let audienceSelectedOption = null;
@@ -486,7 +490,7 @@
           }
         });
 
-        // INCOMING AUDIO/VIDEO STREAM RELAY FROM HOST (HEAR CONTESTANTS SPEAK)
+        // INCOMING AUDIO/VIDEO STREAM RELAY FROM HOST
         peer.on('call', (call) => {
           call.answer();
           call.on('stream', (remoteStream) => {
@@ -573,14 +577,12 @@
       const contestantChoice = data.chosenAnswer;
 
       if (userGotItRight) {
-        // Advance +1 tile
         audienceIndex = Math.min(boardTileCoords.length - 1, audienceIndex + 1);
         animatePawnHop(audiencePawn, audiencePawnIdx, audienceIndex, 0);
         audiencePawnIdx = audienceIndex;
         audStatusMsg.textContent = `🎉 Correct! Ghost token advanced (+1 tile)!`;
         playTone(587, 'sine', 0.2, 0.05);
       } else {
-        // Incorrect: Reset straight back to start (Tile 0)
         if (audiencePawnIdx > 0) {
           animatePawnHop(audiencePawn, audiencePawnIdx, 0, 0, 100);
           audienceIndex = 0;
@@ -979,6 +981,103 @@
       hopNextStep();
     }
 
+    // --- DICE DRAWING HELPER ---
+    function drawDiceFace(ctx, x, y, size, value) {
+      ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#222222'; ctx.lineWidth = 3;
+      ctx.fillRect(x, y, size, size); ctx.strokeRect(x, y, size, size);
+      ctx.fillStyle = '#e74c3c';
+      const dot = (dx, dy) => {
+        ctx.beginPath(); ctx.arc(x + dx * size, y + dy * size, size * 0.08, 0, Math.PI * 2); ctx.fill();
+      };
+      if (value % 2 === 1) dot(0.5, 0.5);
+      if (value > 1) { dot(0.25, 0.25); dot(0.75, 0.75); }
+      if (value > 3) { dot(0.75, 0.25); dot(0.25, 0.75); }
+      if (value === 6) { dot(0.25, 0.5); dot(0.75, 0.5); }
+    }
+
+    // Backstage Screens (Renders Live Cameras / Goody Face / Withdrawn Status)
+    const studioScreenCanvas = document.createElement('canvas'); studioScreenCanvas.width = 512; studioScreenCanvas.height = 256;
+    const sScreenCtx = studioScreenCanvas.getContext('2d');
+    const studioScreenTex = new THREE.CanvasTexture(studioScreenCanvas);
+   
+    function drawScreenFeed(ctx, x, y, width, height, name, city, isLive, videoElem, isGuy, currentRoll, isRolling, isGoodySlot, isWithdrawn) {
+      ctx.fillStyle = '#05020a'; ctx.fillRect(x, y, width, height);
+      ctx.strokeStyle = isGoodySlot ? '#a29bfe' : (isWithdrawn ? '#d63031' : '#39ff14');
+      ctx.lineWidth = 3; ctx.strokeRect(x, y, width, height);
+
+      if (isWithdrawn) {
+        ctx.fillStyle = '#1c0a1a'; ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
+        ctx.fillStyle = '#ffda66'; ctx.font = 'bold 20px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(`CONTESTANT (${name.toUpperCase()})`, x + width / 2, y + height * 0.45);
+        ctx.fillStyle = '#ff7675'; ctx.font = 'bold 16px monospace';
+        ctx.fillText("WITHDRAWN / OFFLINE", x + width / 2, y + height * 0.65);
+      } else if (isGoodySlot) {
+        ctx.fillStyle = '#16082b'; ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
+        const cx = x + width / 2; const cy = y + height * 0.45;
+
+        ctx.fillStyle = '#cccccc'; ctx.strokeStyle = '#00f0ff'; ctx.lineWidth = 3;
+        ctx.strokeRect(cx - 35, cy - 30, 70, 60);
+        ctx.strokeStyle = '#39ff14'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(cx - 20, cy - 8); ctx.lineTo(cx - 12, cy - 18); ctx.lineTo(cx - 4, cy - 8); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx + 4, cy - 8); ctx.lineTo(cx + 12, cy - 18); ctx.lineTo(cx + 20, cy - 8); ctx.stroke();
+        
+        ctx.beginPath();
+        if (isGoodySpeaking) {
+          ctx.ellipse(cx, cy + 12, 14, 7, 0, 0, Math.PI * 2);
+        } else {
+          ctx.arc(cx, cy + 8, 10, 0.2, Math.PI - 0.2, false);
+        }
+        ctx.stroke();
+      } else if (isLive && videoElem.readyState >= 2) {
+        ctx.save(); ctx.drawImage(videoElem, x + 2, y + 2, width - 4, height - 4); ctx.restore();
+      } else {
+        ctx.fillStyle = isGuy ? '#1b2a47' : '#3d1b38'; ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
+        const cx = x + width / 2; const cy = y + height * 0.58;
+        ctx.fillStyle = isGuy ? '#4a69bd' : '#e84393'; ctx.beginPath(); ctx.ellipse(cx, cy + 25, 26, 32, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#f8c291'; ctx.beginPath(); ctx.arc(cx, cy - 10, 16, 0, Math.PI * 2); ctx.fill();
+      }
+
+      // Render Dice Overlay
+      if (!isGoodySlot && !isWithdrawn) {
+        const diceSize = 42;
+        const diceX = x + width - diceSize - 12;
+        const diceY = y + 12;
+
+        if (isRolling) {
+          const animVal = Math.floor((performance.now() / 80) % 6) + 1;
+          drawDiceFace(ctx, diceX, diceY, diceSize, animVal);
+        } else if (currentRoll !== null && currentRoll !== undefined) {
+          drawDiceFace(ctx, diceX, diceY, diceSize, currentRoll);
+        }
+      }
+
+      ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(x, y + height - 26, width, 26);
+      ctx.fillStyle = isGoodySlot ? '#00f0ff' : '#39ff14'; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
+      const tag = isGoodySlot ? "[AI HOST: GOODY]" : `${isLive ? 'LIVE' : 'CALL'} ${name.toUpperCase()} [${city.toUpperCase()}]`;
+      ctx.fillText(tag, x + width / 2, y + height - 8);
+    }
+
+    function renderBackstageScreens() {
+      sScreenCtx.fillStyle = '#060210'; sScreenCtx.fillRect(0, 0, 512, 256);
+      
+      const isP1Goody = isVsGoodyMode && goodyPlayerSlot === "goody-contestant-1";
+      const isP2Goody = isVsGoodyMode && goodyPlayerSlot === "goody-contestant-2";
+      const isP1Withdrawn = isSoloMode && soloPlayerId !== "goody-contestant-1";
+      const isP2Withdrawn = isSoloMode && soloPlayerId !== "goody-contestant-2";
+
+      drawScreenFeed(sScreenCtx, 15, 20, 225, 215, p1ContestantName, p1ContestantCity, hasLiveJakeStream, videoJake, true, p1RollVal, isDiceRollingP1, isP1Goody, isP1Withdrawn);
+      drawScreenFeed(sScreenCtx, 272, 20, 225, 215, p2ContestantName, p2ContestantCity, hasLiveJuneStream, videoJune, false, p2RollVal, isDiceRollingP2, isP2Goody, isP2Withdrawn);
+      
+      studioScreenTex.needsUpdate = true;
+    }
+    const studioBackScreenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshBasicMaterial({ map: studioScreenTex }));
+    studioBackScreenMesh.position.set(0, 3.4, -4.5); miniDiorama.add(studioBackScreenMesh);
+
+    let isSoloMode = false;
+    let isVsGoodyMode = false;
+    let goodyPlayerSlot = null;
+    let soloPlayerId = null;
+
     // 3D Studio Question Board (Left Screen)
     const qBoardCanvas = document.createElement('canvas'); qBoardCanvas.width = 512; qBoardCanvas.height = 384;
     const qBoardCtx = qBoardCanvas.getContext('2d');
@@ -1180,432 +1279,15 @@
       faceTex.needsUpdate = true;
     }
 
-    // --- DICE DRAWING HELPER ---
-    function drawDiceFace(ctx, x, y, size, value) {
-      ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#222222'; ctx.lineWidth = 3;
-      ctx.fillRect(x, y, size, size); ctx.strokeRect(x, y, size, size);
-      ctx.fillStyle = '#e74c3c';
-      const dot = (dx, dy) => {
-        ctx.beginPath(); ctx.arc(x + dx * size, y + dy * size, size * 0.08, 0, Math.PI * 2); ctx.fill();
-      };
-      if (value % 2 === 1) dot(0.5, 0.5);
-      if (value > 1) { dot(0.25, 0.25); dot(0.75, 0.75); }
-      if (value > 3) { dot(0.75, 0.25); dot(0.25, 0.75); }
-      if (value === 6) { dot(0.25, 0.5); dot(0.75, 0.5); }
-    }
-
-    // Backstage Screens (Renders Live Cameras with Functional Dice)
-    const studioScreenCanvas = document.createElement('canvas'); studioScreenCanvas.width = 512; studioScreenCanvas.height = 256;
-    const sScreenCtx = studioScreenCanvas.getContext('2d');
-    const studioScreenTex = new THREE.CanvasTexture(studioScreenCanvas);
-   
-    function drawScreenFeed(ctx, x, y, width, height, name, city, isLive, videoElem, isGuy, currentRoll, isRolling) {
-      ctx.fillStyle = '#05020a'; ctx.fillRect(x, y, width, height);
-      ctx.strokeStyle = '#39ff14'; ctx.lineWidth = 3; ctx.strokeRect(x, y, width, height);
-
-      if (isLive && videoElem.readyState >= 2) {
-        ctx.save(); ctx.drawImage(videoElem, x + 2, y + 2, width - 4, height - 4); ctx.restore();
-      } else {
-        ctx.fillStyle = isGuy ? '#1b2a47' : '#3d1b38'; ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
-        const cx = x + width / 2; const cy = y + height * 0.58;
-        ctx.fillStyle = isGuy ? '#4a69bd' : '#e84393'; ctx.beginPath(); ctx.ellipse(cx, cy + 25, 26, 32, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#f8c291'; ctx.beginPath(); ctx.arc(cx, cy - 10, 16, 0, Math.PI * 2); ctx.fill();
-      }
-
-      // Render Dice Overlay
-      const diceSize = 42;
-      const diceX = x + width - diceSize - 12;
-      const diceY = y + 12;
-
-      if (isRolling) {
-        const animVal = Math.floor((performance.now() / 80) % 6) + 1;
-        drawDiceFace(ctx, diceX, diceY, diceSize, animVal);
-      } else if (currentRoll !== null && currentRoll !== undefined) {
-        drawDiceFace(ctx, diceX, diceY, diceSize, currentRoll);
-      }
-
-      ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(x, y + height - 26, width, 26);
-      ctx.fillStyle = '#39ff14'; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
-      ctx.fillText(`${isLive ? 'LIVE' : 'CALL'} ${name.toUpperCase()} [${city.toUpperCase()}]`, x + width / 2, y + height - 8);
-    }
-
-    function renderBackstageScreens() {
-      sScreenCtx.fillStyle = '#060210'; sScreenCtx.fillRect(0, 0, 512, 256);
-      drawScreenFeed(sScreenCtx, 15, 20, 225, 215, p1ContestantName, p1ContestantCity, hasLiveJakeStream, videoJake, true, p1RollVal, isDiceRollingP1);
-      drawScreenFeed(sScreenCtx, 272, 20, 225, 215, p2ContestantName, p2ContestantCity, hasLiveJuneStream, videoJune, false, p2RollVal, isDiceRollingP2);
-      studioScreenTex.needsUpdate = true;
-    }
-    const studioBackScreenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshBasicMaterial({ map: studioScreenTex }));
-    studioBackScreenMesh.position.set(0, 3.4, -4.5); miniDiorama.add(studioBackScreenMesh);
-
-    // Robotic Camera Rigs
-    function createStudioRoboticCamera(x, z) {
-      const camRig = new THREE.Group(); camRig.position.set(x, 0.44, z);
-      const darkMat = new THREE.MeshStandardMaterial({ color: 0x1f1f26 });
-      const basePlate = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.42, 0.08, 16), darkMat); basePlate.position.y = 0.04; camRig.add(basePlate);
-      const outerCol = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.13, 0.55, 16), darkMat); outerCol.position.y = 0.35; camRig.add(outerCol);
-      const headPivot = new THREE.Group(); headPivot.position.y = 1.0;
-      const cameraBox = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.24, 0.42), darkMat); headPivot.add(cameraBox);
-      const lensBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.095, 0.26, 16), new THREE.MeshStandardMaterial({ color: 0x0a0a0a }));
-      lensBarrel.rotation.x = Math.PI / 2; lensBarrel.position.set(0, 0, -0.24); headPivot.add(lensBarrel);
-      const frontGlass = new THREE.Mesh(new THREE.CircleGeometry(0.08, 16), new THREE.MeshBasicMaterial({ color: 0x00f0ff }));
-      frontGlass.position.set(0, 0, -0.431); headPivot.add(frontGlass);
-      const tallyLamp = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
-      tallyLamp.position.set(0, 0.15, -0.28); headPivot.add(tallyLamp);
-      camRig.add(headPivot);
-      return { camRig, headPivot };
-    }
-    const autoCam1 = createStudioRoboticCamera(-2.4, 0.3); miniDiorama.add(autoCam1.camRig);
-    const autoCam2 = createStudioRoboticCamera(2.4, 0.3); miniDiorama.add(autoCam2.camRig);
-
-    function updateCameraAlignment() {
-      if (!gHead) return;
-      const headWorldPos = new THREE.Vector3(); gHead.getWorldPosition(headWorldPos);
-      autoCam1.headPivot.lookAt(headWorldPos); autoCam1.headPivot.rotation.y += Math.PI;
-      autoCam2.headPivot.lookAt(headWorldPos); autoCam2.headPivot.rotation.y += Math.PI;
-    }
-
-    miniDiorama.position.set(0, 7.95, -9);
-    scene.add(miniDiorama);
-    updateCameraAlignment();
-
-    function updateStudioPowerVisuals(isPower) {
-      studioSpot.intensity = isPower ? 5.0 : 1.2;
-    }
-
-    // ==========================================
-    // 4. WHITE STRETCH LIMOUSINE & DOORMAN
-    // ==========================================
-    const limoGroup = new THREE.Group();
-    limoGroup.position.set(-18, 0.4, 8.5);
-
-    const whiteLimoMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.8, roughness: 0.15 });
-    const tintedGlassMat = new THREE.MeshStandardMaterial({ color: 0x050508, roughness: 0.05 });
-    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xecf0f1, metalness: 0.95, roughness: 0.1 });
-
-    const limoBody = new THREE.Mesh(new THREE.BoxGeometry(8.5, 1.4, 2.2), whiteLimoMat);
-    limoBody.position.y = 0.55; limoGroup.add(limoBody);
-
-    const limoCabin = new THREE.Mesh(new THREE.BoxGeometry(5.6, 1.0, 1.95), tintedGlassMat);
-    limoCabin.position.set(-0.4, 1.6, 0); limoGroup.add(limoCabin);
-
-    const chromeTrim = new THREE.Mesh(new THREE.BoxGeometry(8.55, 0.08, 2.22), chromeMat);
-    chromeTrim.position.y = 0.35; limoGroup.add(chromeTrim);
-
-    const headLightL = new THREE.Mesh(new THREE.CircleGeometry(0.18, 12), new THREE.MeshBasicMaterial({ color: 0xfffae6 }));
-    headLightL.rotation.y = Math.PI / 2; headLightL.position.set(4.26, 0.65, 0.7); limoGroup.add(headLightL);
-    const headLightR = new THREE.Mesh(new THREE.CircleGeometry(0.18, 12), new THREE.MeshBasicMaterial({ color: 0xfffae6 }));
-    headLightR.rotation.y = Math.PI / 2; headLightR.position.set(4.26, 0.65, -0.7); limoGroup.add(headLightR);
-
-    // Opening Passenger Door
-    const limoDoorPivot = new THREE.Group();
-    limoDoorPivot.position.set(0.5, 0.55, -1.1);
-    const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.3, 0.1), whiteLimoMat);
-    doorMesh.position.set(0.6, 0, 0); limoDoorPivot.add(doorMesh);
-    const doorWindow = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.6, 0.12), tintedGlassMat);
-    doorWindow.position.set(0.6, 0.55, 0); limoDoorPivot.add(doorWindow);
-    limoGroup.add(limoDoorPivot);
-
-    [-3.0, -1.0, 1.0, 3.0].forEach(wx => {
-      const wL = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.28, 16), chromeMat);
-      wL.rotation.x = Math.PI / 2; wL.position.set(wx, 0.2, 1.15); limoGroup.add(wL);
-      const wR = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.28, 16), chromeMat);
-      wR.rotation.x = Math.PI / 2; wR.position.set(wx, 0.2, -1.15); limoGroup.add(wR);
-    });
-    scene.add(limoGroup);
-
-    // Uniformed Doorman Staff Plushie
-    const doormanPlushie = createCutePlushie3D(0x2c3e50, true, 1.0);
-    doormanPlushie.position.set(1.5, 0.26, 6.2);
-    doormanPlushie.rotation.y = Math.PI;
-    scene.add(doormanPlushie);
-
-    // Spectator's Personal Plushie (75% Opacity)
-    const myPlushie = createCutePlushie3D(0xff7675, false, 0.75);
-    myPlushie.position.set(0, 0.26, 7.8);
-    myPlushie.visible = false;
-    scene.add(myPlushie);
-
-    let playerPos = { x: 0, y: 0.26, z: 7.8 };
-    let playerYaw = 0;
-    let playerPitch = -0.12;
-
-    // --- 5. ARRIVAL CUTSCENE SEQUENCER ---
-    let cutsceneActive = false;
-    let cutsceneStartTime = 0;
-
-    function startLimoArrivalCutscene() {
-      cutsceneActive = true;
-      cutsceneStartTime = performance.now();
-      lensOverlay.style.display = 'block';
-      camera.position.set(3.8, 1.8, 4.0);
-      camera.lookAt(-10, 1.0, 8.5);
-    }
-
-    function updateCutscene(now) {
-      const elapsed = (now - cutsceneStartTime) / 1000;
-
-      if (elapsed < 3.0) {
-        const t = elapsed / 3.0;
-        limoGroup.position.x = -18 + (18 * Math.sin(t * Math.PI / 2));
-        camera.lookAt(limoGroup.position.x, 1.0, 8.5);
-      } else if (elapsed < 4.5) {
-        const t = (elapsed - 3.0) / 1.5;
-        limoDoorPivot.rotation.y = -t * 1.4;
-        doormanPlushie.position.z = 6.2 + (t * 0.9);
-        doormanPlushie.rotation.y = Math.PI - (t * 0.5);
-        camera.position.set(3.2 - (t * 0.5), 1.6, 4.5);
-        camera.lookAt(0.5, 0.8, 7.5);
-      } else if (elapsed < 6.5) {
-        myPlushie.visible = true;
-        const t = (elapsed - 4.5) / 2.0;
-        myPlushie.position.set(0, 0.26, 8.2 - (t * 1.6));
-        playerPos.z = myPlushie.position.z;
-
-        camera.position.lerp(new THREE.Vector3(playerPos.x, playerPos.y + 0.85, playerPos.z + 1.35), 0.08);
-        camera.lookAt(playerPos.x, playerPos.y + 0.6, playerPos.z - 4.0);
-      } else if (elapsed < 7.2) {
-        const t = (elapsed - 6.5) / 0.7;
-        limoDoorPivot.rotation.y = -1.4 * (1.0 - t);
-      } else {
-        cutsceneActive = false;
-        isSpectatorControlsLocked = false;
-        lensOverlay.style.display = 'none';
-        barTop.style.transform = 'translateY(-100%)';
-        barBottom.style.transform = 'translateY(100%)';
-        spectatorUi.style.display = 'flex';
-      }
-    }
-
-    // ==========================================
-    // 6. PC KEYBOARD (WASD / ARROWS) & ON-SCREEN CONTROLS
-    // ==========================================
-    const keysPressed = {};
-
-    window.addEventListener('keydown', (e) => {
-      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
-      keysPressed[e.code] = true;
-    });
-
-    window.addEventListener('keyup', (e) => {
-      keysPressed[e.code] = false;
-    });
-
-    function applyMovementStep(deltaSec) {
-      if (isSpectatorControlsLocked) return;
-
-      let moveFwd = 0;
-      let moveRight = 0;
-
-      if (keysPressed['KeyW'] || keysPressed['ArrowUp']) moveFwd += 1;
-      if (keysPressed['KeyS'] || keysPressed['ArrowDown']) moveFwd -= 1;
-      if (keysPressed['KeyA'] || keysPressed['ArrowLeft']) moveRight -= 1;
-      if (keysPressed['KeyD'] || keysPressed['ArrowRight']) moveRight += 1;
-
-      if (dpadActiveDirs.has('FORWARD')) moveFwd += 1;
-      if (dpadActiveDirs.has('BACK')) moveFwd -= 1;
-      if (dpadActiveDirs.has('LEFT')) moveRight -= 1;
-      if (dpadActiveDirs.has('RIGHT')) moveRight += 1;
-
-      if (moveFwd === 0 && moveRight === 0) return;
-
-      const len = Math.hypot(moveFwd, moveRight);
-      const speed = 4.2;
-      const dist = (speed * deltaSec) / len;
-
-      const fwdX = -Math.sin(playerYaw);
-      const fwdZ = -Math.cos(playerYaw);
-      const rX = Math.cos(playerYaw);
-      const rZ = -Math.sin(playerYaw);
-
-      playerPos.x += (fwdX * moveFwd + rX * moveRight) * dist;
-      playerPos.z += (fwdZ * moveFwd + rZ * moveRight) * dist;
-
-      checkZoneAndElevatorTriggers();
-    }
-
-    const dpadActiveDirs = new Set();
-    function setupDpadButton(btnId, dir) {
-      const el = document.getElementById(btnId);
-      const start = (e) => {
-        unlockAudio();
-        e.preventDefault();
-        dpadActiveDirs.add(dir);
-        el.classList.add('pressed');
-      };
-      const stop = () => {
-        dpadActiveDirs.delete(dir);
-        el.classList.remove('pressed');
-      };
-
-      el.addEventListener('mousedown', start);
-      el.addEventListener('mouseup', stop);
-      el.addEventListener('mouseleave', stop);
-      el.addEventListener('touchstart', start, { passive: false });
-      el.addEventListener('touchend', stop, { passive: false });
-    }
-    setupDpadButton('dpad-fwd', 'FORWARD');
-    setupDpadButton('dpad-back', 'BACK');
-    setupDpadButton('dpad-left', 'LEFT');
-    setupDpadButton('dpad-right', 'RIGHT');
-
-    // ==========================================
-    // 7. INTERACTIVE VISIBLE-CURSOR LOOK PAD
-    // ==========================================
-    const lookPad = document.getElementById('look-pad');
-    const lookPadKnob = document.getElementById('look-pad-knob');
-    let isLooking = false;
-    let lookOriginX = 0;
-    let lookOriginY = 0;
-
-    function handleLookStart(clientX, clientY) {
-      unlockAudio();
-      isLooking = true;
-      lookOriginX = clientX;
-      lookOriginY = clientY;
-    }
-
-    function handleLookMove(clientX, clientY) {
-      if (!isLooking || isSpectatorControlsLocked) return;
-
-      const deltaX = clientX - lookOriginX;
-      const deltaY = clientY - lookOriginY;
-      lookOriginX = clientX;
-      lookOriginY = clientY;
-
-      playerYaw -= deltaX * 0.008;
-      playerPitch = Math.max(-0.6, Math.min(0.5, playerPitch - deltaY * 0.006));
-
-      const maxOffset = 22;
-      const knobX = Math.max(-maxOffset, Math.min(maxOffset, deltaX * 3));
-      const knobY = Math.max(-maxOffset, Math.min(maxOffset, deltaY * 3));
-      lookPadKnob.style.transform = `translate(${knobX}px, ${knobY}px)`;
-    }
-
-    function handleLookEnd() {
-      isLooking = false;
-      lookPadKnob.style.transform = `translate(0px, 0px)`;
-    }
-
-    lookPad.addEventListener('mousedown', (e) => handleLookStart(e.clientX, e.clientY));
-    window.addEventListener('mousemove', (e) => handleLookMove(e.clientX, e.clientY));
-    window.addEventListener('mouseup', handleLookEnd);
-
-    lookPad.addEventListener('touchstart', (e) => {
-      if (e.touches.length > 0) handleLookStart(e.touches[0].clientX, e.touches[0].clientY);
-    }, { passive: true });
-
-    window.addEventListener('touchmove', (e) => {
-      if (isLooking && e.touches.length > 0) handleLookMove(e.touches[0].clientX, e.touches[0].clientY);
-    }, { passive: true });
-
-    window.addEventListener('touchend', handleLookEnd);
-
-    // ==========================================
-    // 8. ZONE & ELEVATOR TRIGGERS
-    // ==========================================
-    function checkZoneAndElevatorTriggers() {
-      if (currentZone === "STREET" && playerPos.z < 4.0) {
-        currentZone = "FOYER"; locationPill.textContent = "LOCATION: GRAND FOYER";
-      } else if (currentZone === "FOYER" && playerPos.z > 4.5) {
-        currentZone = "STREET"; locationPill.textContent = "LOCATION: STREET CURBSIDE";
-      }
-
-      if (currentZone === "FOYER" && playerPos.x > 6.0 && Math.abs(playerPos.z - (-5.0)) < 2.0) {
-        interactionPrompt.style.display = 'block';
-        interactionPrompt.textContent = "🚿 RESTROOM: WASHING & DRYING HANDS...";
-        playTone(380, 'sine', 0.15, 0.03);
-      }
-      else if (currentZone === "FOYER" && playerPos.x < -5.5 && Math.abs(playerPos.z - (-5.0)) < 2.0) {
-        interactionPrompt.style.display = 'block';
-        interactionPrompt.textContent = "🍿 CONCESSIONS: FRESH POPCORN & COLD DRINKS READY!";
-      }
-      else if (currentZone === "FOYER" && Math.abs(playerPos.x) < 1.6 && playerPos.z < -10.5) {
-        interactionPrompt.style.display = 'block';
-        interactionPrompt.textContent = "TAKING LIFT TO STUDIO MEZZANINE...";
-        isSpectatorControlsLocked = true;
-        playTone(523, 'sine', 0.2, 0.04);
-
-        setTimeout(() => {
-          currentZone = "STUDIO"; locationPill.textContent = "LOCATION: LIVE STUDIO TABLE";
-          interactionPrompt.style.display = 'none';
-          playerPos.x = 0; playerPos.y = 8.41; playerPos.z = -4.5; playerYaw = 0;
-          isSpectatorControlsLocked = false;
-          playTone(659, 'sine', 0.2, 0.04);
-        }, 1200);
-      }
-      else if (currentZone === "STUDIO" && playerPos.z > -2.0) {
-        interactionPrompt.style.display = 'block';
-        interactionPrompt.textContent = "TAKING LIFT DOWN TO GRAND FOYER...";
-        isSpectatorControlsLocked = true;
-        playTone(659, 'sine', 0.2, 0.04);
-
-        setTimeout(() => {
-          currentZone = "FOYER"; locationPill.textContent = "LOCATION: GRAND FOYER";
-          interactionPrompt.style.display = 'none';
-          playerPos.x = 0; playerPos.y = 0.26; playerPos.z = -9.0; playerYaw = Math.PI;
-          isSpectatorControlsLocked = false;
-          playTone(523, 'sine', 0.2, 0.04);
-        }, 1200);
-      } else {
-        interactionPrompt.style.display = 'none';
-      }
-    }
-
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-
-    // --- 9. MAIN RENDER LOOP ---
-    let prevFrameTime = performance.now();
-    let prevBroadcastTime = 0;
-
-    function animate() {
-      requestAnimationFrame(animate);
-      const time = performance.now();
-      const deltaSec = Math.min((time - prevFrameTime) / 1000, 0.1);
-      prevFrameTime = time;
-
-      if (cutsceneActive) {
-        updateCutscene(time);
-      } else {
-        applyMovementStep(deltaSec);
-
-        myPlushie.position.set(playerPos.x, playerPos.y, playerPos.z);
-        myPlushie.rotation.y = playerYaw;
-
-        const camDist = 1.35; const camHeight = 0.85;
-        camera.position.set(
-          playerPos.x + Math.sin(playerYaw) * camDist,
-          playerPos.y + camHeight,
-          playerPos.z + Math.cos(playerYaw) * camDist
-        );
-        camera.lookAt(new THREE.Vector3(
-          playerPos.x - Math.sin(playerYaw) * 4.0,
-          playerPos.y + camHeight + playerPitch * 3.0,
-          playerPos.z - Math.cos(playerYaw) * 4.0
-        ));
-
-        if (time - prevBroadcastTime > 160) {
-          prevBroadcastTime = time;
-          broadcastSpectatorMovement();
-        }
-      }
-
-      renderGoodyFace(time);
-      renderBackstageScreens();
-
-      if (pawn1?.userData?.badgeMesh) pawn1.userData.badgeMesh.quaternion.copy(camera.quaternion);
-      if (pawn2?.userData?.badgeMesh) pawn2.userData.badgeMesh.quaternion.copy(camera.quaternion);
-
-      miniAudience.children.forEach((p) => {
-        p.position.y = p.userData.initialY + Math.sin(time * 0.006 + p.userData.phase) * 0.04;
-      });
-
-      renderer.render(scene, camera);
-    }
-    animate();
+    // --- LATEST UPDATED SYNC HANDLER ---
+    // Make sure we listen for game modes (Solo / Vs. Goody) in SYNC_BOARD_STATE
+    // (Added inside connectToStudio data listener on host connection)
+
+    // Ensure SYNC_BOARD_STATE handles mode flags if present:
+    // if (data.isSoloMode !== undefined) isSoloMode = data.isSoloMode;
+    // if (data.isVsGoodyMode !== undefined) isVsGoodyMode = data.isVsGoodyMode;
+    // if (data.goodyPlayerSlot !== undefined) goodyPlayerSlot = data.goodyPlayerSlot;
+    // if (data.soloPlayerId !== undefined) soloPlayerId = data.soloPlayerId;
   </script>
 </body>
 </html>
