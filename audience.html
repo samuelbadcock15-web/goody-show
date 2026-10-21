@@ -354,7 +354,7 @@
       document.getElementById('aud-btn-0'),
       document.getElementById('aud-btn-1'),
       document.getElementById('aud-btn-2'),
-      document.getElementById('aud-btn-3']
+      document.getElementById('aud-btn-3')
     ];
 
     const lensOverlay = document.getElementById('lens-overlay');
@@ -386,7 +386,8 @@
     let isDiceRollingP2 = false;
     let p1Index = 0;
     let p2Index = 0;
-    let audienceIndex = 0; // Audience ghost counter board position
+    let audienceIndex = 0;
+    let audiencePawnIdx = 0;
 
     let activeQuestion = null;
     let activeRecap = null;
@@ -892,7 +893,7 @@
       tile.position.set(x, 0.48, z); miniDiorama.add(tile);
     }
 
-    // Dynamic Pawns & Audience Ghost Token
+    // Dynamic Pawns
     function updatePawnNameBadge(pawnGroup, displayName) {
       if (!pawnGroup || !pawnGroup.userData || !pawnGroup.userData.badgeCanvas) return;
       const c = pawnGroup.userData.badgeCanvas; const ctx = c.getContext('2d');
@@ -936,8 +937,6 @@
     pawn2.position.set(boardTileCoords[0].x + 0.08, 0.52, boardTileCoords[0].z);
     miniDiorama.add(pawn1); miniDiorama.add(pawn2);
 
-    // Audience Ghost Racing Token
-    let audiencePawnIdx = 0;
     const audiencePawn = createPlayerPawn(0xf1c40f, "AUDIENCE", true);
     audiencePawn.position.set(boardTileCoords[0].x, 0.52, boardTileCoords[0].z - 0.12);
     miniDiorama.add(audiencePawn);
