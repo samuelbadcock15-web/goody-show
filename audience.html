@@ -42,7 +42,7 @@
     }
     .btn-join:active { transform: scale(0.98); }
 
-    /* LENS CUTSCENE OVERLAY */
+    /* BROADCAST CAMERAMAN LENS CUTSCENE OVERLAY */
     #lens-overlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       pointer-events: none; z-index: 50; display: none;
@@ -82,27 +82,23 @@
       box-shadow: 0 0 18px rgba(253, 203, 110, 0.45);
     }
 
-    /* PLAY ALONG BANNER */
+    /* TRIVIA OVERLAY */
     #stage-synced-banner {
-      background: rgba(22, 9, 44, 0.95); border: 2px solid #00f0ff; border-radius: 12px;
-      padding: 10px 14px; margin: 6px auto; width: 100%; max-width: 460px; text-align: center;
-      display: none; pointer-events: auto; box-shadow: 0 0 16px rgba(0, 240, 255, 0.35);
+      background: rgba(22, 9, 44, 0.94); border: 2px solid #00f0ff; border-radius: 10px;
+      padding: 8px 12px; margin: 6px auto; width: 100%; max-width: 440px; text-align: center;
+      display: none; pointer-events: auto;
     }
     #stage-q-title { font-size: 0.75rem; color: #ffda66; font-weight: bold; font-family: monospace; }
-    #stage-feedback-tag { font-size: 0.82rem; font-weight: 900; font-family: monospace; margin: 3px 0; }
-    #stage-q-text { font-size: 0.85rem; color: #ffffff; margin: 4px 0 8px 0; font-weight: 600; line-height: 1.3; }
-    
-    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    #stage-q-text { font-size: 0.84rem; color: #ffffff; margin: 4px 0 8px 0; font-weight: 600; line-height: 1.3; }
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
     .opt-box {
-      background: #250f44; border: 1.5px solid #a29bfe; border-radius: 8px;
-      color: #fff; padding: 8px; font-size: 0.75rem; text-align: left;
+      background: #250f44; border: 1.5px solid #a29bfe; border-radius: 6px;
+      color: #fff; padding: 6px 8px; font-size: 0.72rem; text-align: left;
       font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      cursor: pointer; transition: background 0.15s, border-color 0.15s;
     }
-    .opt-box:hover { background: #391763; border-color: #00f0ff; }
-    .opt-box.selected { background: #6c5ce7 !important; border-color: #fdcb6e !important; box-shadow: 0 0 8px #fdcb6e; }
-    .opt-box.correct { background: #00b894 !important; border-color: #55efc4 !important; color: #fff !important; }
-    .opt-box.wrong { background: #d63031 !important; border-color: #ff7675 !important; opacity: 0.7; }
+    .opt-box.selected { background: #6c5ce7; border-color: #fdcb6e; }
+    .opt-box.correct { background: #00b894 !important; border-color: #55efc4 !important; }
+    .opt-box.wrong { background: #d63031 !important; border-color: #ff7675 !important; }
 
     /* CHAT */
     #chat-container {
@@ -133,7 +129,7 @@
       font-size: 0.75rem; padding: 0 12px; cursor: pointer;
     }
 
-    /* CONTROLS */
+    /* CONTROLS BAR: D-PAD (LEFT) & LOOK PAD (RIGHT) */
     .controls-wrapper {
       display: flex; justify-content: space-between; align-items: flex-end;
       width: 100%; pointer-events: none; padding: 0 4px;
@@ -142,7 +138,9 @@
       background: rgba(20, 7, 40, 0.90); border: 1.5px solid #d4af37; border-radius: 10px;
       padding: 4px; pointer-events: auto; display: flex; flex-direction: column; align-items: center;
     }
-    .dpad-sublabel { font-size: 0.60rem; font-family: monospace; color: #ffda66; margin-top: 2px; }
+    .dpad-sublabel {
+      font-size: 0.60rem; font-family: monospace; color: #ffda66; margin-top: 2px;
+    }
     .dpad-grid { display: grid; grid-template-columns: 44px 44px 44px; grid-template-rows: 32px 32px; gap: 4px; }
     .dpad-btn {
       background: #2b1154; border: 1.5px solid #d4af37; border-radius: 6px; color: #fff;
@@ -164,7 +162,10 @@
       opacity: 0.85; pointer-events: none; transition: transform 0.05s linear;
       box-shadow: 0 0 8px #00f0ff;
     }
-    #look-pad-label { font-size: 0.62rem; font-family: monospace; color: #00f0ff; margin-top: 4px; pointer-events: none; }
+    #look-pad-label {
+      font-size: 0.62rem; font-family: monospace; color: #00f0ff;
+      margin-top: 4px; pointer-events: none; font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -200,16 +201,14 @@
 
     <div id="interaction-prompt">PRESS [ W / ▲ ] TO TAKE ELEVATOR</div>
 
-    <!-- PLAY ALONG AT HOME BANNER -->
     <div id="stage-synced-banner">
-      <div id="stage-q-title">PLAY ALONG AT HOME</div>
-      <div id="stage-feedback-tag"></div>
-      <div id="stage-q-text">Standby for question...</div>
+      <div id="stage-q-title">CURRENT QUESTION</div>
+      <div id="stage-q-text">Standby for next question...</div>
       <div class="options-grid" id="stage-options-grid" style="display:none;">
-        <button class="opt-box" id="aud-opt-0">A) ...</button>
-        <button class="opt-box" id="aud-opt-1">B) ...</button>
-        <button class="opt-box" id="aud-opt-2">C) ...</button>
-        <button class="opt-box" id="aud-opt-3">D) ...</button>
+        <div class="opt-box" id="aud-opt-0">A) ...</div>
+        <div class="opt-box" id="aud-opt-1">B) ...</div>
+        <div class="opt-box" id="aud-opt-2">C) ...</div>
+        <div class="opt-box" id="aud-opt-3">D) ...</div>
       </div>
     </div>
 
@@ -334,10 +333,8 @@
     const locationPill = document.getElementById('location-pill');
     const showClockPill = document.getElementById('show-clock-pill');
     const interactionPrompt = document.getElementById('interaction-prompt');
-
     const stageSyncedBanner = document.getElementById('stage-synced-banner');
     const stageQTitle = document.getElementById('stage-q-title');
-    const stageFeedbackTag = document.getElementById('stage-feedback-tag');
     const stageQText = document.getElementById('stage-q-text');
     const stageOptionsGrid = document.getElementById('stage-options-grid');
     const audOptBoxes = [
@@ -372,8 +369,6 @@
     let p2ContestantCity = "Nottingham";
     let p1RollVal = null;
     let p2RollVal = null;
-    let isDiceRollingP1 = false;
-    let isDiceRollingP2 = false;
     let p1Index = 0;
     let p2Index = 0;
 
@@ -381,10 +376,6 @@
     let activeRecap = null;
     let stageSelectedOption = null;
     let stageOptionStatus = null;
-
-    // Audience Play-Along State
-    let audienceSelectedOption = null;
-    let audienceLocked = false;
 
     const videoJake = document.createElement('video');
     videoJake.autoplay = true; videoJake.playsInline = true; videoJake.muted = true;
@@ -405,21 +396,7 @@
       startLimoArrivalCutscene();
     });
 
-    // Wire Play-Along Buttons
-    audOptBoxes.forEach((btn, idx) => {
-      btn.addEventListener('click', () => {
-        if (audienceLocked || !activeQuestion || !activeQuestion.options) return;
-        audienceSelectedOption = activeQuestion.options[idx];
-        playTone(600, 'sine', 0.08, 0.05);
-
-        audOptBoxes.forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        stageFeedbackTag.style.color = "#00f0ff";
-        stageFeedbackTag.textContent = "YOUR GUESS IS LOCKED IN!";
-      });
-    });
-
-    // WEBRTC CONNECTION & DATA SYNC
+    // WEBRTC CONNECTION & STREAM RECEIVER
     function connectToStudio() {
       peer = new Peer();
       peer.on('open', () => {
@@ -445,12 +422,7 @@
             updateStudioPowerVisuals(data.studioPower);
             if (data.p1Name) { p1ContestantName = data.p1Name; updatePawnNameBadge(pawn1, data.p1Name); }
             if (data.p2Name) { p2ContestantName = data.p2Name; updatePawnNameBadge(pawn2, data.p2Name); }
-            
-            p1RollVal = data.p1Roll !== undefined ? data.p1Roll : p1RollVal;
-            p2RollVal = data.p2Roll !== undefined ? data.p2Roll : p2RollVal;
-            isDiceRollingP1 = Boolean(data.p1Rolling);
-            isDiceRollingP2 = Boolean(data.p2Rolling);
-
+           
             if (data.p1Index !== undefined && data.p1Index !== p1Index) {
               const old = p1Index; p1Index = data.p1Index;
               animatePawnHop(pawn1, old, p1Index, -0.08);
@@ -461,25 +433,16 @@
             }
             renderStageQuestionBoard();
           } else if (data.type === 'SHOW_QUESTION_LOCKED') {
-            activeQuestion = data.question;
-            activeRecap = null;
-            stageSelectedOption = null;
-            stageOptionStatus = null;
-
-            audienceSelectedOption = null;
-            audienceLocked = false;
-            stageFeedbackTag.textContent = "";
-
+            activeQuestion = data.question; activeRecap = null;
+            stageSelectedOption = null; stageOptionStatus = null;
             renderStageQuestionBoard();
-
             stageSyncedBanner.style.display = 'block';
-            stageQTitle.textContent = `PLAY ALONG: ${data.question.country.toUpperCase()} [${data.activeContestantName.toUpperCase()}]`;
+            stageQTitle.textContent = `${data.question.country.toUpperCase()} [${data.activeContestantName.toUpperCase()}]`;
             stageQText.textContent = data.question.text || data.question.q;
 
             if (data.question.options && data.question.options.length === 4) {
               stageOptionsGrid.style.display = 'grid';
               data.question.options.forEach((opt, idx) => {
-                audOptBoxes[idx].style.display = 'block';
                 audOptBoxes[idx].textContent = `${["A", "B", "C", "D"][idx]}) ${opt}`;
                 audOptBoxes[idx].className = 'opt-box';
               });
@@ -487,57 +450,29 @@
               stageOptionsGrid.style.display = 'none';
             }
           } else if (data.type === 'OPPONENT_ANSWERED') {
-            stageSelectedOption = data.chosenAnswer;
-            stageOptionStatus = 'selected';
+            stageSelectedOption = data.chosenAnswer; stageOptionStatus = 'selected';
             renderStageQuestionBoard();
             if (activeQuestion && activeQuestion.options) {
               const idx = activeQuestion.options.indexOf(data.chosenAnswer);
               if (idx !== -1) audOptBoxes[idx].className = 'opt-box selected';
             }
           } else if (data.type === 'EVALUATION_RESULT') {
-            audienceLocked = true;
             stageOptionStatus = data.isCorrect ? 'correct' : 'wrong';
             stageSelectedOption = data.chosenAnswer;
-            const actualCorrect = data.correctAnswer || (data.isCorrect ? data.chosenAnswer : null);
-
             renderStageQuestionBoard();
-
             if (activeQuestion && activeQuestion.options) {
-              activeQuestion.options.forEach((opt, idx) => {
-                if (actualCorrect && opt === actualCorrect) {
-                  audOptBoxes[idx].classList.add('correct');
-                } else if (audienceSelectedOption === opt && !data.isCorrect) {
-                  audOptBoxes[idx].classList.add('wrong');
-                }
-              });
+              const idx = activeQuestion.options.indexOf(data.chosenAnswer);
+              if (idx !== -1) audOptBoxes[idx].className = `opt-box ${data.isCorrect ? 'correct' : 'wrong'}`;
             }
-
-            if (audienceSelectedOption) {
-              const userGotItRight = actualCorrect ? (audienceSelectedOption === actualCorrect) : (data.isCorrect && audienceSelectedOption === data.chosenAnswer);
-              if (userGotItRight) {
-                stageFeedbackTag.style.color = '#39ff14';
-                stageFeedbackTag.textContent = '★ WELL DONE! YOU GOT IT RIGHT! ★';
-                playTone(780, 'triangle', 0.25, 0.08);
-              } else {
-                stageFeedbackTag.style.color = '#ff7675';
-                stageFeedbackTag.textContent = 'UNLUCKY! BETTER LUCK NEXT TIME!';
-                playTone(220, 'sawtooth', 0.25, 0.08);
-              }
-            } else {
-              stageFeedbackTag.style.color = '#ffda66';
-              stageFeedbackTag.textContent = 'TIME UP! NO GUESS WAS MADE.';
-            }
-
             setTimeout(() => {
               activeRecap = { country: data.country, text: data.recap, isCorrect: data.isCorrect };
               activeQuestion = null;
               renderStageQuestionBoard();
               stageSyncedBanner.style.display = 'block';
               stageOptionsGrid.style.display = 'none';
-              stageFeedbackTag.textContent = "";
               stageQTitle.textContent = `WHAT WE LEARNED (${data.country})`;
               stageQText.textContent = data.recap;
-            }, 1600);
+            }, 1400);
           } else if (data.type === 'HOST_SPEAK') {
             isGoodySpeaking = true;
             playHostSpeechLocally(data.text);
@@ -548,11 +483,14 @@
             handleRemoteSpectatorMovement(data);
           } else if (data.type === 'HOST_EJECTED_SPECTATOR') {
             alert(data.message || "You have been removed from the studio by the director.");
-            window.location.reload();
+            if (dataConn) { try { dataConn.close(); } catch(e){} }
+            if (peer) { try { peer.destroy(); } catch(e){} }
+            spectatorUi.style.display = 'none';
+            entryModal.style.display = 'flex';
           }
         });
 
-        // INCOMING VIDEO & DICE STREAM RELAY FROM HOST
+        // INCOMING VIDEO RELAY FROM HOST
         peer.on('call', (call) => {
           call.answer();
           call.on('stream', (remoteStream) => {
@@ -628,7 +566,8 @@
       const text = chatTextInput.value.trim();
       if (!text) return;
       const now = performance.now();
-      
+     
+      // Cooldown rule: 2.5s between messages
       if (now - lastMessageSentTime < 2500) return;
       lastMessageSentTime = now;
 
@@ -1010,17 +949,17 @@
       const pGroup = new THREE.Group();
       const isTransparent = opacity < 1.0;
 
-      const pMat = new THREE.MeshStandardMaterial({ 
-        color: color, 
-        roughness: 0.95, 
-        transparent: isTransparent, 
-        opacity: opacity 
+      const pMat = new THREE.MeshStandardMaterial({
+        color: color,
+        roughness: 0.95,
+        transparent: isTransparent,
+        opacity: opacity
       });
-      const earMat = new THREE.MeshStandardMaterial({ 
-        color: 0xff7675, 
-        roughness: 0.95, 
-        transparent: isTransparent, 
-        opacity: opacity 
+      const earMat = new THREE.MeshStandardMaterial({
+        color: 0xff7675,
+        roughness: 0.95,
+        transparent: isTransparent,
+        opacity: opacity
       });
 
       const pBody = new THREE.Mesh(new THREE.SphereGeometry(0.28, 14, 14), pMat); pBody.position.y = 0.28; pGroup.add(pBody);
@@ -1028,13 +967,13 @@
 
       if (hasUniform) {
         const jacket = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.29, 0.30, 0.26, 16), 
+          new THREE.CylinderGeometry(0.29, 0.30, 0.26, 16),
           new THREE.MeshStandardMaterial({ color: 0x5a0b1d, transparent: isTransparent, opacity: opacity })
         );
         jacket.position.y = 0.28; pGroup.add(jacket);
         [-0.04, 0.04].forEach(bx => {
           const goldBtn = new THREE.Mesh(
-            new THREE.SphereGeometry(0.02, 6, 6), 
+            new THREE.SphereGeometry(0.02, 6, 6),
             new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.9, transparent: isTransparent, opacity: opacity })
           );
           goldBtn.position.set(bx, 0.28, -0.29); pGroup.add(goldBtn);
@@ -1056,12 +995,12 @@
       const shineR = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 6), eyeWhiteMat); shineR.position.set(0.06, 0.612, -0.21); pGroup.add(eyeR, shineR);
 
       const snout = new THREE.Mesh(
-        new THREE.SphereGeometry(0.042, 8, 8), 
+        new THREE.SphereGeometry(0.042, 8, 8),
         new THREE.MeshStandardMaterial({ color: 0xff8fab, roughness: 0.6, transparent: isTransparent, opacity: opacity })
       );
       snout.scale.set(1.2, 0.8, 1); snout.position.set(0, 0.56, -0.21); pGroup.add(snout);
       const mouth = new THREE.Mesh(
-        new THREE.TorusGeometry(0.03, 0.007, 4, 8, Math.PI), 
+        new THREE.TorusGeometry(0.03, 0.007, 4, 8, Math.PI),
         new THREE.MeshBasicMaterial({ color: 0x222222, transparent: isTransparent, opacity: opacity })
       );
       mouth.position.set(0, 0.525, -0.21); mouth.rotation.x = -Math.PI * 0.1; pGroup.add(mouth);
@@ -1123,23 +1062,12 @@
       faceTex.needsUpdate = true;
     }
 
-    // BACKSTAGE TV SCREENS WITH LIVE DICE RENDERING
-    function drawDiceFace(ctx, x, y, size, value) {
-      ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#222222'; ctx.lineWidth = 3;
-      ctx.fillRect(x, y, size, size); ctx.strokeRect(x, y, size, size);
-      ctx.fillStyle = '#e74c3c';
-      const dot = (dx, dy) => { ctx.beginPath(); ctx.arc(x + dx * size, y + dy * size, size * 0.08, 0, Math.PI * 2); ctx.fill(); };
-      if (value % 2 === 1) dot(0.5, 0.5);
-      if (value > 1) { dot(0.25, 0.25); dot(0.75, 0.75); }
-      if (value > 3) { dot(0.75, 0.25); dot(0.25, 0.75); }
-      if (value === 6) { dot(0.25, 0.5); dot(0.75, 0.5); }
-    }
-
+    // Backstage Screens (Renders the Actual Live Cameras)
     const studioScreenCanvas = document.createElement('canvas'); studioScreenCanvas.width = 512; studioScreenCanvas.height = 256;
     const sScreenCtx = studioScreenCanvas.getContext('2d');
     const studioScreenTex = new THREE.CanvasTexture(studioScreenCanvas);
-    
-    function drawScreenFeed(ctx, x, y, width, height, name, city, isLive, videoElem, isGuy, currentRoll, isRolling) {
+   
+    function drawScreenFeed(ctx, x, y, width, height, name, city, isLive, videoElem, isGuy, currentRoll) {
       ctx.fillStyle = '#05020a'; ctx.fillRect(x, y, width, height);
       ctx.strokeStyle = '#39ff14'; ctx.lineWidth = 3; ctx.strokeRect(x, y, width, height);
 
@@ -1151,19 +1079,6 @@
         ctx.fillStyle = isGuy ? '#4a69bd' : '#e84393'; ctx.beginPath(); ctx.ellipse(cx, cy + 25, 26, 32, 0, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#f8c291'; ctx.beginPath(); ctx.arc(cx, cy - 10, 16, 0, Math.PI * 2); ctx.fill();
       }
-
-      // Render Dice on Screen Feed
-      const diceSize = 42;
-      const diceX = x + width - diceSize - 12;
-      const diceY = y + 12;
-
-      if (isRolling) {
-        const animVal = Math.floor((performance.now() / 80) % 6) + 1;
-        drawDiceFace(ctx, diceX, diceY, diceSize, animVal);
-      } else if (currentRoll !== null && currentRoll !== undefined) {
-        drawDiceFace(ctx, diceX, diceY, diceSize, currentRoll);
-      }
-
       ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(x, y + height - 26, width, 26);
       ctx.fillStyle = '#39ff14'; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
       ctx.fillText(`${isLive ? 'LIVE' : 'CALL'} ${name.toUpperCase()} [${city.toUpperCase()}]`, x + width / 2, y + height - 8);
@@ -1171,14 +1086,14 @@
 
     function renderBackstageScreens() {
       sScreenCtx.fillStyle = '#060210'; sScreenCtx.fillRect(0, 0, 512, 256);
-      drawScreenFeed(sScreenCtx, 15, 20, 225, 215, p1ContestantName, p1ContestantCity, hasLiveJakeStream, videoJake, true, p1RollVal, isDiceRollingP1);
-      drawScreenFeed(sScreenCtx, 272, 20, 225, 215, p2ContestantName, p2ContestantCity, hasLiveJuneStream, videoJune, false, p2RollVal, isDiceRollingP2);
+      drawScreenFeed(sScreenCtx, 15, 20, 225, 215, p1ContestantName, p1ContestantCity, hasLiveJakeStream, videoJake, true, p1RollVal);
+      drawScreenFeed(sScreenCtx, 272, 20, 225, 215, p2ContestantName, p2ContestantCity, hasLiveJuneStream, videoJune, false, p2RollVal);
       studioScreenTex.needsUpdate = true;
     }
     const studioBackScreenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshBasicMaterial({ map: studioScreenTex }));
     studioBackScreenMesh.position.set(0, 3.4, -4.5); miniDiorama.add(studioBackScreenMesh);
 
-    // Robotic Cameras
+    // Robotic Camera Rigs
     function createStudioRoboticCamera(x, z) {
       const camRig = new THREE.Group(); camRig.position.set(x, 0.44, z);
       const darkMat = new THREE.MeshStandardMaterial({ color: 0x1f1f26 });
@@ -1213,108 +1128,319 @@
       studioSpot.intensity = isPower ? 5.0 : 1.2;
     }
 
-    // Limo Cutscene
-    const limoGroup = new THREE.Group(); limoGroup.position.set(-18, 0.4, 8.5);
-    const limoBody = new THREE.Mesh(new THREE.BoxGeometry(8.5, 1.4, 2.2), new THREE.MeshStandardMaterial({ color: 0xffffff })); limoBody.position.y = 0.55; limoGroup.add(limoBody);
+    // ==========================================
+    // 4. WHITE STRETCH LIMOUSINE & DOORMAN
+    // ==========================================
+    const limoGroup = new THREE.Group();
+    limoGroup.position.set(-18, 0.4, 8.5);
+
+    const whiteLimoMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.8, roughness: 0.15 });
+    const tintedGlassMat = new THREE.MeshStandardMaterial({ color: 0x050508, roughness: 0.05 });
+    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xecf0f1, metalness: 0.95, roughness: 0.1 });
+
+    const limoBody = new THREE.Mesh(new THREE.BoxGeometry(8.5, 1.4, 2.2), whiteLimoMat);
+    limoBody.position.y = 0.55; limoGroup.add(limoBody);
+
+    const limoCabin = new THREE.Mesh(new THREE.BoxGeometry(5.6, 1.0, 1.95), tintedGlassMat);
+    limoCabin.position.set(-0.4, 1.6, 0); limoGroup.add(limoCabin);
+
+    const chromeTrim = new THREE.Mesh(new THREE.BoxGeometry(8.55, 0.08, 2.22), chromeMat);
+    chromeTrim.position.y = 0.35; limoGroup.add(chromeTrim);
+
+    const headLightL = new THREE.Mesh(new THREE.CircleGeometry(0.18, 12), new THREE.MeshBasicMaterial({ color: 0xfffae6 }));
+    headLightL.rotation.y = Math.PI / 2; headLightL.position.set(4.26, 0.65, 0.7); limoGroup.add(headLightL);
+    const headLightR = new THREE.Mesh(new THREE.CircleGeometry(0.18, 12), new THREE.MeshBasicMaterial({ color: 0xfffae6 }));
+    headLightR.rotation.y = Math.PI / 2; headLightR.position.set(4.26, 0.65, -0.7); limoGroup.add(headLightR);
+
+    // Opening Passenger Door
+    const limoDoorPivot = new THREE.Group();
+    limoDoorPivot.position.set(0.5, 0.55, -1.1);
+    const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.3, 0.1), whiteLimoMat);
+    doorMesh.position.set(0.6, 0, 0); limoDoorPivot.add(doorMesh);
+    const doorWindow = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.6, 0.12), tintedGlassMat);
+    doorWindow.position.set(0.6, 0.55, 0); limoDoorPivot.add(doorWindow);
+    limoGroup.add(limoDoorPivot);
+
+    [-3.0, -1.0, 1.0, 3.0].forEach(wx => {
+      const wL = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.28, 16), chromeMat);
+      wL.rotation.x = Math.PI / 2; wL.position.set(wx, 0.2, 1.15); limoGroup.add(wL);
+      const wR = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.28, 16), chromeMat);
+      wR.rotation.x = Math.PI / 2; wR.position.set(wx, 0.2, -1.15); limoGroup.add(wR);
+    });
     scene.add(limoGroup);
 
-    const myPlushie = createCutePlushie3D(0xff7675, false, 0.75); myPlushie.position.set(0, 0.26, 7.8); myPlushie.visible = false; scene.add(myPlushie);
+    // Uniformed Doorman Staff Plushie
+    const doormanPlushie = createCutePlushie3D(0x2c3e50, true, 1.0);
+    doormanPlushie.position.set(1.5, 0.26, 6.2);
+    doormanPlushie.rotation.y = Math.PI;
+    scene.add(doormanPlushie);
+
+    // Spectator's Personal Plushie (75% Opacity)
+    const myPlushie = createCutePlushie3D(0xff7675, false, 0.75);
+    myPlushie.position.set(0, 0.26, 7.8);
+    myPlushie.visible = false;
+    scene.add(myPlushie);
+
     let playerPos = { x: 0, y: 0.26, z: 7.8 };
-    let playerYaw = 0; let playerPitch = -0.12;
-    let cutsceneActive = false; let cutsceneStartTime = 0;
+    let playerYaw = 0;
+    let playerPitch = -0.12;
+
+    // --- 5. ARRIVAL CUTSCENE SEQUENCER ---
+    let cutsceneActive = false;
+    let cutsceneStartTime = 0;
 
     function startLimoArrivalCutscene() {
-      cutsceneActive = true; cutsceneStartTime = performance.now();
-      lensOverlay.style.display = 'block'; camera.position.set(3.8, 1.8, 4.0);
+      cutsceneActive = true;
+      cutsceneStartTime = performance.now();
+      lensOverlay.style.display = 'block';
+      camera.position.set(3.8, 1.8, 4.0);
+      camera.lookAt(-10, 1.0, 8.5);
     }
 
     function updateCutscene(now) {
       const elapsed = (now - cutsceneStartTime) / 1000;
+
       if (elapsed < 3.0) {
-        limoGroup.position.x = -18 + (18 * Math.sin((elapsed / 3.0) * Math.PI / 2));
-      } else if (elapsed < 5.0) {
+        const t = elapsed / 3.0;
+        limoGroup.position.x = -18 + (18 * Math.sin(t * Math.PI / 2));
+        camera.lookAt(limoGroup.position.x, 1.0, 8.5);
+      } else if (elapsed < 4.5) {
+        const t = (elapsed - 3.0) / 1.5;
+        limoDoorPivot.rotation.y = -t * 1.4;
+        doormanPlushie.position.z = 6.2 + (t * 0.9);
+        doormanPlushie.rotation.y = Math.PI - (t * 0.5);
+        camera.position.set(3.2 - (t * 0.5), 1.6, 4.5);
+        camera.lookAt(0.5, 0.8, 7.5);
+      } else if (elapsed < 6.5) {
         myPlushie.visible = true;
+        const t = (elapsed - 4.5) / 2.0;
+        myPlushie.position.set(0, 0.26, 8.2 - (t * 1.6));
+        playerPos.z = myPlushie.position.z;
+
+        camera.position.lerp(new THREE.Vector3(playerPos.x, playerPos.y + 0.85, playerPos.z + 1.35), 0.08);
+        camera.lookAt(playerPos.x, playerPos.y + 0.6, playerPos.z - 4.0);
+      } else if (elapsed < 7.2) {
+        const t = (elapsed - 6.5) / 0.7;
+        limoDoorPivot.rotation.y = -1.4 * (1.0 - t);
       } else {
-        cutsceneActive = false; isSpectatorControlsLocked = false;
-        lensOverlay.style.display = 'none'; spectatorUi.style.display = 'flex';
+        cutsceneActive = false;
+        isSpectatorControlsLocked = false;
+        lensOverlay.style.display = 'none';
+        barTop.style.transform = 'translateY(-100%)';
+        barBottom.style.transform = 'translateY(100%)';
+        spectatorUi.style.display = 'flex';
       }
     }
 
-    // Controls
+    // ==========================================
+    // 6. PC KEYBOARD (WASD / ARROWS) & ON-SCREEN CONTROLS
+    // ==========================================
     const keysPressed = {};
-    window.addEventListener('keydown', (e) => { if (e.target.tagName !== 'INPUT') keysPressed[e.code] = true; });
-    window.addEventListener('keyup', (e) => { keysPressed[e.code] = false; });
+
+    window.addEventListener('keydown', (e) => {
+      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+      keysPressed[e.code] = true;
+    });
+
+    window.addEventListener('keyup', (e) => {
+      keysPressed[e.code] = false;
+    });
 
     function applyMovementStep(deltaSec) {
       if (isSpectatorControlsLocked) return;
-      let moveFwd = 0; let moveRight = 0;
+
+      let moveFwd = 0;
+      let moveRight = 0;
+
       if (keysPressed['KeyW'] || keysPressed['ArrowUp']) moveFwd += 1;
       if (keysPressed['KeyS'] || keysPressed['ArrowDown']) moveFwd -= 1;
       if (keysPressed['KeyA'] || keysPressed['ArrowLeft']) moveRight -= 1;
       if (keysPressed['KeyD'] || keysPressed['ArrowRight']) moveRight += 1;
+
+      if (dpadActiveDirs.has('FORWARD')) moveFwd += 1;
+      if (dpadActiveDirs.has('BACK')) moveFwd -= 1;
+      if (dpadActiveDirs.has('LEFT')) moveRight -= 1;
+      if (dpadActiveDirs.has('RIGHT')) moveRight += 1;
+
       if (moveFwd === 0 && moveRight === 0) return;
 
-      const speed = 4.2 * deltaSec;
-      playerPos.x += (-Math.sin(playerYaw) * moveFwd + Math.cos(playerYaw) * moveRight) * speed;
-      playerPos.z += (-Math.cos(playerYaw) * moveFwd - Math.sin(playerYaw) * moveRight) * speed;
+      const len = Math.hypot(moveFwd, moveRight);
+      const speed = 4.2;
+      const dist = (speed * deltaSec) / len;
 
-      if (currentZone === "FOYER" && Math.abs(playerPos.x) < 1.6 && playerPos.z < -10.5) {
-        playerPos.x = 0; playerPos.y = 8.41; playerPos.z = -4.5;
-        currentZone = "STUDIO"; locationPill.textContent = "LOCATION: LIVE STUDIO TABLE";
-      }
+      const fwdX = -Math.sin(playerYaw);
+      const fwdZ = -Math.cos(playerYaw);
+      const rX = Math.cos(playerYaw);
+      const rZ = -Math.sin(playerYaw);
+
+      playerPos.x += (fwdX * moveFwd + rX * moveRight) * dist;
+      playerPos.z += (fwdZ * moveFwd + rZ * moveRight) * dist;
+
+      checkZoneAndElevatorTriggers();
     }
 
     const dpadActiveDirs = new Set();
     function setupDpadButton(btnId, dir) {
       const el = document.getElementById(btnId);
-      const start = (e) => { unlockAudio(); e.preventDefault(); dpadActiveDirs.add(dir); el.classList.add('pressed'); };
-      const stop = () => { dpadActiveDirs.delete(dir); el.classList.remove('pressed'); };
-      el.addEventListener('mousedown', start); el.addEventListener('mouseup', stop); el.addEventListener('mouseleave', stop);
-      el.addEventListener('touchstart', start, { passive: false }); el.addEventListener('touchend', stop, { passive: false });
-    }
-    setupDpadButton('dpad-fwd', 'FORWARD'); setupDpadButton('dpad-back', 'BACK');
-    setupDpadButton('dpad-left', 'LEFT'); setupDpadButton('dpad-right', 'RIGHT');
+      const start = (e) => {
+        unlockAudio();
+        e.preventDefault();
+        dpadActiveDirs.add(dir);
+        el.classList.add('pressed');
+      };
+      const stop = () => {
+        dpadActiveDirs.delete(dir);
+        el.classList.remove('pressed');
+      };
 
+      el.addEventListener('mousedown', start);
+      el.addEventListener('mouseup', stop);
+      el.addEventListener('mouseleave', stop);
+      el.addEventListener('touchstart', start, { passive: false });
+      el.addEventListener('touchend', stop, { passive: false });
+    }
+    setupDpadButton('dpad-fwd', 'FORWARD');
+    setupDpadButton('dpad-back', 'BACK');
+    setupDpadButton('dpad-left', 'LEFT');
+    setupDpadButton('dpad-right', 'RIGHT');
+
+    // ==========================================
+    // 7. INTERACTIVE VISIBLE-CURSOR LOOK PAD
+    // ==========================================
     const lookPad = document.getElementById('look-pad');
     const lookPadKnob = document.getElementById('look-pad-knob');
-    let isLooking = false, lookOriginX = 0, lookOriginY = 0;
+    let isLooking = false;
+    let lookOriginX = 0;
+    let lookOriginY = 0;
 
-    function handleLookStart(x, y) { unlockAudio(); isLooking = true; lookOriginX = x; lookOriginY = y; }
-    function handleLookMove(x, y) {
-      if (!isLooking || isSpectatorControlsLocked) return;
-      const dx = x - lookOriginX, dy = y - lookOriginY;
-      lookOriginX = x; lookOriginY = y;
-      playerYaw -= dx * 0.008;
-      playerPitch = Math.max(-0.6, Math.min(0.5, playerPitch - dy * 0.006));
-      lookPadKnob.style.transform = `translate(${Math.max(-20, Math.min(20, dx * 3))}px, ${Math.max(-20, Math.min(20, dy * 3))}px)`;
+    function handleLookStart(clientX, clientY) {
+      unlockAudio();
+      isLooking = true;
+      lookOriginX = clientX;
+      lookOriginY = clientY;
     }
-    function handleLookEnd() { isLooking = false; lookPadKnob.style.transform = 'translate(0px, 0px)'; }
 
-    lookPad.addEventListener('mousedown', e => handleLookStart(e.clientX, e.clientY));
-    window.addEventListener('mousemove', e => handleLookMove(e.clientX, e.clientY));
+    function handleLookMove(clientX, clientY) {
+      if (!isLooking || isSpectatorControlsLocked) return;
+
+      const deltaX = clientX - lookOriginX;
+      const deltaY = clientY - lookOriginY;
+      lookOriginX = clientX;
+      lookOriginY = clientY;
+
+      playerYaw -= deltaX * 0.008;
+      playerPitch = Math.max(-0.6, Math.min(0.5, playerPitch - deltaY * 0.006));
+
+      const maxOffset = 22;
+      const knobX = Math.max(-maxOffset, Math.min(maxOffset, deltaX * 3));
+      const knobY = Math.max(-maxOffset, Math.min(maxOffset, deltaY * 3));
+      lookPadKnob.style.transform = `translate(${knobX}px, ${knobY}px)`;
+    }
+
+    function handleLookEnd() {
+      isLooking = false;
+      lookPadKnob.style.transform = `translate(0px, 0px)`;
+    }
+
+    lookPad.addEventListener('mousedown', (e) => handleLookStart(e.clientX, e.clientY));
+    window.addEventListener('mousemove', (e) => handleLookMove(e.clientX, e.clientY));
     window.addEventListener('mouseup', handleLookEnd);
 
-    lookPad.addEventListener('touchstart', e => { if (e.touches.length) handleLookStart(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
-    window.addEventListener('touchmove', e => { if (isLooking && e.touches.length) handleLookMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+    lookPad.addEventListener('touchstart', (e) => {
+      if (e.touches.length > 0) handleLookStart(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+      if (isLooking && e.touches.length > 0) handleLookMove(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+
     window.addEventListener('touchend', handleLookEnd);
 
-    let prevTime = performance.now();
+    // ==========================================
+    // 8. ZONE & ELEVATOR TRIGGERS
+    // ==========================================
+    function checkZoneAndElevatorTriggers() {
+      if (currentZone === "STREET" && playerPos.z < 4.0) {
+        currentZone = "FOYER"; locationPill.textContent = "LOCATION: GRAND FOYER";
+      } else if (currentZone === "FOYER" && playerPos.z > 4.5) {
+        currentZone = "STREET"; locationPill.textContent = "LOCATION: STREET CURBSIDE";
+      }
+
+      if (currentZone === "FOYER" && playerPos.x > 6.0 && Math.abs(playerPos.z - (-5.0)) < 2.0) {
+        interactionPrompt.style.display = 'block';
+        interactionPrompt.textContent = "🚿 RESTROOM: WASHING & DRYING HANDS...";
+        playTone(380, 'sine', 0.15, 0.03);
+      }
+      else if (currentZone === "FOYER" && playerPos.x < -5.5 && Math.abs(playerPos.z - (-5.0)) < 2.0) {
+        interactionPrompt.style.display = 'block';
+        interactionPrompt.textContent = "🍿 CONCESSIONS: FRESH POPCORN & COLD DRINKS READY!";
+      }
+      else if (currentZone === "FOYER" && Math.abs(playerPos.x) < 1.6 && playerPos.z < -10.5) {
+        interactionPrompt.style.display = 'block';
+        interactionPrompt.textContent = "TAKING LIFT TO STUDIO MEZZANINE...";
+        isSpectatorControlsLocked = true;
+        playTone(523, 'sine', 0.2, 0.04);
+
+        setTimeout(() => {
+          currentZone = "STUDIO"; locationPill.textContent = "LOCATION: LIVE STUDIO TABLE";
+          interactionPrompt.style.display = 'none';
+          playerPos.x = 0; playerPos.y = 8.41; playerPos.z = -4.5; playerYaw = 0;
+          isSpectatorControlsLocked = false;
+          playTone(659, 'sine', 0.2, 0.04);
+        }, 1200);
+      }
+      else if (currentZone === "STUDIO" && playerPos.z > -2.0) {
+        interactionPrompt.style.display = 'block';
+        interactionPrompt.textContent = "TAKING LIFT DOWN TO GRAND FOYER...";
+        isSpectatorControlsLocked = true;
+        playTone(659, 'sine', 0.2, 0.04);
+
+        setTimeout(() => {
+          currentZone = "FOYER"; locationPill.textContent = "LOCATION: GRAND FOYER";
+          interactionPrompt.style.display = 'none';
+          playerPos.x = 0; playerPos.y = 0.26; playerPos.z = -9.0; playerYaw = Math.PI;
+          isSpectatorControlsLocked = false;
+          playTone(523, 'sine', 0.2, 0.04);
+        }, 1200);
+      } else {
+        interactionPrompt.style.display = 'none';
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // --- 9. MAIN RENDER LOOP ---
+    let prevFrameTime = performance.now();
     let prevBroadcastTime = 0;
 
     function animate() {
       requestAnimationFrame(animate);
       const time = performance.now();
-      const deltaSec = Math.min((time - prevTime) / 1000, 0.1);
-      prevTime = time;
+      const deltaSec = Math.min((time - prevFrameTime) / 1000, 0.1);
+      prevFrameTime = time;
 
       if (cutsceneActive) {
         updateCutscene(time);
       } else {
         applyMovementStep(deltaSec);
+
         myPlushie.position.set(playerPos.x, playerPos.y, playerPos.z);
         myPlushie.rotation.y = playerYaw;
-        camera.position.set(playerPos.x + Math.sin(playerYaw) * 1.35, playerPos.y + 0.85, playerPos.z + Math.cos(playerYaw) * 1.35);
-        camera.lookAt(playerPos.x - Math.sin(playerYaw) * 4.0, playerPos.y + 0.85 + playerPitch * 3.0, playerPos.z - Math.cos(playerYaw) * 4.0);
+
+        const camDist = 1.35; const camHeight = 0.85;
+        camera.position.set(
+          playerPos.x + Math.sin(playerYaw) * camDist,
+          playerPos.y + camHeight,
+          playerPos.z + Math.cos(playerYaw) * camDist
+        );
+        camera.lookAt(new THREE.Vector3(
+          playerPos.x - Math.sin(playerYaw) * 4.0,
+          playerPos.y + camHeight + playerPitch * 3.0,
+          playerPos.z - Math.cos(playerYaw) * 4.0
+        ));
 
         if (time - prevBroadcastTime > 160) {
           prevBroadcastTime = time;
@@ -1324,6 +1450,14 @@
 
       renderGoodyFace(time);
       renderBackstageScreens();
+
+      if (pawn1?.userData?.badgeMesh) pawn1.userData.badgeMesh.quaternion.copy(camera.quaternion);
+      if (pawn2?.userData?.badgeMesh) pawn2.userData.badgeMesh.quaternion.copy(camera.quaternion);
+
+      miniAudience.children.forEach((p) => {
+        p.position.y = p.userData.initialY + Math.sin(time * 0.006 + p.userData.phase) * 0.04;
+      });
+
       renderer.render(scene, camera);
     }
     animate();
