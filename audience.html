@@ -82,27 +82,29 @@
       box-shadow: 0 0 18px rgba(253, 203, 110, 0.45);
     }
 
-    /* AUDIENCE PLAY-ALONG TRIVIA HUD */
+    /* TOP-SCREEN AUDIENCE PLAY-ALONG & RECAP HUD */
     #audience-trivia-hud {
-      background: rgba(18, 7, 36, 0.95); border: 2px solid #00f0ff; border-radius: 12px;
-      padding: 10px 14px; margin: 4px auto; width: 100%; max-width: 440px; text-align: center;
-      display: none; pointer-events: auto; box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+      position: absolute; top: 52px; left: 50%; transform: translateX(-50%);
+      background: rgba(18, 7, 36, 0.92); border: 2px solid #00f0ff; border-radius: 12px;
+      padding: 8px 12px; width: 100%; max-width: 440px; text-align: center;
+      display: none; pointer-events: auto; box-shadow: 0 0 20px rgba(0, 240, 255, 0.3); z-index: 25;
+      backdrop-filter: blur(4px);
     }
-    #aud-q-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; font-family: monospace; color: #ffda66; font-weight: bold; margin-bottom: 4px; }
-    #aud-q-text { font-size: 0.82rem; color: #fff; font-weight: 600; margin-bottom: 8px; line-height: 1.3; }
-    .aud-options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    #aud-q-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.68rem; font-family: monospace; color: #ffda66; font-weight: bold; margin-bottom: 3px; }
+    #aud-q-text { font-size: 0.78rem; color: #fff; font-weight: 600; margin-bottom: 6px; line-height: 1.25; }
+    .aud-options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
     .aud-opt-btn {
-      background: #2b1154; border: 1.5px solid #a29bfe; border-radius: 8px; color: #fff;
-      padding: 8px 10px; font-size: 0.76rem; font-weight: bold; text-align: left; cursor: pointer;
+      background: rgba(43, 17, 84, 0.85); border: 1.5px solid #a29bfe; border-radius: 6px; color: #fff;
+      padding: 6px 8px; font-size: 0.72rem; font-weight: bold; text-align: left; cursor: pointer;
       transition: background 0.2s, border-color 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .aud-opt-btn:hover:not(:disabled) { background: #6c5ce7; border-color: #00f0ff; }
-    .aud-opt-btn.selected { background: #0984e3 !important; border-color: #00f0ff !important; box-shadow: 0 0 8px rgba(9,132,227,0.6); }
+    .aud-opt-btn.selected { background: rgba(9, 132, 227, 0.9) !important; border-color: #00f0ff !important; box-shadow: 0 0 8px rgba(9,132,227,0.6); }
     .aud-opt-btn.contestant-picked { border: 2.5px dashed #ffda66 !important; }
-    .aud-opt-btn.correct { background: #00b894 !important; border-color: #55efc4 !important; }
-    .aud-opt-btn.wrong { background: #d63031 !important; border-color: #ff7675 !important; }
+    .aud-opt-btn.correct { background: rgba(0, 184, 148, 0.9) !important; border-color: #55efc4 !important; }
+    .aud-opt-btn.wrong { background: rgba(214, 48, 49, 0.9) !important; border-color: #ff7675 !important; }
     .aud-opt-btn:disabled { cursor: default; opacity: 0.85; }
-    #aud-status-msg { margin-top: 6px; font-size: 0.74rem; font-family: monospace; color: #39ff14; font-weight: bold; }
+    #aud-status-msg { margin-top: 5px; font-size: 0.70rem; font-family: monospace; color: #39ff14; font-weight: bold; }
 
     /* CHAT */
     #chat-container {
@@ -205,7 +207,7 @@
 
     <div id="interaction-prompt">PRESS [ W / ▲ ] TO TAKE ELEVATOR</div>
 
-    <!-- AUDIENCE PLAY-ALONG TRIVIA HUD -->
+    <!-- TOP-SCREEN AUDIENCE PLAY-ALONG & RECAP HUD -->
     <div id="audience-trivia-hud">
       <div id="aud-q-header">
         <span id="aud-q-country">HOME PLAY-ALONG</span>
@@ -352,7 +354,7 @@
       document.getElementById('aud-btn-0'),
       document.getElementById('aud-btn-1'),
       document.getElementById('aud-btn-2'),
-      document.getElementById('aud-btn-3')
+      document.getElementById('aud-btn-3']
     ];
 
     const lensOverlay = document.getElementById('lens-overlay');
@@ -384,6 +386,7 @@
     let isDiceRollingP2 = false;
     let p1Index = 0;
     let p2Index = 0;
+    let audienceIndex = 0; // Audience ghost counter board position
 
     let activeQuestion = null;
     let activeRecap = null;
@@ -463,7 +466,7 @@
             setTimeout(() => {
               activeRecap = { country: data.country, text: data.recap, isCorrect: data.isCorrect };
               activeQuestion = null;
-              renderStageQuestionBoard();
+              renderStageRecap(data.recap, data.country);
             }, 1400);
           } else if (data.type === 'HOST_SPEAK') {
             isGoodySpeaking = true;
@@ -510,7 +513,8 @@
 
     function startAudiencePlayAlong(qData, contestantName) {
       audienceTriviaHud.style.display = 'block';
-      audQCountry.textContent = `HOME TRIVIA: ${qData.country.toUpperCase()}`;
+      document.getElementById('aud-options-grid').style.display = 'grid';
+      audQCountry.textContent = `HOME PLAY-ALONG: ${qData.country.toUpperCase()}`;
       audQText.textContent = qData.text || qData.q;
       audStatusMsg.textContent = `Contestant (${contestantName}) is thinking... Pick your answer!`;
 
@@ -527,7 +531,6 @@
       audienceSelectedOption = idx;
 
       audOptionBtns.forEach((b, i) => {
-        b.disabled = true; // Grey out / lock all buttons
         if (i === idx) {
           b.classList.add('selected');
         }
@@ -566,21 +569,30 @@
       const contestantCorrect = data.isCorrect;
       const contestantChoice = data.chosenAnswer;
 
-      if (audienceSelectedOption === null) {
-        audStatusMsg.textContent = `Time up! Contestant chose "${contestantChoice}" (${contestantCorrect ? "Correct" : "Incorrect"}).`;
-      } else if (userGotItRight) {
-        audStatusMsg.textContent = `🎉 Well done! You were CORRECT! Contestant was ${contestantCorrect ? "correct" : "incorrect"}.`;
+      if (userGotItRight) {
+        audienceIndex = Math.min(boardTileCoords.length - 1, audienceIndex + 1);
+        animatePawnHop(audiencePawn, audiencePawnIdx, audienceIndex, 0);
+        audiencePawnIdx = audienceIndex;
+        audStatusMsg.textContent = `🎉 Correct! You advanced your ghost token (+1 tile)!`;
         playTone(587, 'sine', 0.2, 0.05);
       } else {
-        audStatusMsg.textContent = `❌ Unlucky! The correct answer was "${correctAnsText}". Contestant was ${contestantCorrect ? "correct" : "incorrect"}.`;
+        audStatusMsg.textContent = `❌ Unlucky! The correct answer was "${correctAnsText}".`;
         playTone(220, 'triangle', 0.2, 0.05);
       }
+    }
+
+    function renderStageRecap(recapText, country) {
+      audienceTriviaHud.style.display = 'block';
+      audQCountry.textContent = `WHAT WE LEARNED (${country.toUpperCase()})`;
+      audQText.textContent = recapText;
+      document.getElementById('aud-options-grid').style.display = 'none';
+      audStatusMsg.textContent = "Goody delivering recap... Next turn starting soon.";
 
       setTimeout(() => {
         audienceTriviaHud.style.display = 'none';
         audienceSelectedOption = null;
         contestantSelectedAnswer = null;
-      }, 5500);
+      }, 5000);
     }
 
     function broadcastSpectatorMovement() {
@@ -880,7 +892,7 @@
       tile.position.set(x, 0.48, z); miniDiorama.add(tile);
     }
 
-    // Dynamic Pawns
+    // Dynamic Pawns & Audience Ghost Token
     function updatePawnNameBadge(pawnGroup, displayName) {
       if (!pawnGroup || !pawnGroup.userData || !pawnGroup.userData.badgeCanvas) return;
       const c = pawnGroup.userData.badgeCanvas; const ctx = c.getContext('2d');
@@ -898,18 +910,24 @@
       pawnGroup.userData.badgeTexture.needsUpdate = true;
     }
 
-    function createPlayerPawn(colorHex, initialName) {
+    function createPlayerPawn(colorHex, initialName, isGhost = false) {
       const pawn = new THREE.Group();
-      const baseMat = new THREE.MeshStandardMaterial({ color: colorHex, metalness: 0.6, roughness: 0.25 });
+      const baseMat = new THREE.MeshStandardMaterial({
+        color: colorHex, metalness: 0.6, roughness: 0.25,
+        transparent: isGhost, opacity: isGhost ? 0.45 : 1.0
+      });
       const base = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.10, 0.04, 16), baseMat); base.position.y = 0.02; pawn.add(base);
       const body = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.16, 16), baseMat); body.position.y = 0.12; pawn.add(body);
       const head = new THREE.Mesh(new THREE.SphereGeometry(0.055, 16, 16), baseMat); head.position.y = 0.22; pawn.add(head);
-      const bCanvas = document.createElement('canvas'); bCanvas.width = 256; bCanvas.height = 96;
-      const bTex = new THREE.CanvasTexture(bCanvas);
-      const badgeMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.13), new THREE.MeshBasicMaterial({ map: bTex, transparent: true, side: THREE.DoubleSide, depthWrite: false }));
-      badgeMesh.position.set(0, 0.35, 0); pawn.add(badgeMesh);
-      pawn.userData = { badgeCanvas: bCanvas, badgeTexture: bTex, badgeMesh, tagColor: '#' + colorHex.toString(16).padStart(6, '0') };
-      updatePawnNameBadge(pawn, initialName);
+
+      if (!isGhost) {
+        const bCanvas = document.createElement('canvas'); bCanvas.width = 256; bCanvas.height = 96;
+        const bTex = new THREE.CanvasTexture(bCanvas);
+        const badgeMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.13), new THREE.MeshBasicMaterial({ map: bTex, transparent: true, side: THREE.DoubleSide, depthWrite: false }));
+        badgeMesh.position.set(0, 0.35, 0); pawn.add(badgeMesh);
+        pawn.userData = { badgeCanvas: bCanvas, badgeTexture: bTex, badgeMesh, tagColor: '#' + colorHex.toString(16).padStart(6, '0') };
+        updatePawnNameBadge(pawn, initialName);
+      }
       return pawn;
     }
     const pawn1 = createPlayerPawn(0x00d2d3, "Jake");
@@ -917,6 +935,12 @@
     pawn1.position.set(boardTileCoords[0].x - 0.08, 0.52, boardTileCoords[0].z);
     pawn2.position.set(boardTileCoords[0].x + 0.08, 0.52, boardTileCoords[0].z);
     miniDiorama.add(pawn1); miniDiorama.add(pawn2);
+
+    // Audience Ghost Racing Token
+    let audiencePawnIdx = 0;
+    const audiencePawn = createPlayerPawn(0xf1c40f, "AUDIENCE", true);
+    audiencePawn.position.set(boardTileCoords[0].x, 0.52, boardTileCoords[0].z - 0.12);
+    miniDiorama.add(audiencePawn);
 
     function animatePawnHop(pawn, fromIdx, toIdx, offsetX, hopDurationMs = 280) {
       if (fromIdx === toIdx) return;
@@ -947,7 +971,7 @@
       hopNextStep();
     }
 
-    // 3D Studio Question Board (Left Screen) - Fully synchronized with contestant choice highlighting
+    // 3D Studio Question Board (Left Screen)
     const qBoardCanvas = document.createElement('canvas'); qBoardCanvas.width = 512; qBoardCanvas.height = 384;
     const qBoardCtx = qBoardCanvas.getContext('2d');
     const qBoardTex = new THREE.CanvasTexture(qBoardCanvas);
