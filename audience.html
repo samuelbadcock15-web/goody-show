@@ -8,7 +8,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
     html, body {
       width: 100%; height: 100%; height: 100dvh;
-      overflow: hidden; background: #06020c; color: #fff;
+      overflow: hidden; background: #040208; color: #fff;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     #canvas3d { width: 100%; height: 100%; display: block; position: absolute; top: 0; left: 0; z-index: 1; }
@@ -703,15 +703,39 @@
     renderer.setPixelRatio(window.devicePixelRatio);
 
     // ILLUMINATION RIG
-    const ambientLight = new THREE.AmbientLight(0x352155, 1.6); scene.add(ambientLight);
-    const ceilingLight = new THREE.PointLight(0xffecd2, 1.2, 60); ceilingLight.position.set(0, 16.0, 0); scene.add(ceilingLight);
-    const studioSpot = new THREE.SpotLight(0x00f0ff, 5.0, 30, Math.PI / 3, 0.4); studioSpot.position.set(0, 11, -9); scene.add(studioSpot);
+    const ambientLight = new THREE.AmbientLight(0x181026, 0.85); scene.add(ambientLight);
+    const ceilingLight = new THREE.PointLight(0xffecd2, 1.0, 50); ceilingLight.position.set(0, 13.5, 0); scene.add(ceilingLight);
+    const deskLampLight = new THREE.PointLight(0xffea9f, 2.5, 20); deskLampLight.position.set(-6.5, 7.8, -4.5); scene.add(deskLampLight);
 
-    const streetLamp1 = new THREE.PointLight(0xffe599, 3.5, 24); streetLamp1.position.set(-6, 4.2, 7.8); scene.add(streetLamp1);
-    const streetLamp2 = new THREE.PointLight(0xffe599, 3.5, 24); streetLamp2.position.set(6, 4.2, 7.8); scene.add(streetLamp2);
-    const foyerChandelier1 = new THREE.PointLight(0xffdfa9, 3.5, 20); foyerChandelier1.position.set(-3.5, 3.8, -4.5); scene.add(foyerChandelier1);
-    const foyerChandelier2 = new THREE.PointLight(0xffdfa9, 3.5, 20); foyerChandelier2.position.set(3.5, 3.8, -4.5); scene.add(foyerChandelier2);
-    const restroomVanityLight = new THREE.PointLight(0xffffff, 2.5, 12); restroomVanityLight.position.set(8.5, 3.2, -5.0); scene.add(restroomVanityLight);
+    const hostSpotlight = new THREE.SpotLight(0xffffff, 9.0, 16, Math.PI / 4.5, 0.25, 1.2);
+    hostSpotlight.position.set(0, 10.5, -11.6);
+    const hostSpotTarget = new THREE.Object3D(); hostSpotTarget.position.set(0, 4.5, -11.6);
+    scene.add(hostSpotTarget); hostSpotlight.target = hostSpotTarget; scene.add(hostSpotlight);
+
+    const trussGroup = new THREE.Group(); trussGroup.position.set(0, 8.4, -9.8);
+    const trussMat = new THREE.MeshStandardMaterial({ color: 0x3d3d4e, metalness: 0.85, roughness: 0.3 });
+    const trussArch = new THREE.Mesh(new THREE.TorusGeometry(3.6, 0.08, 8, 24, Math.PI), trussMat);
+    trussArch.rotation.x = Math.PI / 2; trussGroup.add(trussArch);
+
+    function createDownFacingSpotlight(colorHex, x, y, z) {
+      const fixGroup = new THREE.Group(); fixGroup.position.set(x, y, z);
+      const headPivot = new THREE.Group();
+      const can = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.24, 0.55, 16), new THREE.MeshStandardMaterial({ color: 0x15151e }));
+      can.rotation.x = Math.PI / 2; headPivot.add(can);
+      const lens = new THREE.Mesh(new THREE.CircleGeometry(0.19, 16), new THREE.MeshBasicMaterial({ color: colorHex }));
+      lens.position.set(0, 0, 0.28); headPivot.add(lens);
+      const spot = new THREE.SpotLight(colorHex, 5.0, 18, Math.PI / 3.4, 0.35);
+      spot.position.set(0, 0, 0.28); headPivot.add(spot);
+      const targetObj = new THREE.Object3D(); targetObj.position.set(x * 0.4, -4.5, -0.8);
+      scene.add(targetObj); spot.target = targetObj;
+      headPivot.rotation.x = Math.PI * 0.35;
+      fixGroup.add(headPivot); trussGroup.add(fixGroup);
+      return { spot, lens, color: colorHex };
+    }
+    const fixtureCyan = createDownFacingSpotlight(0x00f0ff, -2.4, 0.0, 0.2);
+    const fixtureGold = createDownFacingSpotlight(0xffea00, 0.0, 0.2, -0.1);
+    const fixtureMagenta = createDownFacingSpotlight(0xff007f, 2.4, 0.0, 0.2);
+    scene.add(trussGroup);
 
     // GROUND LEVEL: STREET, LOBBY, FOYER, RESTROOMS
     const groundLevelGroup = new THREE.Group();
@@ -1079,6 +1103,41 @@
     }
     const studioBackScreenMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.8), new THREE.MeshBasicMaterial({ map: studioScreenTex }));
     studioBackScreenMesh.position.set(0, 3.4, -4.5); miniDiorama.add(studioBackScreenMesh);
+
+    // Robotic Camera Rigs
+    function createStudioRoboticCamera(x, z) {
+      const camRig = new THREE.Group(); camRig.position.set(x, 0.44, z);
+      const darkMat = new THREE.MeshStandardMaterial({ color: 0x1f1f26 });
+      const basePlate = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.42, 0.08, 16), darkMat); basePlate.position.y = 0.04; camRig.add(basePlate);
+      const outerCol = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.13, 0.55, 16), darkMat); outerCol.position.y = 0.35; camRig.add(outerCol);
+      const headPivot = new THREE.Group(); headPivot.position.y = 1.0;
+      const cameraBox = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.24, 0.42), darkMat); headPivot.add(cameraBox);
+      const lensBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.095, 0.26, 16), new THREE.MeshStandardMaterial({ color: 0x0a0a0a }));
+      lensBarrel.rotation.x = Math.PI / 2; lensBarrel.position.set(0, 0, -0.24); headPivot.add(lensBarrel);
+      const frontGlass = new THREE.Mesh(new THREE.CircleGeometry(0.08, 16), new THREE.MeshBasicMaterial({ color: 0x00f0ff }));
+      frontGlass.position.set(0, 0, -0.431); headPivot.add(frontGlass);
+      const tallyLamp = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+      tallyLamp.position.set(0, 0.15, -0.28); headPivot.add(tallyLamp);
+      camRig.add(headPivot);
+      return { camRig, headPivot };
+    }
+    const autoCam1 = createStudioRoboticCamera(-2.4, 0.3); miniDiorama.add(autoCam1.camRig);
+    const autoCam2 = createStudioRoboticCamera(2.4, 0.3); miniDiorama.add(autoCam2.camRig);
+
+    function updateCameraAlignment() {
+      if (!gHead) return;
+      const headWorldPos = new THREE.Vector3(); gHead.getWorldPosition(headWorldPos);
+      autoCam1.headPivot.lookAt(headWorldPos); autoCam1.headPivot.rotation.y += Math.PI;
+      autoCam2.headPivot.lookAt(headWorldPos); autoCam2.headPivot.rotation.y += Math.PI;
+    }
+
+    miniDiorama.position.set(0, 7.95, -9);
+    scene.add(miniDiorama);
+    updateCameraAlignment();
+
+    function updateStudioPowerVisuals(isPower) {
+      studioSpot.intensity = isPower ? 5.0 : 1.2;
+    }
 
     // 3D Studio Question Board (Left Screen)
     const qBoardCanvas = document.createElement('canvas'); qBoardCanvas.width = 512; qBoardCanvas.height = 384;
